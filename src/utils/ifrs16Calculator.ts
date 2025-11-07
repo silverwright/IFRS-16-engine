@@ -8,12 +8,24 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
   const ibrAnnual = leaseData.IBR_Annual || 0.14;
   const paymentTiming = leaseData.PaymentTiming || 'Advance';
 
-  // IFRS 16: Include renewal option if reasonably certain (likelihood >= 0.5 or 50%)
+  // IFRS 16: Determine lease term based on termination and renewal options
   const renewalYears = leaseData.RenewalOptionYears || 0;
   const renewalLikelihood = leaseData.RenewalOptionLikelihood || 0;
 
+  // Extract termination option point (years) from string field
+  const terminationPointStr = leaseData.TerminationOptionPoint || '';
+  const terminationYears = parseFloat(terminationPointStr) || 0;
+  const terminationLikelihood = leaseData.TerminationOptionLikelihood || 0;
+
   let totalLeaseYears = nonCancellableYears;
-  if (renewalYears > 0 && renewalLikelihood >= 0.5) {
+
+  // Priority 1: If termination is reasonably certain (>0.5) and termination point is valid (>0),
+  // use termination point years, ignoring both non-cancellable period and renewal options
+  if (terminationYears > 0 && terminationLikelihood > 0.5) {
+    totalLeaseYears = terminationYears;
+  }
+  // Priority 2: Otherwise, include renewal option if reasonably certain
+  else if (renewalYears > 0 && renewalLikelihood >= 0.5) {
     totalLeaseYears = nonCancellableYears + renewalYears;
   }
 
