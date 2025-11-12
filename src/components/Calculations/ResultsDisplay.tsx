@@ -245,9 +245,9 @@ export function ResultsDisplay() {
         {activeTab === 'cashflow' && (
           <div className="space-y-4">
             <h4 className="text-xl font-bold text-slate-900">Cashflow Schedule</h4>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+            <div className="overflow-x-auto border border-slate-200 rounded-lg max-h-[600px] overflow-y-auto">
               <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
+                <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Period</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Date</th>
@@ -255,7 +255,7 @@ export function ResultsDisplay() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {calculations.cashflowSchedule.slice(0, 12).map((row, index) => (
+                  {calculations.cashflowSchedule.map((row, index) => (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="px-6 py-4 text-sm font-medium text-slate-900">{row.period}</td>
                       <td className="px-6 py-4 text-sm text-slate-600">{row.date}</td>
@@ -266,11 +266,9 @@ export function ResultsDisplay() {
                   ))}
                 </tbody>
               </table>
-              {calculations.cashflowSchedule.length > 12 && (
-                <div className="bg-slate-50 px-6 py-3 text-sm text-slate-600 text-center border-t border-slate-200">
-                  Showing first 12 of {calculations.cashflowSchedule.length} periods
-                </div>
-              )}
+            </div>
+            <div className="text-sm text-slate-600 text-center">
+              Showing all {calculations.cashflowSchedule.length} periods (scroll to view more)
             </div>
           </div>
         )}
@@ -278,9 +276,9 @@ export function ResultsDisplay() {
         {activeTab === 'amortization' && (
           <div className="space-y-4">
             <h4 className="text-xl font-bold text-slate-900">Amortization Schedule</h4>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-lg">
+            <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-lg max-h-[600px] overflow-y-auto">
               <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">Month</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Payment</th>
@@ -292,7 +290,7 @@ export function ResultsDisplay() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {calculations.amortizationSchedule.slice(0, 12).map((row, index) => (
+                  {calculations.amortizationSchedule.map((row, index) => (
                     <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gradient-to-r from-slate-50 to-slate-100'} hover:bg-blue-50 transition-colors`}>
                       <td className="px-4 py-3 text-sm font-bold text-slate-900">{row.month}</td>
                       <td className="px-4 py-3 text-sm font-semibold text-right text-blue-600">
@@ -317,11 +315,9 @@ export function ResultsDisplay() {
                   ))}
                 </tbody>
               </table>
-              {calculations.amortizationSchedule.length > 12 && (
-                <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-6 py-3 text-sm text-slate-700 text-center border-t border-slate-200 font-medium">
-                  Showing first 12 of {calculations.amortizationSchedule.length} months
-                </div>
-              )}
+            </div>
+            <div className="text-sm text-slate-600 text-center">
+              Showing all {calculations.amortizationSchedule.length} months (scroll to view more)
             </div>
           </div>
         )}

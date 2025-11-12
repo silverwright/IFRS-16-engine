@@ -21,6 +21,8 @@ export function LeaseCalculations() {
 
   const handleSelectContract = (contract: SavedContract) => {
     setSelectedContract(contract);
+    // Clear previous calculations first
+    dispatch({ type: 'SET_CALCULATIONS', payload: null });
     dispatch({ type: 'LOAD_CONTRACT', payload: contract.data });
     dispatch({ type: 'SET_MODE', payload: contract.mode });
   };
