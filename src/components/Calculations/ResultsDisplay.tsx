@@ -133,7 +133,7 @@ export function ResultsDisplay() {
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm font-medium">Total Interest</p>
+              <p className="text-purple-100 text-sm font-medium">Total Interest to be paid</p>
               <p className="text-2xl font-bold mt-1">
                 {formatCurrency(calculations.totalInterest)}
               </p>
@@ -225,7 +225,7 @@ export function ResultsDisplay() {
                 <h5 className="font-semibold text-slate-800 text-lg">Total Impact</h5>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Total Interest Expense:</span>
+                    <span className="text-slate-600">Total Interest to be paid:</span>
                     <span className="font-bold text-purple-600">{formatCurrency(calculations.totalInterest)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-slate-200">

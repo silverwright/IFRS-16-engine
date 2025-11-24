@@ -35,18 +35,24 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
   // Calculate PV of lease payments
   let pv = 0;
   const isAdvance = paymentTiming === 'Advance';
-  
+
   for (let i = 1; i <= periods; i++) {
-    const discountFactor = isAdvance ? 
-      1 / Math.pow(1 + ratePerPeriod, i - 1) : 
+    const discountFactor = isAdvance ?
+      1 / Math.pow(1 + ratePerPeriod, i - 1) :
       1 / Math.pow(1 + ratePerPeriod, i);
     pv += paymentPerPeriod * discountFactor;
   }
 
-  const initialLiability = Math.round(pv * 100) / 100;
+  let initialLiability = Math.round(pv * 100) / 100;
   const idc = leaseData.InitialDirectCosts || 0;
   const prepayments = leaseData.PrepaymentsBeforeCommencement || 0;
   const incentives = leaseData.LeaseIncentives || 0;
+
+  // If payment timing is Advance and there are prepayments, subtract prepayments from liability
+  if (isAdvance && prepayments > 0) {
+    initialLiability = Math.round((initialLiability - prepayments) * 100) / 100;
+  }
+
   const initialROU = initialLiability + idc + prepayments - incentives;
 
   // Generate schedules
