@@ -278,13 +278,15 @@ export function ResultsDisplay() {
             <h4 className="text-xl font-bold text-slate-900">Amortization Schedule</h4>
             <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-lg max-h-[600px] overflow-y-auto">
               <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white sticky top-0 z-10">
+                <thead className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">Month</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Payment</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Interest</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Principal</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Remaining Liability</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">SOFP Curr Liab</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">SOFP Non-Curr Liab</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Depreciation</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Remaining Asset</th>
                   </tr>
@@ -302,13 +304,19 @@ export function ResultsDisplay() {
                       <td className="px-4 py-3 text-sm font-semibold text-right text-green-600">
                         {formatCurrency(row.principal)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-purple-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-slate-700">
                         {formatCurrency(row.remainingLiability)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-teal-600">
+                        {formatCurrency(row.sofpCurrLiab)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-cyan-600">
+                        {formatCurrency(row.sofpNonCurrLiab)}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-right text-orange-600">
                         {formatCurrency(row.depreciation)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-indigo-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-pink-600">
                         {formatCurrency(row.remainingAsset)}
                       </td>
                     </tr>

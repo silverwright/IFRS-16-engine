@@ -144,10 +144,36 @@ function generateAmortizationSchedule(initialLiability: number, payment: number,
       principal: principal,
       remainingLiability: Math.max(0, closing),
       depreciation: depreciation,
-      remainingAsset: Math.max(0, remainingAsset)
+      remainingAsset: Math.max(0, remainingAsset),
+      sofpCurrLiab: 0,
+      sofpNonCurrLiab: 0
     });
 
     opening = Math.max(0, closing);
+  }
+
+  // Calculate SOFP Current Liability (consecutive subtraction of remaining liability)
+  // Y2-Y1, Y3-Y2, Y4-Y3, etc.
+  for (let i = 0; i < schedule.length; i++) {
+    if (i < schedule.length - 1) {
+      const currentRemaining = schedule[i].remainingLiability;
+      const nextRemaining = schedule[i + 1].remainingLiability;
+      schedule[i].sofpCurrLiab = Math.round((currentRemaining - nextRemaining) * 100) / 100;
+    } else {
+      // For the last period, current liability is the remaining liability itself
+      schedule[i].sofpCurrLiab = schedule[i].remainingLiability;
+    }
+  }
+
+  // Calculate SOFP Non-Current Liability (next year's remaining liability)
+  // Y1 = Y2, Y2 = Y3, Y3 = Y4, etc.
+  for (let i = 0; i < schedule.length; i++) {
+    if (i < schedule.length - 1) {
+      schedule[i].sofpNonCurrLiab = schedule[i + 1].remainingLiability;
+    } else {
+      // For the last period, non-current liability is 0
+      schedule[i].sofpNonCurrLiab = 0;
+    }
   }
 
   return schedule;
