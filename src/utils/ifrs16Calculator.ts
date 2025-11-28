@@ -60,7 +60,31 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
     initialLiability = Math.round((initialLiability - prepayments) * 100) / 100;
   }
 
-  const initialROU = initialLiability + idc + prepayments - incentives;
+  // Get asset valuation fields
+  const fairValue = leaseData.FairValue || 0;
+  const carryingAmount = leaseData.CarryingAmount || 0;
+  const salesProceeds = leaseData.SalesProceeds || 0;
+
+  // Logic 2 & 3: Adjust lease liability based on sales proceeds vs fair value
+  if (fairValue > 0 && salesProceeds > 0) {
+    if (salesProceeds < fairValue) {
+      // Logic 2: Sales proceeds < Fair value -> deduct difference from liability
+      const difference = fairValue - salesProceeds;
+      initialLiability = Math.round((initialLiability - difference) * 100) / 100;
+    } else if (salesProceeds > fairValue) {
+      // Logic 3: Sales proceeds > Fair value -> add difference to liability
+      const difference = salesProceeds - fairValue;
+      initialLiability = Math.round((initialLiability + difference) * 100) / 100;
+    }
+  }
+
+  // Calculate initial ROU
+  let initialROU = initialLiability + idc + prepayments - incentives;
+
+  // Logic 1: If fair value and carrying amount are set, recalculate ROU
+  if (fairValue > 0 && carryingAmount > 0) {
+    initialROU = Math.round((initialLiability / fairValue * carryingAmount) * 100) / 100;
+  }
 
   // Generate schedules
   const cashflowSchedule = generateCashflowSchedule(leaseData, periods, rvgAmount);
