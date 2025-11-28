@@ -97,6 +97,14 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
       'Purchase Option Reasonably Certain': 'PurchaseOptionReasonablyCertain',
       'PurchaseOptionReasonablyCertain': 'PurchaseOptionReasonablyCertain',
 
+      // Asset Valuation
+      'Carrying Amount': 'CarryingAmount',
+      'CarryingAmount': 'CarryingAmount',
+      'Fair Value': 'FairValue',
+      'FairValue': 'FairValue',
+      'Sales Proceeds': 'SalesProceeds',
+      'SalesProceeds': 'SalesProceeds',
+
       // ROU Adjustments
       'Initial Direct Costs': 'InitialDirectCosts',
       'InitialDirectCosts': 'InitialDirectCosts',
@@ -201,7 +209,8 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
           'VariablePaymentsInSubstanceFixed', 'VariablePaymentsUsageExpected',
           'RVGExpected', 'PurchaseOptionPrice', 'InitialDirectCosts',
           'PrepaymentsBeforeCommencement', 'LeaseIncentives', 'IBR_Annual',
-          'UsefulLifeYears', 'InsuranceSumInsured', 'InsuranceTPLimit'
+          'UsefulLifeYears', 'InsuranceSumInsured', 'InsuranceTPLimit',
+          'CarryingAmount', 'FairValue', 'SalesProceeds'
         ];
 
         if (numericFields.includes(leaseKey)) {
@@ -487,7 +496,7 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
               <p className="font-semibold text-slate-900 mb-2">⚙️ Optional Columns - Advanced Options:</p>
               <div className="bg-slate-100 border border-slate-300 rounded p-3 mb-2">
                 <code className="text-xs break-words">
-                  Renewal Option Years | Renewal Likelihood | Termination Option Point | Termination Likelihood | Termination Penalty Expected | Termination Reasonably Certain | Purchase Option Price | Purchase Option Reasonably Certain | RVG Expected | RVG Reasonably Certain | Variable Payments In Substance Fixed | Variable Payments Usage Expected | Low Value Exemption | Short Term Exemption | Separate Non Lease Components | Allocation Basis | FX Policy | Judgement Notes | Approval Signoff
+                  Renewal Option Years | Renewal Likelihood | Termination Option Point | Termination Likelihood | Termination Penalty Expected | Termination Reasonably Certain | Purchase Option Price | Purchase Option Reasonably Certain | RVG Expected | RVG Reasonably Certain | Carrying Amount | Fair Value | Sales Proceeds | Variable Payments In Substance Fixed | Variable Payments Usage Expected | Low Value Exemption | Short Term Exemption | Separate Non Lease Components | Allocation Basis | FX Policy | Judgement Notes | Approval Signoff
                 </code>
               </div>
             </div>

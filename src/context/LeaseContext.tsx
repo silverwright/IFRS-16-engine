@@ -41,7 +41,12 @@ export interface LeaseData {
   RVGReasonablyCertain: boolean;
   PurchaseOptionPrice: number;
   PurchaseOptionReasonablyCertain: boolean;
-  
+
+  // Asset Valuation
+  CarryingAmount: number;
+  FairValue: number;
+  SalesProceeds: number;
+
   // ROU Adjustments
   InitialDirectCosts: number;
   PrepaymentsBeforeCommencement: number;

@@ -146,10 +146,41 @@ export function AdvancedOptionsForm() {
         </div>
       </div>
 
+      {/* Asset Valuation */}
+      <div className="border-t pt-6 space-y-4">
+        <h4 className="text-md font-semibold text-slate-900">Asset Valuation</h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            label="Carrying Amount"
+            type="number"
+            value={leaseData.CarryingAmount || ''}
+            onChange={(value) => updateField('CarryingAmount', Number(value))}
+            placeholder="0"
+          />
+
+          <FormField
+            label="Fair Value"
+            type="number"
+            value={leaseData.FairValue || ''}
+            onChange={(value) => updateField('FairValue', Number(value))}
+            placeholder="0"
+          />
+
+          <FormField
+            label="Sales Proceeds"
+            type="number"
+            value={leaseData.SalesProceeds || ''}
+            onChange={(value) => updateField('SalesProceeds', Number(value))}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
       {/* Policy Flags */}
       <div className="border-t pt-6 space-y-4">
         <h4 className="text-md font-semibold text-slate-900">Policy Elections</h4>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg">
             <Switch
@@ -161,7 +192,7 @@ export function AdvancedOptionsForm() {
               <p className="text-xs text-slate-600">Apply low-value practical expedient</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg">
             <Switch
               checked={leaseData.ShortTermExemption || false}
