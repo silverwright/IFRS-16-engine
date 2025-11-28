@@ -172,7 +172,7 @@ export function Home() {
       </section>
 
       {/* Modules Grid */}
-      <section className="px-6 py-12 bg-slate-50 w-full">
+      <section className="px-6 py-12 bg-slate-50 dark:bg-gray-900 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {modules.map((module, index) => {
             const Icon = module.icon;
@@ -181,23 +181,23 @@ export function Home() {
                 key={module.id}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300 group cursor-pointer"
                 onClick={() => navigate(module.id)}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
-                    <Icon className="h-6 w-6 text-blue-600" />
+                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
+                    <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className="text-sm font-medium text-slate-500">
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
                     Module {index + 1}
                   </span>
                 </div>
 
-                <h3 className="text-lg font-semibold text-slate-900 mb-3 group-hover:text-blue-700 transition-colors">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                   {module.title}
                 </h3>
 
-                <p className="text-slate-600 text-sm mb-4 leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">
                   {module.description}
                 </p>
 
@@ -205,7 +205,7 @@ export function Home() {
                   {module.features.map((feature, featureIndex) => (
                     <li
                       key={featureIndex}
-                      className="flex items-center text-sm text-slate-600"
+                      className="flex items-center text-sm text-slate-600 dark:text-slate-400"
                     >
                       <CheckCircle className="h-4 w-4 text-emerald-500 mr-2 flex-shrink-0" />
                       {feature}
@@ -213,7 +213,7 @@ export function Home() {
                   ))}
                 </ul>
 
-                <div className="flex items-center text-blue-600 font-medium text-sm group-hover:text-blue-700 transition-colors">
+                <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                   Access Module
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -225,24 +225,24 @@ export function Home() {
 
       {/* Call to Action */}
       <section className="px-6 mt-16 mb-12 w-full">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-8 text-center text-white">
           <h2 className="text-2xl font-bold mb-4">
             Ready to Streamline Your Lease Accounting?
           </h2>
-          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+          <p className="text-blue-100 dark:text-blue-200 mb-6 max-w-2xl mx-auto">
             Start with Module 1 to initiate your first lease contract, or
             explore our methodology guide to understand the framework.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={() => navigate("/contract")}
-              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+              className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
             >
               Start with Contract Initiation
             </button>
             <button
               onClick={() => navigate("/methodology")}
-              className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-colors"
+              className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400 transition-colors"
             >
               View Methodology
             </button>
