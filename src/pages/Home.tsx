@@ -70,17 +70,29 @@ export function Home() {
   return (
     <div className="w-full font-sans bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full min-h-screen flex items-center -mt-16 md:-mt-20 overflow-hidden pb-32">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-            backgroundSize: '40px 40px'
-          }}></div>
+      <section className="relative w-full h-screen flex items-center -mt-16 md:-mt-20 overflow-hidden">
+        {/* Full-width Background Image */}
+        <div className="absolute inset-0 w-full h-full">
+          <img
+            src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            alt="Professional working"
+            className="w-full h-full object-cover"
+          />
         </div>
 
-        <div className="container mx-auto px-6 lg:px-12 py-20 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Slanted Overlay from Left */}
+        <div className="absolute inset-0 w-full h-full">
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            style={{
+              clipPath: 'polygon(0 0, 60% 0, 45% 100%, 0 100%)'
+            }}
+          ></div>
+        </div>
+
+        {/* Content Container */}
+        <div className="container mx-auto px-6 lg:px-12 relative z-10">
+          <div className="max-w-2xl">
             {/* Left Content */}
             <div className="space-y-8">
               <div className="inline-block">
@@ -97,7 +109,7 @@ export function Home() {
                 </span>
               </h1>
 
-              <div className="space-y-4 text-slate-300 text-lg leading-relaxed max-w-xl">
+              <div className="space-y-4 text-slate-300 text-lg leading-relaxed">
                 <p>
                   IFRS 16 is the international accounting standard for lease accounting that requires organizations to recognize most leases on their balance sheet as right-of-use assets and corresponding lease liabilities.
                 </p>
@@ -126,24 +138,8 @@ export function Home() {
                 </button>
               </div>
             </div>
-
-            {/* Right Image */}
-            <div className="relative lg:block hidden">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
-                <img
-                  src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800"
-                  alt="Professional working"
-                  className="w-full h-full min-h-[700px] object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-              </div>
-            </div>
           </div>
         </div>
-
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
       </section>
 
       {/* Modules Section */}
