@@ -1,23 +1,13 @@
-// src/pages/Home.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { TypeAnimation } from "react-type-animation";
 import {
-  FileText,
-  Calculator,
-  BookOpen,
-  Shield,
-  BarChart3,
-  GraduationCap,
   ArrowRight,
+  Play,
   CheckCircle,
 } from "lucide-react";
 
 export function Home() {
   const navigate = useNavigate();
-
-  const text = "IFRS 16 Lease Solution";
 
   const modules = [
     {
@@ -25,227 +15,252 @@ export function Home() {
       title: "Contract Initiation & Approval",
       description:
         "Streamline lease contract creation and approval processes with comprehensive data capture and validation.",
-      icon: FileText,
-      features: [
-        "Full lease contract management",
-        "CSV import for existing contracts",
-        "Approval workflows",
-        "Data validation",
-      ],
+      image: "https://images.pexels.com/photos/48148/document-agreement-documents-sign-48148.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-blue-600 to-blue-700"
     },
     {
       id: "/calculations",
       title: "Lease Calculation Engine",
       description:
         "Advanced calculations for lease liability and right-of-use assets with automated amortization schedules.",
-      icon: Calculator,
-      features: [
-        "Lease liability calculations",
-        "Right-of-use asset valuation",
-        "Amortization tables",
-        "Total cost analysis",
-      ],
+      image: "https://images.pexels.com/photos/6801647/pexels-photo-6801647.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-emerald-600 to-emerald-700"
     },
     {
       id: "/disclosure-journals",
       title: "Disclosure & Journal Entries",
       description:
         "Generate compliant disclosures and accounting journal entries automatically with maturity analysis.",
-      icon: BookOpen,
-      features: [
-        "Automated journal entries",
-        "Key disclosure figures",
-        "Maturity analysis tables",
-        "IFRS 16 compliance reporting",
-      ],
+      image: "https://images.pexels.com/photos/534216/pexels-photo-534216.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-violet-600 to-violet-700"
     },
     {
       id: "/reports",
       title: "Reports & Analytics",
       description:
         "Comprehensive reporting and analytics for lease portfolio management.",
-      icon: BookOpen,
-      features: [
-        "Portfolio analytics",
-        "Custom report generation",
-        "Period-end reporting",
-        "Export capabilities",
-      ],
+      image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-amber-600 to-amber-700"
     },
     {
       id: "/methodology",
       title: "IFRS 16 Methodology",
       description:
         "Comprehensive methodology guide covering assumptions, processes, and best practices.",
-      icon: Shield,
-      features: [
-        "Methodology documentation",
-        "Assumptions framework",
-        "Best practices",
-        "Implementation guides",
-      ],
+      image: "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-cyan-600 to-cyan-700"
     },
     {
       id: "/dashboard",
       title: "Dashboard",
       description:
         "Comprehensive analytics and insights into your lease portfolio with interactive visualizations.",
-      icon: BarChart3,
-      features: [
-        "Portfolio analytics",
-        "Interactive dashboards",
-        "Trend analysis",
-        "Performance metrics",
-      ],
+      image: "https://images.pexels.com/photos/265087/pexels-photo-265087.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-pink-600 to-pink-700"
     },
     {
       id: "/education",
       title: "Learn IFRS 16",
       description:
         "Self-paced e-learning platform to master IFRS 16 lease accounting fundamentals.",
-      icon: GraduationCap,
-      features: [
-        "Interactive courses",
-        "Self-assessment tools",
-        "Progress tracking",
-        "Certification",
-      ],
+      image: "https://images.pexels.com/photos/6238050/pexels-photo-6238050.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-indigo-600 to-indigo-700"
     },
   ];
 
   return (
-    <div className="w-full font-sans">
+    <div className="w-full font-sans bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-screen min-h-screen flex flex-col items-center justify-center text-center bg-cover bg-center -mt-16 md:-mt-20">
-        <img
-          src="/Picture1.png"
-          alt="Landing Background"
-          className="absolute inset-0 w-full h-full object-cover z-0"
-        />
+      <section className="relative w-full min-h-[90vh] flex items-center -mt-16 md:-mt-20 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="container mx-auto px-6 lg:px-12 py-20 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="inline-block">
+                <span className="text-emerald-400 text-sm font-semibold tracking-wider uppercase">
+                  Financial Excellence
+                </span>
+              </div>
 
-        {/* Content */}
-        <div className="relative z-10 px-4">
-          {/* Word-by-word staggered animation */}
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 flex flex-wrap justify-center">
-            {text.split(" ").map((word, index) => (
-              <motion.span
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.9 + index * 0.6,
-                  duration: 0.6,
-                }}
-                className="mr-2"
+              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight">
+                Asset Liability
+                <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                  Management
+                </span>
+              </h1>
+
+              <div className="space-y-4 text-slate-300 text-lg leading-relaxed max-w-xl">
+                <p>
+                  Asset Liability Management (ALM) is a strategic framework used primarily by financial institutions, insurance companies, pension funds to manage the risks that arise from mismatches between assets and liabilities.
+                </p>
+                <p>
+                  It's essentially the practice of managing a company's balance sheet to create that the institution can meet its debt obligations while maximizing profitability and maintaining acceptable risk levels.
+                </p>
+                <p className="text-white font-medium">
+                  At its core, ALM addresses the fundamental question: How do we ensure our assets (what we own and what's owed to us) are sufficient and appropriately structured to cover our liabilities (what we owe to others) without exposing us to excessive risk?
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-4 pt-4">
+                <button
+                  onClick={() => navigate("/contract")}
+                  className="group bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/50"
+                >
+                  Learn More
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button
+                  onClick={() => navigate("/education")}
+                  className="group bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                >
+                  Watch Demo
+                  <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Image */}
+            <div className="relative lg:block hidden">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-500">
+                <img
+                  src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800"
+                  alt="Professional working"
+                  className="w-full h-[600px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+              </div>
+
+              {/* Floating Stats */}
+              <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-2xl p-6 max-w-xs">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-slate-900">IFRS 16</div>
+                    <div className="text-sm text-slate-600">Compliant Solution</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-20 right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+      </section>
+
+      {/* Modules Section */}
+      <section className="py-20 px-6 lg:px-12 relative">
+        <div className="container mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-emerald-400 text-sm font-semibold tracking-wider uppercase">
+              Our Solutions
+            </span>
+            <h2 className="text-4xl lg:text-5xl font-bold text-white">
+              ALM Products
+            </h2>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Specialized solutions tailored for different financial sectors
+            </p>
+          </div>
+
+          {/* Modules Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {modules.map((module, index) => (
+              <div
+                key={module.id}
+                className="group relative bg-slate-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer"
+                onClick={() => navigate(module.id)}
               >
-                {word}
-              </motion.span>
-            ))}
-          </h1>
+                {/* Module Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={module.image}
+                    alt={module.title}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
 
-          {/* Benefits Typing Animation */}
-          <div className="flex flex-wrap justify-center gap-3 text-white text-xl md:text-2xl font-bold mt-4">
-            <TypeAnimation
-              sequence={[
-                4000,
-                "✅ IFRS 16 Compliant",
-                2000,
-                "⚡ Automated Calculations",
-                2000,
-                "👥 Multi-User Support",
-                2000,
-                "🌍 Multi-Currency",
-                2000,
-                "IFRS 16 Compliant | Automated Calculations | Multi-User Support | Multi-Currency",
-              ]}
-              speed={50}
-              repeat={0}
-              wrapper="span"
-              cursor={false}
-              className="whitespace-pre inline-block min-h-[40px]"
-            />
+                  {/* Module Number Badge */}
+                  <div className="absolute top-4 right-4 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                    {index + 1}
+                  </div>
+                </div>
+
+                {/* Module Content */}
+                <div className="p-6 space-y-3">
+                  <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                    {module.title}
+                  </h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    {module.description}
+                  </p>
+
+                  {/* CTA */}
+                  <div className="pt-4">
+                    <button className="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+                      <span>Open Solution</span>
+                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hover Glow Effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <div className={`absolute inset-0 bg-gradient-to-t ${module.color} opacity-10`}></div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Modules Grid */}
-      <section className="px-6 py-12 bg-slate-50 dark:bg-gray-900 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {modules.map((module, index) => {
-            const Icon = module.icon;
-            return (
-              <motion.div
-                key={module.id}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-6 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-300 group cursor-pointer"
-                onClick={() => navigate(module.id)}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                    <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    Module {index + 1}
-                  </span>
-                </div>
+      {/* CTA Section */}
+      <section className="py-20 px-6 lg:px-12 relative">
+        <div className="container mx-auto">
+          <div className="relative bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0" style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '30px 30px'
+              }}></div>
+            </div>
 
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
-                  {module.title}
-                </h3>
-
-                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 leading-relaxed">
-                  {module.description}
-                </p>
-
-                <ul className="space-y-2 mb-6">
-                  {module.features.map((feature, featureIndex) => (
-                    <li
-                      key={featureIndex}
-                      className="flex items-center text-sm text-slate-600 dark:text-slate-400"
-                    >
-                      <CheckCircle className="h-4 w-4 text-emerald-500 mr-2 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-                  Access Module
-                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="px-6 mt-16 mb-12 w-full">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-2xl p-8 text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">
-            Ready to Streamline Your Lease Accounting?
-          </h2>
-          <p className="text-blue-100 dark:text-blue-200 mb-6 max-w-2xl mx-auto">
-            Start with Module 1 to initiate your first lease contract, or
-            explore our methodology guide to understand the framework.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={() => navigate("/contract")}
-              className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Start with Contract Initiation
-            </button>
-            <button
-              onClick={() => navigate("/methodology")}
-              className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400 transition-colors"
-            >
-              View Methodology
-            </button>
+            <div className="relative z-10 py-16 px-8 lg:px-16 text-center space-y-6">
+              <h2 className="text-3xl lg:text-4xl font-bold text-white">
+                Ready to Streamline Your Lease Accounting?
+              </h2>
+              <p className="text-white/90 text-lg max-w-2xl mx-auto">
+                Start with Module 1 to initiate your first lease contract, or explore our methodology guide to understand the framework.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 pt-4">
+                <button
+                  onClick={() => navigate("/contract")}
+                  className="bg-white text-emerald-600 px-8 py-4 rounded-lg font-semibold hover:bg-slate-100 transition-colors shadow-lg"
+                >
+                  Start with Contract Initiation
+                </button>
+                <button
+                  onClick={() => navigate("/methodology")}
+                  className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-emerald-600 transition-all"
+                >
+                  View Methodology
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
