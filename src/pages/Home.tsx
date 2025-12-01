@@ -70,7 +70,7 @@ export function Home() {
   return (
     <div className="w-full font-sans bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       {/* Hero Section */}
-      <section className="relative w-full min-h-[90vh] flex items-center -mt-16 md:-mt-20 overflow-hidden">
+      <section className="relative w-full min-h-screen flex items-center -mt-16 md:-mt-20 overflow-hidden pb-32">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
