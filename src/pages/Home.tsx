@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Play,
-  CheckCircle,
 } from "lucide-react";
 
 export function Home() {
@@ -91,22 +90,22 @@ export function Home() {
               </div>
 
               <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight">
-                Asset Liability
+                IFRS 16 Lease
                 <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                  Management
+                  Solution
                 </span>
               </h1>
 
               <div className="space-y-4 text-slate-300 text-lg leading-relaxed max-w-xl">
                 <p>
-                  Asset Liability Management (ALM) is a strategic framework used primarily by financial institutions, insurance companies, pension funds to manage the risks that arise from mismatches between assets and liabilities.
+                  IFRS 16 is the international accounting standard for lease accounting that requires organizations to recognize most leases on their balance sheet as right-of-use assets and corresponding lease liabilities.
                 </p>
                 <p>
-                  It's essentially the practice of managing a company's balance sheet to create that the institution can meet its debt obligations while maximizing profitability and maintaining acceptable risk levels.
+                  This comprehensive solution streamlines the complex process of lease accounting by automating calculations, generating compliant disclosures, and producing accurate journal entries that meet IFRS 16 requirements.
                 </p>
                 <p className="text-white font-medium">
-                  At its core, ALM addresses the fundamental question: How do we ensure our assets (what we own and what's owed to us) are sufficient and appropriately structured to cover our liabilities (what we owe to others) without exposing us to excessive risk?
+                  From contract initiation to financial reporting, our platform handles the entire lease lifecycle, ensuring accurate measurement of lease liabilities and right-of-use assets while maintaining full compliance with international accounting standards.
                 </p>
               </div>
 
@@ -134,22 +133,9 @@ export function Home() {
                 <img
                   src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800"
                   alt="Professional working"
-                  className="w-full h-[600px] object-cover"
+                  className="w-full h-full min-h-[700px] object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-              </div>
-
-              {/* Floating Stats */}
-              <div className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-2xl p-6 max-w-xs">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-slate-900">IFRS 16</div>
-                    <div className="text-sm text-slate-600">Compliant Solution</div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -166,13 +152,13 @@ export function Home() {
           {/* Section Header */}
           <div className="text-center mb-16 space-y-4">
             <span className="text-emerald-400 text-sm font-semibold tracking-wider uppercase">
-              Our Solutions
+              Our Modules
             </span>
             <h2 className="text-4xl lg:text-5xl font-bold text-white">
-              ALM Products
+              Complete IFRS 16 Platform
             </h2>
             <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-              Specialized solutions tailored for different financial sectors
+              End-to-end lease accounting solution from contract initiation to financial reporting
             </p>
           </div>
 
