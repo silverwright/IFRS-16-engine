@@ -166,25 +166,25 @@ export function ContractInitiation() {
   }
 
   return (
-    <div className="w-full min-h-screen p-6 space-y-6 bg-slate-100">
+    <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6 flex items-start gap-3 shadow">
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <FileText className="w-5 h-5 text-blue-600" />
+      <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 backdrop-blur-sm rounded-xl border border-slate-600/50 p-6 flex items-start gap-3 shadow-2xl">
+        <div className="w-12 h-12 bg-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg">
+          <FileText className="w-6 h-6 text-emerald-400" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-white">
             Contract Initiation & Approval
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-300">
             {modeSelected ? `Running in ${state.mode} mode` : 'Manage your lease contracts'}
           </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow">
-        <div className="border-b border-slate-200">
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-600/50 shadow-2xl overflow-hidden">
+        <div className="border-b border-slate-600/50">
           <nav className="flex space-x-8 px-6">
             {[
               { id: 'list', name: 'Contract List', icon: FileText },
@@ -197,8 +197,8 @@ export function ContractInitiation() {
                 className={`
                   py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
                   ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                    ? 'border-emerald-500 text-emerald-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-500'
                   }
                 `}
               >
@@ -230,7 +230,7 @@ export function ContractInitiation() {
               <ProgressBar steps={activeSteps} currentStep={currentStep} />
 
               {/* Form Content */}
-              <div className="bg-slate-50 rounded-lg border border-slate-200 p-6">
+              <div className="bg-slate-700/40 backdrop-blur-sm rounded-xl border border-slate-600/50 p-6 shadow-lg">
                 <CurrentStepComponent />
               </div>
 
@@ -239,7 +239,7 @@ export function ContractInitiation() {
                 <Button
                   variant="outline"
                   onClick={resetMode}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/50"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Mode Selection
@@ -250,7 +250,7 @@ export function ContractInitiation() {
                     variant="outline"
                     onClick={prevStep}
                     disabled={currentStep === 1}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-emerald-400 hover:border-emerald-500/50 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-300"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Previous
@@ -260,14 +260,14 @@ export function ContractInitiation() {
                     variant="outline"
                     onClick={handleSaveContract}
                     disabled={!state.leaseData.ContractID}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 border-slate-600 text-slate-300 hover:bg-slate-700/50 hover:text-cyan-400 hover:border-cyan-500/50 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-300"
                   >
                     <Save className="w-4 h-4" />
                     Save Contract
                   </Button>
 
                   {currentStep < activeSteps[activeSteps.length - 1].id ? (
-                    <Button onClick={nextStep} className="flex items-center gap-2">
+                    <Button onClick={nextStep} className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0 shadow-lg shadow-emerald-500/30">
                       Next
                       <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -276,7 +276,7 @@ export function ContractInitiation() {
                       onClick={() => {
                         console.log('Generating contract...');
                       }}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white border-0 shadow-lg shadow-emerald-500/30"
                     >
                       Generate Contract
                       <FileText className="w-4 h-4" />

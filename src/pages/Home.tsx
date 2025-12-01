@@ -85,7 +85,7 @@ export function Home() {
           <div
             className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
             style={{
-              clipPath: 'polygon(0 0, 60% 0, 45% 100%, 0 100%)'
+              clipPath: 'polygon(0 0, 68% 0, 52% 100%, 0 100%)'
             }}
           ></div>
         </div>
@@ -167,7 +167,7 @@ export function Home() {
                 onClick={() => navigate(module.id)}
               >
                 {/* Module Image */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-64 overflow-hidden">
                   <img
                     src={module.image}
                     alt={module.title}

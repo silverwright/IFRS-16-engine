@@ -22,7 +22,7 @@ export function PaymentDetailsForm() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Payment Details</h3>
+      <h3 className="text-lg font-semibold text-white">Payment Details</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
@@ -61,7 +61,7 @@ export function PaymentDetailsForm() {
 
       {/* Escalation Section */}
       <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-slate-900 mb-4">Escalation</h4>
+        <h4 className="text-md font-semibold text-emerald-400 mb-4">Escalation</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
@@ -107,7 +107,7 @@ export function PaymentDetailsForm() {
 
       {/* Rate & Financial Details */}
       <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-slate-900 mb-4">Financial Details</h4>
+        <h4 className="text-md font-semibold text-emerald-400 mb-4">Financial Details</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
@@ -161,7 +161,7 @@ export function PaymentDetailsForm() {
 
       {/* Bank Payment Details */}
       <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-slate-900 mb-4">Bank Payment Details</h4>
+        <h4 className="text-md font-semibold text-emerald-400 mb-4">Bank Payment Details</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField

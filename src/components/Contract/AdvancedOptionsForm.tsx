@@ -35,11 +35,11 @@ export function AdvancedOptionsForm() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Advanced Options</h3>
+      <h3 className="text-lg font-semibold text-white">Advanced Options</h3>
       
       {/* Renewal & Termination */}
       <div className="space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Renewal & Termination Options</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Renewal & Termination Options</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -103,7 +103,7 @@ export function AdvancedOptionsForm() {
 
       {/* Purchase Options & Guarantees */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Purchase Options & Guarantees</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Purchase Options & Guarantees</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -148,7 +148,7 @@ export function AdvancedOptionsForm() {
 
       {/* Asset Valuation */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Asset Valuation</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Asset Valuation</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
@@ -179,7 +179,7 @@ export function AdvancedOptionsForm() {
 
       {/* Policy Flags */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Policy Elections</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Policy Elections</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg">
@@ -212,7 +212,7 @@ export function AdvancedOptionsForm() {
 
       {/* Governance */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Governance & Approval</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Governance & Approval</h4>
 
         <FormField
           label="Judgement Notes"

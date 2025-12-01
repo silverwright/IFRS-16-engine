@@ -26,16 +26,16 @@ export function FormField({
   step
 }: FormFieldProps) {
   const baseClasses = `
-    w-full px-3 py-2 border border-slate-300 rounded-lg
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-    transition-colors placeholder:text-slate-400
+    w-full px-3 py-2 border border-slate-600/50 rounded-lg bg-slate-800/50 text-white
+    focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+    transition-colors placeholder:text-slate-500 backdrop-blur-sm
   `;
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-2">
+      <label className="block text-sm font-medium text-slate-200 mb-2">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-emerald-400 ml-1">*</span>}
       </label>
       {multiline ? (
         <textarea

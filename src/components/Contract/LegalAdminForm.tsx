@@ -15,11 +15,11 @@ export function LegalAdminForm() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900">Legal & Administrative</h3>
+      <h3 className="text-lg font-semibold text-white">Legal & Administrative</h3>
 
       {/* Jurisdiction & Registration */}
       <div className="space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Jurisdiction & Registration</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Jurisdiction & Registration</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -89,7 +89,7 @@ export function LegalAdminForm() {
 
       {/* Insurance */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Insurance</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Insurance</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -119,7 +119,7 @@ export function LegalAdminForm() {
 
       {/* Use & Restrictions */}
       <div className="border-t pt-6 space-y-4">
-        <h4 className="text-md font-semibold text-slate-900">Use & Restrictions</h4>
+        <h4 className="text-md font-semibold text-emerald-400">Use & Restrictions</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
