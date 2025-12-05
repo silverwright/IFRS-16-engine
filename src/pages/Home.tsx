@@ -65,6 +65,14 @@ export function Home() {
       image: "https://images.pexels.com/photos/6238050/pexels-photo-6238050.jpeg?auto=compress&cs=tinysrgb&w=800",
       color: "from-indigo-600 to-indigo-700"
     },
+    {
+      id: "/ibmr-calculator",
+      title: "IBMR Calculator",
+      description:
+        "Calculate Incremental Borrowing Rate (IBR) with precision using advanced financial models and market data.",
+      image: "https://images.pexels.com/photos/53621/calculator-calculation-insurance-finance-53621.jpeg?auto=compress&cs=tinysrgb&w=800",
+      color: "from-teal-600 to-teal-700"
+    },
   ];
 
   return (
@@ -159,7 +167,7 @@ export function Home() {
           </div>
 
           {/* Modules Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {modules.map((module, index) => (
               <div
                 key={module.id}
@@ -167,7 +175,7 @@ export function Home() {
                 onClick={() => navigate(module.id)}
               >
                 {/* Module Image */}
-                <div className="relative h-64 overflow-hidden">
+                <div className="relative h-96 overflow-hidden">
                   <img
                     src={module.image}
                     alt={module.title}

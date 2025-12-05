@@ -356,3 +356,182 @@ Updated the Contract Initiation page mode selection interface to match the dark 
 
 ---
 
+### Request 7
+**User:** [Screenshot of Dashboard] "Update the background to look like the others using the same dark theme"
+
+**Claude Actions:**
+Updated the Dashboard page to use consistent dark theme styling across all components.
+
+**Components Updated:**
+
+#### Dashboard.tsx ([src/pages/Dashboard.tsx](../src/pages/Dashboard.tsx))
+
+**Changes Made:**
+
+**KPI Cards Row (6 cards):**
+- Background: Changed from `bg-white` to `bg-slate-800/50 backdrop-blur-sm`
+- Borders: Changed from `border-slate-200` to `border-slate-700/50`
+- Shadows: Enhanced to `shadow-xl`
+- Labels: Changed from `text-slate-600` to `text-slate-400`
+- Values: Changed from `-600` shades to `-500` shades (e.g., `text-green-500`, `text-blue-500`)
+- All cards now have consistent semi-transparent dark styling
+
+**Portfolio Composition Card:**
+- Background: `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Title: Changed to `text-slate-100`
+- Category labels: Changed to `text-slate-200`
+- Values: Changed to `text-slate-100`
+- Contract counts: Changed to `text-slate-400`
+- Progress bars: Background changed to `bg-slate-700/50`
+- Icons: Changed to `-400` shades for visibility
+
+**Monthly Trends Table:**
+- Background: `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Title: Changed to `text-slate-100`
+- Table header: Border changed to `border-slate-700`
+- Header text: Changed to `text-slate-400`
+- Table rows: Changed to `border-slate-700/50` with `hover:bg-slate-700/30`
+- Data values: Color-coded with `-400` shades (`text-blue-400`, `text-green-400`, `text-orange-400`)
+
+**Additional Metrics Row (4 cards):**
+- Payment Performance
+- Lease Modifications
+- Compliance Score
+- Cost Optimization
+- All cards updated to `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Titles: Changed to `text-slate-300`
+- Labels and descriptions: Changed to `text-slate-400`
+- Values: Changed to `-400` shades for proper visibility
+
+**Upcoming Contract Maturities Table:**
+- Background: `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Title: Changed to `text-slate-100`
+- Table header: Border changed to `border-slate-700`, text to `text-slate-400`
+- Table rows: Border changed to `border-slate-700/50` with hover effect
+- Data text: Changed to `text-slate-200` for primary, `text-slate-400` for secondary
+- Status badges: Updated to semi-transparent backgrounds with borders:
+  - Urgent: `bg-red-500/20 text-red-400 border border-red-500/30`
+  - Warning: `bg-yellow-500/20 text-yellow-400 border border-yellow-500/30`
+
+**Visual Result:**
+- Cohesive dark theme matching the rest of the application
+- All cards use semi-transparent slate backgrounds with subtle borders
+- Proper text contrast with light text on dark backgrounds
+- Color-coded data for easy scanning and analysis
+- Professional glass-morphic design language
+
+**Files Modified:**
+- [src/pages/Dashboard.tsx](../src/pages/Dashboard.tsx) - Complete dark theme implementation
+
+**Status:** ✓ Completed
+
+---
+
+### Request 8
+**User:** [Screenshots of Contract Import interface] "update"
+
+**Claude Actions:**
+Updated the FileImport component to match the dark theme styling.
+
+**Components Updated:**
+
+#### FileImport Component ([src/components/Contract/FileImport.tsx](../src/components/Contract/FileImport.tsx))
+
+**Changes Made:**
+
+**Import Type Selection View:**
+- Container: Changed from `bg-white` to `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Title: Changed to `text-slate-100`
+- Description: Changed to `text-slate-400`
+- Import buttons:
+  - Background: Changed to `border-slate-600/50` with colored hover states
+  - CSV: `hover:border-blue-500 hover:bg-blue-500/10`
+  - Excel: `hover:border-green-500 hover:bg-green-500/10`
+  - Icon backgrounds: `bg-blue-500/20` and `bg-green-500/20`
+  - Icons: Changed to `-400` shades (`text-blue-400`, `text-green-400`)
+  - Text: Titles to `text-slate-100`, descriptions to `text-slate-400`
+
+**Upload Interface:**
+- Container: `bg-slate-800/50 backdrop-blur-sm` with `border-slate-700/50`
+- Title: Changed to `text-slate-100`
+- "Change Import Type" button: Dark theme styling with hover effects
+
+**Mode Selection Section:**
+- Background: Changed from `bg-blue-50` to `bg-blue-500/10` with `border-blue-500/30`
+- Title: Changed to `text-slate-100`
+- Description: Changed to `text-slate-400`
+- Mode buttons:
+  - Selected: `border-blue-500 bg-blue-500/20 text-blue-300`
+  - Unselected: `border-slate-600 bg-slate-700/50 text-slate-300`
+  - Hover: `hover:border-blue-500/50`
+
+**Upload Area:**
+- Border: Changed to `border-slate-600/50` with `hover:border-blue-500/50`
+- Icon backgrounds: `bg-blue-500/20` or `bg-green-500/20`
+- Title: Changed to `text-slate-100`
+- Description: Changed to `text-slate-400`
+
+**Status Messages:**
+- Success: `bg-green-500/20 border-green-500/30` with `text-green-300`
+- Error: `bg-red-500/20 border-red-500/30` with `text-red-300`
+
+**Expected Format Section:**
+- Background: `bg-slate-700/40` with `border-slate-600/50`
+- Title: Changed to `text-slate-100`
+- Description: Changed to `text-slate-400`
+- Code blocks: `bg-slate-900/50` with `text-slate-300`
+- Table:
+  - Header: `bg-slate-800/50` with `text-slate-300`
+  - Rows: `border-slate-700` with `text-slate-400`
+
+**Visual Result:**
+- Consistent dark theme across all import screens
+- Glass-morphic design with semi-transparent backgrounds
+- Proper color-coding for different import types
+- Clear visual hierarchy with appropriate text contrast
+- Professional appearance matching the rest of the application
+
+**Files Modified:**
+- [src/components/Contract/FileImport.tsx](../src/components/Contract/FileImport.tsx) - Complete dark theme implementation
+
+**Status:** ✓ Completed
+
+---
+
+### Request 9
+**User:** "On my home page add one more module and call it IBMR Calculator, add it after Learn IFRS"
+
+**Claude Actions:**
+Added a new IBMR Calculator module to the home page modules array.
+
+**Module Added:**
+
+#### IBMR Calculator Module
+- **Route:** `/ibmr-calculator`
+- **Title:** "IBMR Calculator"
+- **Description:** "Calculate Incremental Borrowing Rate (IBR) with precision using advanced financial models and market data."
+- **Image:** Calculator with financial documents (Pexels photo)
+- **Color Theme:** Teal gradient (`from-teal-600 to-teal-700`)
+- **Position:** Module #8, immediately after "Learn IFRS 16"
+
+**Module Details:**
+The IBMR (Incremental Borrowing Rate) Calculator is a critical tool for IFRS 16 lease accounting. The IBR is used to discount future lease payments when the interest rate implicit in the lease is not readily determinable, making it essential for accurate lease liability calculations.
+
+**Files Modified:**
+- [src/pages/Home.tsx](../src/pages/Home.tsx) - Added IBMR Calculator module
+
+**Image Updates:**
+- Initial image: `https://images.pexels.com/photos/7887826/pexels-photo-7887826.jpeg` (financial documents)
+- Updated to: `https://images.pexels.com/photos/8927669/pexels-photo-8927669.jpeg` (calculator with charts)
+- Final image: `https://images.pexels.com/photos/53621/calculator-calculation-insurance-finance-53621.jpeg` (calculator on financial documents)
+
+**Visual Integration:**
+- Module card follows the same dark theme design pattern
+- Teal color theme distinguishes it from other modules
+- Calculator-related imagery for immediate recognition
+- Consistent with the professional aesthetic of the home page
+
+**Status:** ✓ Completed
+
+---
+
