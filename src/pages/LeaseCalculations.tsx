@@ -57,16 +57,16 @@ export function LeaseCalculations() {
   }, [selectedContract, hasRequiredData, leaseData, calculations, dispatch]);
 
   return (
-    <div className="w-full min-h-screen p-6 space-y-6 bg-slate-100">
+    <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
 
       {/* Header Box */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6 flex items-center gap-3 shadow">
-        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-          <Calculator className="w-6 h-6 text-green-600" />
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-6 flex items-center gap-3 shadow-xl">
+        <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+          <Calculator className="w-6 h-6 text-green-400" />
         </div>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Lease Liability & ROU Engine</h1>
-          <p className="text-slate-600">IFRS 16 calculations and amortization schedules</p>
+          <h1 className="text-2xl font-bold text-white">Lease Liability & ROU Engine</h1>
+          <p className="text-white/80">IFRS 16 calculations and amortization schedules</p>
         </div>
         {selectedContract && (
           <Button
@@ -82,20 +82,20 @@ export function LeaseCalculations() {
 
       {/* Contract Selector */}
       {!selectedContract && (
-        <div className="bg-white rounded-lg border border-slate-200 shadow p-6">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 shadow-xl p-6">
           <ContractSelector onSelect={handleSelectContract} />
         </div>
       )}
 
       {/* Missing Data Warning Box */}
       {selectedContract && !hasRequiredData && (
-        <div className="bg-amber-50 rounded-lg border border-amber-200 shadow p-6 flex items-start gap-4">
+        <div className="bg-amber-500/20 backdrop-blur-sm rounded-lg border border-amber-400/30 shadow-xl p-6 flex items-start gap-4">
           <div className="flex-shrink-0 mt-1">
-            <AlertTriangle className="w-6 h-6 text-amber-600" />
+            <AlertTriangle className="w-6 h-6 text-amber-300" />
           </div>
           <div>
-            <h4 className="font-semibold text-amber-800 text-lg">Missing Required Data</h4>
-            <p className="text-amber-700 mt-1">
+            <h4 className="font-semibold text-amber-100 text-lg">Missing Required Data</h4>
+            <p className="text-amber-200 mt-1">
               This contract is missing required fields. Please update the contract with all required information.
             </p>
           </div>
@@ -104,12 +104,12 @@ export function LeaseCalculations() {
 
       {/* Calculating Indicator */}
       {selectedContract && hasRequiredData && calculating && (
-        <div className="bg-white rounded-lg border border-slate-200 shadow p-8">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 shadow-xl p-8">
           <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Calculating IFRS 16 Metrics</h3>
-              <p className="text-slate-600">Processing lease parameters and generating schedules...</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Calculating IFRS 16 Metrics</h3>
+              <p className="text-white/80">Processing lease parameters and generating schedules...</p>
             </div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export function LeaseCalculations() {
 
       {/* Results Display Box */}
       {selectedContract && calculations && !calculating && (
-        <div className="bg-white rounded-lg border border-slate-200 shadow p-6">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 shadow-xl p-6">
           <ResultsDisplay />
         </div>
       )}

@@ -1,6 +1,10 @@
 
 import React, { useState } from 'react';
-import { Shield, FileText, Download } from 'lucide-react';
+import {
+  Shield, FileText, Download, BookOpen, Calculator, TrendingUp,
+  Calendar, DollarSign, BarChart3, CheckCircle2, XCircle,
+  ArrowRight, Info, Lightbulb, AlertCircle, Target, Percent
+} from 'lucide-react';
 import { jsPDF } from 'jspdf';
 
 export const Methodology: React.FC = () => {   // 👈 named export instead of const + default
@@ -282,207 +286,477 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
   };
 
   return (
-    <div className="w-full px-6 py-6 bg-slate-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-8 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-100 p-2 rounded-lg">
-            <Shield className="h-6 w-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">IFRS 16 Leases Methodology</h1>
-            <p className="text-slate-600">Bank’s framework for application of IFRS 16</p>
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Professional Header with Gradient */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
+                <Shield className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">IFRS 16 Leases Methodology</h1>
+                <p className="text-blue-100 mt-1">Comprehensive Framework for Lease Accounting Standards</p>
+              </div>
+            </div>
+            <button
+              onClick={handleDownload}
+              className="flex items-center space-x-2 bg-white text-blue-700 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all duration-200 font-medium"
+            >
+              <Download className="h-5 w-5" />
+              <span>Export PDF</span>
+            </button>
           </div>
         </div>
-        <button
-          onClick={handleDownload}
-          className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700"
-        >
-          <Download className="h-4 w-4" /><span>Download PDF</span>
-        </button>
       </div>
 
-      {/* Navigation */}
-      <div className="border-b border-slate-200 mb-8">
-        <nav className="flex flex-wrap space-x-4">
-          {[
-            { id: 'introduction', title: 'Introduction & Scope', icon: Shield },
-            { id: 'assumptions', title: 'General IFRS 16 Assumptions', icon: FileText },
-          ].map(section => {
-            const Icon = section.icon as any;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center space-x-2 py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                  activeSection === section.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                }`}
-              >
-                <Icon className="h-4 w-4" /><span>{section.title}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Sections */}
-      <div className="space-y-8 w-full">
-        {activeSection === 'introduction' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6 w-full space-y-6">
-            <h2 className="text-lg font-semibold text-slate-900">{content.introduction.title}</h2>
-            <p className="text-slate-600">{content.introduction.paragraphs[0]}</p>
-            <ul className="list-disc pl-6 text-slate-600 space-y-1">
-              {content.introduction.bullets.map((b, i) => <li key={i}>{b}</li>)}
-            </ul>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-blue-50 rounded-xl p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">Leased Assets Covered by the Model</h3>
-                <ul className="list-disc pl-6 text-blue-800 space-y-1 text-sm">
-                  {content.introduction.covered.map((c, i) => <li key={i}>{c}</li>)}
-                </ul>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex gap-6">
+          {/* Sidebar Navigation */}
+          <div className="w-72 flex-shrink-0">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 sticky top-6 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 p-4 border-b border-white/10">
+                <h3 className="font-semibold text-white flex items-center">
+                  <BookOpen className="h-5 w-5 mr-2 text-blue-300" />
+                  Table of Contents
+                </h3>
               </div>
-              <div className="bg-emerald-50 rounded-xl p-4">
-                <h3 className="font-semibold text-emerald-900 mb-2">Items Not Covered by the Model</h3>
-                <ul className="list-disc pl-6 text-emerald-800 space-y-1 text-sm">
-                  {content.introduction.excluded.map((e, i) => <li key={i}>{e}</li>)}
-                </ul>
-              </div>
-            </div>
-            {content.introduction.closing.map((p, i) => <p key={i} className="text-slate-600">{p}</p>)}
-          </div>
-        )}
-
-        {activeSection === 'assumptions' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6 w-full space-y-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">{content.assumptions.title}</h2>
-            {content.assumptions.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-
-            {/* Assumptions Sub-navigation */}
-            <div className="border-b border-slate-200 mb-6">
-              <nav className="flex flex-wrap space-x-4">
-                {assumptionSubsections.map(sub => (
-                  <button
-                    key={sub.id}
-                    onClick={() => setActiveAssumption(sub.id)}
-                    className={`flex items-center space-x-2 py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                      activeAssumption === sub.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <span>{sub.title}</span>
-                  </button>
-                ))}
+              <nav className="p-2">
+                {[
+                  { id: 'introduction', title: 'Introduction & Scope', icon: Shield, color: 'blue' },
+                  { id: 'identification', title: 'Identification of ROU', icon: Target, color: 'purple' },
+                  { id: 'measurement', title: 'Measurement of Liability', icon: Calculator, color: 'emerald' },
+                  { id: 'lease-term', title: 'Lease Term', icon: Calendar, color: 'amber' },
+                  { id: 'future-payments', title: 'Future Lease Payments', icon: DollarSign, color: 'rose' },
+                  { id: 'discount-rate', title: 'Discount Rate (IBR)', icon: Percent, color: 'cyan' },
+                  { id: 'structure', title: 'Payment Structure', icon: BarChart3, color: 'violet' },
+                  { id: 'model-logics', title: 'Calculation Logics', icon: Calculator, color: 'indigo' },
+                ].map(section => {
+                  const Icon = section.icon;
+                  const isActive = activeSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      onClick={() => setActiveSection(section.id)}
+                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left mb-1 ${
+                        isActive
+                          ? 'bg-blue-500/30 text-white shadow-lg border border-blue-400/30'
+                          : 'text-white/70 hover:bg-white/10'
+                      }`}
+                    >
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-400/30' : 'bg-white/5'}`}>
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                      </div>
+                      <span className="text-sm font-medium flex-1">{section.title}</span>
+                      {isActive && <ArrowRight className="h-4 w-4" />}
+                    </button>
+                  );
+                })}
               </nav>
             </div>
+          </div>
 
-            {/* Assumptions Content */}
-            {activeAssumption === 'identification' && (
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.identification.heading}</h3>
-                {content.assumptions.subsections.identification.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-              </div>
-            )}
-
-            {activeAssumption === 'measurement' && (
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.measurement.heading}</h3>
-                {content.assumptions.subsections.measurement.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-              </div>
-            )}
-
-            {activeAssumption === 'other' && (
+          {/* Main Content Area */}
+          <div className="flex-1 space-y-6">
+            {activeSection === 'introduction' && (
               <div className="space-y-6">
-                {/* Other Sub-navigation */}
-                <div className="border-b border-slate-200 mb-6">
-                  <nav className="flex flex-wrap space-x-4">
-                    {otherSubsections.map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={() => setActiveOther(sub.id)}
-                        className={`flex items-center space-x-2 py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                          activeOther === sub.id
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-                        }`}
-                      >
-                        <span>{sub.title}</span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Other Subsections Content */}
-                {activeOther === 'lease-term' && (
-                  <div>
-                    {content.assumptions.subsections.other.subsections['lease-term'].paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-                    <ul className="list-disc pl-6 text-slate-600 space-y-1 mb-2">
-                      {content.assumptions.subsections.other.subsections['lease-term'].bullets.map((b, i) => <li key={i}>{b}</li>)}
-                    </ul>
-                    {content.assumptions.subsections.other.subsections['lease-term'].additional.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-                    {content.assumptions.subsections.other.subsections['lease-term'].considerations.map((c, i) => (
-                      <div key={i} className="bg-slate-50 rounded-lg p-4 mb-2">
-                        <h4 className="font-semibold text-slate-800">{c.title}</h4>
-                        <p className="text-slate-600">{c.text}</p>
+                {/* Hero Card */}
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Shield className="h-6 w-6" />
+                        <h2 className="text-2xl font-bold">{content.introduction.title}</h2>
                       </div>
-                    ))}
+                      <p className="text-blue-100 text-lg leading-relaxed mb-4">{content.introduction.paragraphs[0]}</p>
+                      <ul className="space-y-2">
+                        {content.introduction.bullets.map((b, i) => (
+                          <li key={i} className="flex items-start">
+                            <CheckCircle2 className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-blue-50">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {activeOther === 'future-payments' && (
-                  <div>
-                    {content.assumptions.subsections.other.subsections['future-payments'].paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-                    {content.assumptions.subsections.other.subsections['future-payments'].additional.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
+                {/* Assets Coverage Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4">
+                      <div className="flex items-center space-x-2 text-white">
+                        <CheckCircle2 className="h-5 w-5" />
+                        <h3 className="font-bold text-lg">Assets Covered by the Model</h3>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <ul className="space-y-3">
+                        {content.introduction.covered.map((c, i) => (
+                          <li key={i} className="flex items-start group">
+                            <div className="p-1 rounded-lg bg-emerald-500/20 mr-3 mt-0.5 group-hover:bg-emerald-500/30 transition-colors">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                            </div>
+                            <span className="text-white/90">{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                )}
 
-                {activeOther === 'discount-rate' && (
-                  <div>
-                    {content.assumptions.subsections.other.subsections['discount-rate'].paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-                    <ul className="list-disc pl-6 text-slate-600 space-y-1 mb-2">
-                      {content.assumptions.subsections.other.subsections['discount-rate'].bullets.map((b, i) => <li key={i}>{b}</li>)}
-                    </ul>
-                    <p className="text-slate-600">{content.assumptions.subsections.other.subsections['discount-rate'].note}</p>
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                    <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-4">
+                      <div className="flex items-center space-x-2 text-white">
+                        <XCircle className="h-5 w-5" />
+                        <h3 className="font-bold text-lg">Items Not Covered</h3>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <ul className="space-y-3">
+                        {content.introduction.excluded.map((e, i) => (
+                          <li key={i} className="flex items-start group">
+                            <div className="p-1 rounded-lg bg-rose-500/20 mr-3 mt-0.5 group-hover:bg-rose-500/30 transition-colors">
+                              <XCircle className="h-4 w-4 text-rose-300" />
+                            </div>
+                            <span className="text-white/90">{e}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {activeOther === 'structure' && (
-                  <div>
-                    {content.assumptions.subsections.other.subsections['structure'].paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
+                {/* Additional Information Cards */}
+                {content.introduction.closing.map((p, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-blue-500/20 rounded-lg mt-1">
+                        <Info className="h-5 w-5 text-blue-300" />
+                      </div>
+                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
 
-            {activeAssumption === 'model-logics' && (
+            {activeSection === 'identification' && (
               <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.modelLogics.subsections.rou.title}</h3>
-                  <ul className="list-disc pl-6 text-slate-600 space-y-1">
-                    {content.assumptions.subsections.modelLogics.subsections.rou.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
+                <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Target className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">{content.assumptions.subsections.identification.title}</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                    <h3 className="font-semibold text-lg mb-3">{content.assumptions.subsections.identification.heading}</h3>
+                    <div className="space-y-3">
+                      {content.assumptions.subsections.identification.paragraphs.map((p, i) => (
+                        <p key={i} className="text-purple-50 leading-relaxed">{p}</p>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.modelLogics.subsections.liability.title}</h3>
-                  {content.assumptions.subsections.modelLogics.subsections.liability.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
+
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Lightbulb className="h-5 w-5 text-purple-300" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Key Principle</h4>
+                      <p className="text-white/90">The approach in IFRS 16 is based on control and economic benefit, requiring recognition of right-of-use assets for all qualifying leases.</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.modelLogics.subsections.depreciation.title}</h3>
-                  {content.assumptions.subsections.modelLogics.subsections.depreciation.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
-                  <ul className="list-disc pl-6 text-slate-600 space-y-1">
-                    {content.assumptions.subsections.modelLogics.subsections.depreciation.bullets.map((b, i) => <li key={i}>{b}</li>)}
-                  </ul>
+              </div>
+            )}
+
+            {activeSection === 'measurement' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Calculator className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">{content.assumptions.subsections.measurement.title}</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                    <h3 className="font-semibold text-lg mb-3">{content.assumptions.subsections.measurement.heading}</h3>
+                    <div className="space-y-3">
+                      {content.assumptions.subsections.measurement.paragraphs.map((p, i) => (
+                        <p key={i} className="text-emerald-50 leading-relaxed">{p}</p>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">{content.assumptions.subsections.modelLogics.subsections.interest.title}</h3>
-                  {content.assumptions.subsections.modelLogics.subsections.interest.paragraphs.map((p, i) => <p key={i} className="text-slate-600 mb-2">{p}</p>)}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-5">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="p-2 bg-emerald-500/20 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-emerald-300" />
+                      </div>
+                      <h4 className="font-semibold text-white">Discount Rate</h4>
+                    </div>
+                    <p className="text-white/80 text-sm">Present value calculated using the implicit rate in the lease or incremental borrowing rate</p>
+                  </div>
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-5">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="p-2 bg-emerald-500/20 rounded-lg">
+                        <Calendar className="h-5 w-5 text-emerald-300" />
+                      </div>
+                      <h4 className="font-semibold text-white">Recognition Date</h4>
+                    </div>
+                    <p className="text-white/80 text-sm">Initial recognition occurs at commencement date when control of the asset begins</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'lease-term' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Calendar className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">Lease Term</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                    <div className="space-y-3">
+                      {content.assumptions.subsections.other.subsections['lease-term'].paragraphs.map((p, i) => (
+                        <p key={i} className="text-amber-50 leading-relaxed">{p}</p>
+                      ))}
+                      <ul className="space-y-2 mt-4">
+                        {content.assumptions.subsections.other.subsections['lease-term'].bullets.map((b, i) => (
+                          <li key={i} className="flex items-start">
+                            <CheckCircle2 className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                            <span className="text-amber-50">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {content.assumptions.subsections.other.subsections['lease-term'].additional.map((p, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-amber-500/20 rounded-lg">
+                        <Info className="h-5 w-5 text-amber-300" />
+                      </div>
+                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {content.assumptions.subsections.other.subsections['lease-term'].considerations.map((c, i) => (
+                    <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-amber-500/20">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="p-2 bg-amber-500/20 rounded-lg">
+                          <Target className="h-5 w-5 text-amber-300" />
+                        </div>
+                        <h4 className="font-bold text-white">{c.title}</h4>
+                      </div>
+                      <p className="text-white/80 text-sm leading-relaxed">{c.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'future-payments' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-rose-600 to-pink-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <DollarSign className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">Future Lease Payments</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 space-y-3">
+                    {content.assumptions.subsections.other.subsections['future-payments'].paragraphs.map((p, i) => (
+                      <p key={i} className="text-rose-50 leading-relaxed">{p}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {content.assumptions.subsections.other.subsections['future-payments'].additional.map((p, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 bg-rose-500/20 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-rose-300" />
+                      </div>
+                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeSection === 'discount-rate' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-cyan-600 to-blue-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Percent className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">Discount Rate (IBR)</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 space-y-3">
+                    {content.assumptions.subsections.other.subsections['discount-rate'].paragraphs.map((p, i) => (
+                      <p key={i} className="text-cyan-50 leading-relaxed">{p}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-cyan-500/30 to-blue-500/30 p-5 border-b border-white/10">
+                    <h3 className="font-bold text-white flex items-center">
+                      <Calculator className="h-5 w-5 mr-2 text-cyan-300" />
+                      IBR Calculation Factors
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {content.assumptions.subsections.other.subsections['discount-rate'].bullets.map((b, i) => (
+                        <div key={i} className="flex items-center space-x-3 p-4 bg-cyan-500/20 rounded-lg">
+                          <CheckCircle2 className="h-5 w-5 text-cyan-300 flex-shrink-0" />
+                          <span className="text-white/90 font-medium">{b}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 p-4 bg-blue-500/20 rounded-xl border-l-4 border-blue-400">
+                      <div className="flex items-start space-x-2">
+                        <AlertCircle className="h-5 w-5 text-blue-300 mt-0.5 flex-shrink-0" />
+                        <p className="text-white/90 text-sm leading-relaxed">{content.assumptions.subsections.other.subsections['discount-rate'].note}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'structure' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <BarChart3 className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">Structure in Lease Payments</h2>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20 space-y-3">
+                    {content.assumptions.subsections.other.subsections['structure'].paragraphs.map((p, i) => (
+                      <p key={i} className="text-violet-50 leading-relaxed">{p}</p>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                  <div className="flex items-start space-x-3">
+                    <div className="p-2 bg-violet-500/20 rounded-lg">
+                      <Lightbulb className="h-5 w-5 text-violet-300" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white mb-2">Key Assumption</h4>
+                      <p className="text-white/90">All lease payments are assumed to be made in advance at inception, with consistent monthly allocations for prepaid periods.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'model-logics' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <Calculator className="h-7 w-7" />
+                    <h2 className="text-2xl font-bold">Model Calculation Logics</h2>
+                  </div>
+                  <p className="text-indigo-100">Comprehensive overview of calculation methodologies for lease accounting</p>
+                </div>
+
+                {/* Right of Use Asset */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-5">
+                    <h3 className="font-bold text-white text-lg flex items-center">
+                      <Target className="h-6 w-6 mr-2" />
+                      {content.assumptions.subsections.modelLogics.subsections.rou.title}
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <ul className="space-y-3">
+                      {content.assumptions.subsections.modelLogics.subsections.rou.bullets.map((b, i) => (
+                        <li key={i} className="flex items-start">
+                          <div className="p-1.5 rounded-lg bg-indigo-500/20 mr-3 mt-0.5">
+                            <ArrowRight className="h-4 w-4 text-indigo-300" />
+                          </div>
+                          <span className="text-white/90">{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Lease Liability */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-5">
+                    <h3 className="font-bold text-white text-lg flex items-center">
+                      <DollarSign className="h-6 w-6 mr-2" />
+                      {content.assumptions.subsections.modelLogics.subsections.liability.title}
+                    </h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {content.assumptions.subsections.modelLogics.subsections.liability.paragraphs.map((p, i) => (
+                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                    ))}
+                    <div className="bg-blue-500/20 rounded-xl p-4 border-l-4 border-blue-400">
+                      <code className="text-blue-200 text-sm font-mono">
+                        liability = pv(extension amount) = extension amount × 1 / (1+r)^(-t)
+                      </code>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Depreciation */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5">
+                    <h3 className="font-bold text-white text-lg flex items-center">
+                      <TrendingUp className="h-6 w-6 mr-2" />
+                      {content.assumptions.subsections.modelLogics.subsections.depreciation.title}
+                    </h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {content.assumptions.subsections.modelLogics.subsections.depreciation.paragraphs.map((p, i) => (
+                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                    ))}
+                    <ul className="space-y-2">
+                      {content.assumptions.subsections.modelLogics.subsections.depreciation.bullets.map((b, i) => (
+                        <li key={i} className="flex items-start">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-300 mr-2 mt-0.5 flex-shrink-0" />
+                          <span className="text-white/90">{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Interest Expense */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-5">
+                    <h3 className="font-bold text-white text-lg flex items-center">
+                      <Percent className="h-6 w-6 mr-2" />
+                      {content.assumptions.subsections.modelLogics.subsections.interest.title}
+                    </h3>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {content.assumptions.subsections.modelLogics.subsections.interest.paragraphs.map((p, i) => (
+                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                    ))}
+                    <div className="bg-rose-500/20 rounded-xl p-4 border-l-4 border-rose-400">
+                      <code className="text-rose-200 text-sm font-mono">
+                        Lease interest expense = lease liability_(t) - lease liability_(t-1)
+                      </code>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -17,13 +17,13 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
 
   if (contracts.length === 0) {
     return (
-      <div className="bg-amber-50 rounded-lg border border-amber-200 p-6 flex items-start gap-4">
+      <div className="bg-amber-500/20 backdrop-blur-sm rounded-lg border border-amber-400/30 p-6 flex items-start gap-4">
         <div className="flex-shrink-0 mt-1">
-          <FileText className="w-6 h-6 text-amber-600" />
+          <FileText className="w-6 h-6 text-amber-300" />
         </div>
         <div>
-          <h4 className="font-semibold text-amber-800 text-lg">No Contracts Available</h4>
-          <p className="text-amber-700 mt-1">
+          <h4 className="font-semibold text-amber-100 text-lg">No Contracts Available</h4>
+          <p className="text-amber-200 mt-1">
             Please create or import contracts first from the Contract Initiation page.
           </p>
         </div>
@@ -33,8 +33,8 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-slate-900">Select a Contract</h3>
-      <p className="text-sm text-slate-600">
+      <h3 className="text-lg font-semibold text-white">Select a Contract</h3>
+      <p className="text-sm text-white/80">
         Choose a contract to perform calculations and generate reports
       </p>
 
@@ -43,43 +43,43 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
           <button
             key={contract.id}
             onClick={() => onSelect(contract)}
-            className="bg-white border border-slate-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition-all text-left group"
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:border-blue-400/50 hover:bg-white/10 hover:shadow-xl transition-all text-left group"
           >
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                <FileText className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                <FileText className="w-5 h-5 text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-slate-900 truncate">{contract.contractId}</h4>
+                <h4 className="font-semibold text-white truncate">{contract.contractId}</h4>
                 <span className={`inline-block px-2 py-0.5 text-xs rounded-full mt-1 ${
                   contract.status === 'approved'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-amber-100 text-amber-700'
+                    ? 'bg-green-500/20 text-green-300'
+                    : 'bg-amber-500/20 text-amber-300'
                 }`}>
                   {contract.status}
                 </span>
               </div>
             </div>
 
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-white/80">
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-slate-400" />
+                <Building2 className="w-4 h-4 text-white/60" />
                 <span className="truncate">{contract.lesseeName}</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-slate-400" />
+                <Package className="w-4 h-4 text-white/60" />
                 <span className="truncate">{contract.assetDescription}</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400" />
+                <Calendar className="w-4 h-4 text-white/60" />
                 <span>{formatDate(contract.commencementDate)}</span>
               </div>
             </div>
 
-            <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
-              Mode: <span className="font-medium text-slate-700">{contract.mode}</span>
+            <div className="mt-3 pt-3 border-t border-white/10 text-xs text-white/70">
+              Mode: <span className="font-medium text-white/90">{contract.mode}</span>
             </div>
           </button>
         ))}

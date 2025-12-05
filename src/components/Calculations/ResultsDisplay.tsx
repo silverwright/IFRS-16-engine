@@ -61,7 +61,7 @@ export function ResultsDisplay() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Calculation Results</h3>
+        <h3 className="text-lg font-semibold text-white">Calculation Results</h3>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -160,7 +160,7 @@ export function ResultsDisplay() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200">
+      <div className="border-b border-white/10">
         <nav className="flex space-x-8">
           {tabs.map((tab) => (
             <button
@@ -169,8 +169,8 @@ export function ResultsDisplay() {
               className={`
                 py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
                 ${activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                  ? 'border-blue-400 text-blue-300'
+                  : 'border-transparent text-white/70 hover:text-white/90 hover:border-white/30'
                 }
               `}
             >
@@ -182,59 +182,59 @@ export function ResultsDisplay() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-6">
         {activeTab === 'summary' && (
           <div className="space-y-6">
-            <h4 className="text-xl font-bold text-slate-900 mb-4">Calculation Summary</h4>
+            <h4 className="text-xl font-bold text-white mb-4">Calculation Summary</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 space-y-4">
-                <h5 className="font-semibold text-slate-800 text-lg">Initial Recognition</h5>
+              <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 backdrop-blur-sm rounded-lg p-6 space-y-4 border border-blue-500/20">
+                <h5 className="font-semibold text-blue-200 text-lg">Initial Recognition</h5>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Initial Lease Liability:</span>
-                    <span className="font-bold text-blue-600">{formatCurrency(calculations.initialLiability)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-white/80">Initial Lease Liability:</span>
+                    <span className="font-bold text-blue-400">{formatCurrency(calculations.initialLiability)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Initial ROU Asset:</span>
-                    <span className="font-bold text-emerald-600">{formatCurrency(calculations.initialROU)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-white/80">Initial ROU Asset:</span>
+                    <span className="font-bold text-emerald-400">{formatCurrency(calculations.initialROU)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Non-cancellable Period:</span>
-                    <span className="font-medium">{calculations.nonCancellableYears} years</span>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-white/80">Non-cancellable Period:</span>
+                    <span className="font-medium text-white">{calculations.nonCancellableYears} years</span>
                   </div>
                   {calculations.renewalYears > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                      <span className="text-slate-600">Renewal Period:</span>
-                      <span className="font-medium">{calculations.renewalYears} years</span>
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                      <span className="text-white/80">Renewal Period:</span>
+                      <span className="font-medium text-white">{calculations.renewalYears} years</span>
                     </div>
                   )}
                   {calculations.terminationYears > 0 && (
-                    <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                      <span className="text-slate-600">Termination Point:</span>
-                      <span className="font-medium">{calculations.terminationYears} years</span>
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                      <span className="text-white/80">Termination Point:</span>
+                      <span className="font-medium text-white">{calculations.terminationYears} years</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-600 font-semibold">Lease Term (used):</span>
-                    <span className="font-bold text-slate-900">{calculations.leaseTermYears} years</span>
+                    <span className="text-white/90 font-semibold">Lease Term (used):</span>
+                    <span className="font-bold text-white">{calculations.leaseTermYears} years</span>
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 space-y-4">
-                <h5 className="font-semibold text-slate-800 text-lg">Total Impact</h5>
+
+              <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 backdrop-blur-sm rounded-lg p-6 space-y-4 border border-purple-500/20">
+                <h5 className="font-semibold text-purple-200 text-lg">Total Impact</h5>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Total Interest to be paid:</span>
-                    <span className="font-bold text-purple-600">{formatCurrency(calculations.totalInterest)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-white/80">Total Interest to be paid:</span>
+                    <span className="font-bold text-purple-400">{formatCurrency(calculations.totalInterest)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-600">Total Depreciation:</span>
-                    <span className="font-bold text-orange-600">{formatCurrency(calculations.totalDepreciation)}</span>
+                  <div className="flex justify-between items-center py-2 border-b border-white/10">
+                    <span className="text-white/80">Total Depreciation:</span>
+                    <span className="font-bold text-orange-400">{formatCurrency(calculations.totalDepreciation)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-slate-600">Payment Frequency:</span>
-                    <span className="font-medium">{leaseData.PaymentFrequency || 'Monthly'}</span>
+                    <span className="text-white/80">Payment Frequency:</span>
+                    <span className="font-medium text-white">{leaseData.PaymentFrequency || 'Monthly'}</span>
                   </div>
                 </div>
               </div>
@@ -244,22 +244,22 @@ export function ResultsDisplay() {
 
         {activeTab === 'cashflow' && (
           <div className="space-y-4">
-            <h4 className="text-xl font-bold text-slate-900">Cashflow Schedule</h4>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg max-h-[600px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0 z-10">
+            <h4 className="text-xl font-bold text-white">Cashflow Schedule</h4>
+            <div className="overflow-x-auto border border-white/10 rounded-lg max-h-[600px] overflow-y-auto">
+              <table className="min-w-full divide-y divide-white/10">
+                <thead className="bg-gradient-to-r from-blue-600/30 to-blue-700/30 sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Period</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-4 text-right text-xs font-bold text-blue-800 uppercase tracking-wider">Rent Amount</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Period</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">Rent Amount</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+                <tbody className="bg-white/5 divide-y divide-white/10">
                   {calculations.cashflowSchedule.map((row, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-900">{row.period}</td>
-                      <td className="px-6 py-4 text-sm text-slate-600">{row.date}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-right text-green-600">
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'}>
+                      <td className="px-6 py-4 text-sm font-medium text-white">{row.period}</td>
+                      <td className="px-6 py-4 text-sm text-white/80">{row.date}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-right text-green-400">
                         {formatCurrency(row.rent)}
                       </td>
                     </tr>
@@ -267,7 +267,7 @@ export function ResultsDisplay() {
                 </tbody>
               </table>
             </div>
-            <div className="text-sm text-slate-600 text-center">
+            <div className="text-sm text-white/80 text-center">
               Showing all {calculations.cashflowSchedule.length} periods (scroll to view more)
             </div>
           </div>
@@ -275,10 +275,10 @@ export function ResultsDisplay() {
 
         {activeTab === 'amortization' && (
           <div className="space-y-4">
-            <h4 className="text-xl font-bold text-slate-900">Amortization Schedule</h4>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-lg max-h-[600px] overflow-y-auto">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white sticky top-0 z-10">
+            <h4 className="text-xl font-bold text-white">Amortization Schedule</h4>
+            <div className="overflow-x-auto border border-white/10 rounded-lg shadow-xl max-h-[600px] overflow-y-auto">
+              <table className="min-w-full divide-y divide-white/10">
+                <thead className="bg-gradient-to-r from-indigo-600/30 to-blue-600/30 text-white sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">Month</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Payment</th>
@@ -291,32 +291,32 @@ export function ResultsDisplay() {
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Remaining Asset</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-200">
+                <tbody className="bg-white/5 divide-y divide-white/10">
                   {calculations.amortizationSchedule.map((row, index) => (
-                    <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gradient-to-r from-slate-50 to-slate-100'} hover:bg-blue-50 transition-colors`}>
-                      <td className="px-4 py-3 text-sm font-bold text-slate-900">{row.month}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-blue-600">
+                    <tr key={index} className={`${index % 2 === 0 ? 'bg-white/5' : 'bg-white/10'} hover:bg-blue-500/20 transition-colors`}>
+                      <td className="px-4 py-3 text-sm font-bold text-white">{row.month}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-blue-400">
                         {formatCurrency(row.payment)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-red-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-red-400">
                         {formatCurrency(row.interest)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-green-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-green-400">
                         {formatCurrency(row.principal)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-slate-700">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-white/90">
                         {formatCurrency(row.remainingLiability)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-teal-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-teal-400">
                         {formatCurrency(row.sofpCurrLiab)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-cyan-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-cyan-400">
                         {formatCurrency(row.sofpNonCurrLiab)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-orange-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-orange-400">
                         {formatCurrency(row.depreciation)}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right text-pink-600">
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-pink-400">
                         {formatCurrency(row.remainingAsset)}
                       </td>
                     </tr>
@@ -324,7 +324,7 @@ export function ResultsDisplay() {
                 </tbody>
               </table>
             </div>
-            <div className="text-sm text-slate-600 text-center">
+            <div className="text-sm text-white/80 text-center">
               Showing all {calculations.amortizationSchedule.length} months (scroll to view more)
             </div>
           </div>
