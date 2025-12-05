@@ -76,7 +76,7 @@ export function Home() {
   ];
 
   return (
-    <div className="w-full font-sans bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen">
+    <div className="w-full font-sans bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
       {/* Hero Section */}
       <section className="relative w-full h-screen flex items-center -mt-16 md:-mt-20 overflow-hidden">
         {/* Full-width Background Image */}
@@ -91,7 +91,7 @@ export function Home() {
         {/* Slanted Overlay from Left */}
         <div className="absolute inset-0 w-full h-full">
           <div
-            className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+            className="absolute inset-0 bg-gradient-to-br from-white/95 via-slate-100/95 to-slate-200/95 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"
             style={{
               clipPath: 'polygon(0 0, 68% 0, 52% 100%, 0 100%)'
             }}
@@ -104,27 +104,27 @@ export function Home() {
             {/* Left Content */}
             <div className="space-y-8">
               <div className="inline-block">
-                <span className="text-emerald-400 text-sm font-semibold tracking-wider uppercase">
+                <span className="text-emerald-500 dark:text-emerald-400 text-sm font-semibold tracking-wider uppercase">
                   Financial Excellence
                 </span>
               </div>
 
-              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight">
+              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-900 dark:text-white leading-tight">
                 IFRS 16 Lease
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-cyan-500 dark:from-emerald-400 dark:to-cyan-400">
                   Solution
                 </span>
               </h1>
 
-              <div className="space-y-4 text-slate-300 text-lg leading-relaxed">
+              <div className="space-y-4 text-slate-700 dark:text-slate-300 text-lg leading-relaxed">
                 <p>
                   IFRS 16 is the international accounting standard for lease accounting that requires organizations to recognize most leases on their balance sheet as right-of-use assets and corresponding lease liabilities.
                 </p>
                 <p>
                   This comprehensive solution streamlines the complex process of lease accounting by automating calculations, generating compliant disclosures, and producing accurate journal entries that meet IFRS 16 requirements.
                 </p>
-                <p className="text-white font-medium">
+                <p className="text-slate-900 dark:text-white font-medium">
                   From contract initiation to financial reporting, our platform handles the entire lease lifecycle, ensuring accurate measurement of lease liabilities and right-of-use assets while maintaining full compliance with international accounting standards.
                 </p>
               </div>
@@ -132,14 +132,14 @@ export function Home() {
               <div className="flex flex-wrap gap-4 pt-4">
                 <button
                   onClick={() => navigate("/contract")}
-                  className="group bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/50"
+                  className="group bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/50"
                 >
                   Learn More
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
                   onClick={() => navigate("/education")}
-                  className="group bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
+                  className="group bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
                 >
                   Watch Demo
                   <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -155,13 +155,13 @@ export function Home() {
         <div className="container mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16 space-y-4">
-            <span className="text-emerald-400 text-sm font-semibold tracking-wider uppercase">
+            <span className="text-emerald-500 dark:text-emerald-400 text-sm font-semibold tracking-wider uppercase">
               Our Modules
             </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-white">
+            <h2 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">
               Complete IFRS 16 Platform
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">
               End-to-end lease accounting solution from contract initiation to financial reporting
             </p>
           </div>
@@ -171,7 +171,7 @@ export function Home() {
             {modules.map((module, index) => (
               <div
                 key={module.id}
-                className="group relative bg-slate-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-slate-700 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer"
+                className="group relative bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer shadow-lg"
                 onClick={() => navigate(module.id)}
               >
                 {/* Module Image */}
@@ -181,26 +181,26 @@ export function Home() {
                     alt={module.title}
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-white/50 dark:via-slate-900/50 to-transparent"></div>
 
                   {/* Module Number Badge */}
-                  <div className="absolute top-4 right-4 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                  <div className="absolute top-4 right-4 w-10 h-10 bg-emerald-500 dark:bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                     {index + 1}
                   </div>
                 </div>
 
                 {/* Module Content */}
                 <div className="p-6 space-y-3">
-                  <h3 className="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
                     {module.title}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                     {module.description}
                   </p>
 
                   {/* CTA */}
                   <div className="pt-4">
-                    <button className="w-full bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+                    <button className="w-full bg-emerald-500/10 dark:bg-emerald-500/10 hover:bg-emerald-500 dark:hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn">
                       <span>Open Solution</span>
                       <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
@@ -220,7 +220,7 @@ export function Home() {
       {/* CTA Section */}
       <section className="py-20 px-6 lg:px-12 relative">
         <div className="container mx-auto">
-          <div className="relative bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="relative bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-600 dark:to-cyan-600 rounded-3xl overflow-hidden shadow-2xl">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0" style={{
@@ -239,13 +239,13 @@ export function Home() {
               <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <button
                   onClick={() => navigate("/contract")}
-                  className="bg-white text-emerald-600 px-8 py-4 rounded-lg font-semibold hover:bg-slate-100 transition-colors shadow-lg"
+                  className="bg-white dark:bg-white text-emerald-600 dark:text-emerald-600 px-8 py-4 rounded-lg font-semibold hover:bg-slate-100 dark:hover:bg-slate-100 transition-colors shadow-lg"
                 >
                   Start with Contract Initiation
                 </button>
                 <button
                   onClick={() => navigate("/methodology")}
-                  className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-emerald-600 transition-all"
+                  className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-emerald-600 dark:hover:bg-white dark:hover:text-emerald-600 transition-all"
                 >
                   View Methodology
                 </button>

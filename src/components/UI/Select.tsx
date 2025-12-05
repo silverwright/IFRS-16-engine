@@ -13,9 +13,9 @@ interface SelectProps {
 export function Select({ label, value, options, onChange, required, placeholder }: SelectProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-200 mb-2">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
         {label}
-        {required && <span className="text-emerald-400 ml-1">*</span>}
+        {required && <span className="text-emerald-500 dark:text-emerald-400 ml-1">*</span>}
       </label>
       <div className="relative">
         <select
@@ -23,19 +23,20 @@ export function Select({ label, value, options, onChange, required, placeholder 
           onChange={(e) => onChange(e.target.value)}
           required={required}
           className="
-            w-full px-3 py-2 border border-slate-600/50 rounded-lg appearance-none bg-slate-800/50 text-white
+            w-full px-3 py-2 border border-slate-300 dark:border-slate-600/50 rounded-lg appearance-none
+            bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white
             focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
-            transition-colors backdrop-blur-sm
+            transition-colors
           "
         >
-          {placeholder && <option value="" className="bg-slate-800">{placeholder}</option>}
+          {placeholder && <option value="" className="bg-white dark:bg-slate-800">{placeholder}</option>}
           {options.map((option) => (
-            <option key={option} value={option} className="bg-slate-800">
+            <option key={option} value={option} className="bg-white dark:bg-slate-800">
               {option}
             </option>
           ))}
         </select>
-        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 pointer-events-none" />
       </div>
     </div>
   );

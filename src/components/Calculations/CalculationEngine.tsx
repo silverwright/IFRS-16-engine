@@ -29,16 +29,16 @@ export function CalculationEngine() {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Calculator className="w-8 h-8 text-green-600" />
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-600 p-8 text-center">
+      <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Calculator className="w-8 h-8 text-green-600 dark:text-green-400" />
       </div>
-      
-      <h3 className="text-lg font-semibold text-slate-900 mb-2">Ready to Calculate</h3>
-      <p className="text-slate-600 mb-6 max-w-md mx-auto">
+
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Ready to Calculate</h3>
+      <p className="text-slate-600 dark:text-slate-300 mb-6 max-w-md mx-auto">
         Run IFRS 16 calculations to generate lease liability, ROU asset values, and amortization schedules.
       </p>
-      
+
       <Button
         onClick={runCalculations}
         disabled={calculating}
@@ -60,10 +60,10 @@ export function CalculationEngine() {
 
       {calculating && (
         <div className="mt-6 space-y-2">
-          <div className="w-full bg-slate-200 rounded-full h-2">
-            <div className="bg-green-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+            <div className="bg-green-600 dark:bg-green-500 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
           </div>
-          <p className="text-sm text-slate-600">Processing lease parameters and generating schedules...</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">Processing lease parameters and generating schedules...</p>
         </div>
       )}
     </div>

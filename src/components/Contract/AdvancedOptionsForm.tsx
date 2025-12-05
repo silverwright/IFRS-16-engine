@@ -35,11 +35,11 @@ export function AdvancedOptionsForm() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-white">Advanced Options</h3>
-      
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Advanced Options</h3>
+
       {/* Renewal & Termination */}
       <div className="space-y-4">
-        <h4 className="text-md font-semibold text-emerald-400">Renewal & Termination Options</h4>
+        <h4 className="text-md font-semibold text-emerald-500 dark:text-emerald-400">Renewal & Termination Options</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
