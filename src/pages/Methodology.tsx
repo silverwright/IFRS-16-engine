@@ -286,23 +286,23 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
   };
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Professional Header with Gradient */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900 text-white shadow-xl">
+        <div className="w-full px-6 py-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
+              <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/30 dark:border-white/20">
                 <Shield className="h-8 w-8 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">IFRS 16 Leases Methodology</h1>
-                <p className="text-blue-100 mt-1">Comprehensive Framework for Lease Accounting Standards</p>
+                <p className="text-white/90 dark:text-slate-300 mt-1">Comprehensive Framework for Lease Accounting Standards</p>
               </div>
             </div>
             <button
               onClick={handleDownload}
-              className="flex items-center space-x-2 bg-white text-blue-700 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-50 transition-all duration-200 font-medium"
+              className="flex items-center space-x-2 bg-white text-blue-700 dark:text-slate-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-50 dark:hover:bg-slate-100 transition-all duration-200 font-medium"
             >
               <Download className="h-5 w-5" />
               <span>Export PDF</span>
@@ -311,18 +311,18 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex gap-6">
+      <div className="w-full px-6 py-8">
+        <div className="flex gap-6 min-h-screen">
           {/* Sidebar Navigation */}
           <div className="w-72 flex-shrink-0">
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 sticky top-6 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600/30 to-indigo-600/30 p-4 border-b border-white/10">
+            <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 sticky top-6 overflow-hidden h-[calc(100vh-8rem)]">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600/30 dark:to-indigo-600/30 p-4 border-b border-slate-300 dark:border-white/10">
                 <h3 className="font-semibold text-white flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2 text-blue-300" />
+                  <BookOpen className="h-5 w-5 mr-2 text-white dark:text-blue-300" />
                   Table of Contents
                 </h3>
               </div>
-              <nav className="p-2">
+              <nav className="p-2 overflow-y-auto h-[calc(100%-4rem)]">
                 {[
                   { id: 'introduction', title: 'Introduction & Scope', icon: Shield, color: 'blue' },
                   { id: 'identification', title: 'Identification of ROU', icon: Target, color: 'purple' },
@@ -341,12 +341,12 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                       onClick={() => setActiveSection(section.id)}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left mb-1 ${
                         isActive
-                          ? 'bg-blue-500/30 text-white shadow-lg border border-blue-400/30'
-                          : 'text-white/70 hover:bg-white/10'
+                          ? 'bg-blue-100 dark:bg-blue-500/30 text-blue-700 dark:text-white shadow-lg border border-blue-300 dark:border-blue-400/30'
+                          : 'text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/10'
                       }`}
                     >
-                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-400/30' : 'bg-white/5'}`}>
-                        <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-white/60'}`} />
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-200 dark:bg-blue-400/30' : 'bg-slate-200 dark:bg-white/5'}`}>
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-blue-700 dark:text-white' : 'text-slate-600 dark:text-white/60'}`} />
                       </div>
                       <span className="text-sm font-medium flex-1">{section.title}</span>
                       {isActive && <ArrowRight className="h-4 w-4" />}
@@ -362,19 +362,19 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
             {activeSection === 'introduction' && (
               <div className="space-y-6">
                 {/* Hero Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-slate-700 dark:to-slate-800 rounded-2xl shadow-xl p-8 text-white border border-blue-300 dark:border-white/10">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-3">
                         <Shield className="h-6 w-6" />
                         <h2 className="text-2xl font-bold">{content.introduction.title}</h2>
                       </div>
-                      <p className="text-blue-100 text-lg leading-relaxed mb-4">{content.introduction.paragraphs[0]}</p>
+                      <p className="text-white/95 dark:text-slate-300 text-lg leading-relaxed mb-4">{content.introduction.paragraphs[0]}</p>
                       <ul className="space-y-2">
                         {content.introduction.bullets.map((b, i) => (
                           <li key={i} className="flex items-start">
                             <CheckCircle2 className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-blue-50">{b}</span>
+                            <span className="text-white/90 dark:text-slate-200">{b}</span>
                           </li>
                         ))}
                       </ul>
@@ -384,7 +384,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
                 {/* Assets Coverage Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                     <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4">
                       <div className="flex items-center space-x-2 text-white">
                         <CheckCircle2 className="h-5 w-5" />
@@ -395,17 +395,17 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                       <ul className="space-y-3">
                         {content.introduction.covered.map((c, i) => (
                           <li key={i} className="flex items-start group">
-                            <div className="p-1 rounded-lg bg-emerald-500/20 mr-3 mt-0.5 group-hover:bg-emerald-500/30 transition-colors">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                            <div className="p-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 mr-3 mt-0.5 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/30 transition-colors">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
                             </div>
-                            <span className="text-white/90">{c}</span>
+                            <span className="text-slate-800 dark:text-white/90">{c}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   </div>
 
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                     <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-4">
                       <div className="flex items-center space-x-2 text-white">
                         <XCircle className="h-5 w-5" />
@@ -416,10 +416,10 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                       <ul className="space-y-3">
                         {content.introduction.excluded.map((e, i) => (
                           <li key={i} className="flex items-start group">
-                            <div className="p-1 rounded-lg bg-rose-500/20 mr-3 mt-0.5 group-hover:bg-rose-500/30 transition-colors">
-                              <XCircle className="h-4 w-4 text-rose-300" />
+                            <div className="p-1 rounded-lg bg-rose-100 dark:bg-rose-500/20 mr-3 mt-0.5 group-hover:bg-rose-200 dark:group-hover:bg-rose-500/30 transition-colors">
+                              <XCircle className="h-4 w-4 text-rose-700 dark:text-rose-300" />
                             </div>
-                            <span className="text-white/90">{e}</span>
+                            <span className="text-slate-800 dark:text-white/90">{e}</span>
                           </li>
                         ))}
                       </ul>
@@ -429,12 +429,12 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
                 {/* Additional Information Cards */}
                 {content.introduction.closing.map((p, i) => (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                  <div key={i} className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                     <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-blue-500/20 rounded-lg mt-1">
-                        <Info className="h-5 w-5 text-blue-300" />
+                      <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg mt-1">
+                        <Info className="h-5 w-5 text-blue-700 dark:text-blue-300" />
                       </div>
-                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                      <p className="text-slate-800 dark:text-white/90 leading-relaxed flex-1">{p}</p>
                     </div>
                   </div>
                 ))}
@@ -443,29 +443,29 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
             {activeSection === 'identification' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+                <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white border border-purple-300 dark:border-white/10">
                   <div className="flex items-center space-x-3 mb-4">
                     <Target className="h-7 w-7" />
                     <h2 className="text-2xl font-bold">{content.assumptions.subsections.identification.title}</h2>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                  <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/30 dark:border-white/20">
                     <h3 className="font-semibold text-lg mb-3">{content.assumptions.subsections.identification.heading}</h3>
                     <div className="space-y-3">
                       {content.assumptions.subsections.identification.paragraphs.map((p, i) => (
-                        <p key={i} className="text-purple-50 leading-relaxed">{p}</p>
+                        <p key={i} className="text-white/95 dark:text-purple-50 leading-relaxed">{p}</p>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                   <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <Lightbulb className="h-5 w-5 text-purple-300" />
+                    <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
+                      <Lightbulb className="h-5 w-5 text-purple-700 dark:text-purple-300" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-2">Key Principle</h4>
-                      <p className="text-white/90">The approach in IFRS 16 is based on control and economic benefit, requiring recognition of right-of-use assets for all qualifying leases.</p>
+                      <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Key Principle</h4>
+                      <p className="text-slate-700 dark:text-white/90">The approach in IFRS 16 is based on control and economic benefit, requiring recognition of right-of-use assets for all qualifying leases.</p>
                     </div>
                   </div>
                 </div>
@@ -474,39 +474,39 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
             {activeSection === 'measurement' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8 text-white">
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-xl p-8 text-white border border-emerald-300 dark:border-white/10">
                   <div className="flex items-center space-x-3 mb-4">
                     <Calculator className="h-7 w-7" />
                     <h2 className="text-2xl font-bold">{content.assumptions.subsections.measurement.title}</h2>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                  <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/30 dark:border-white/20">
                     <h3 className="font-semibold text-lg mb-3">{content.assumptions.subsections.measurement.heading}</h3>
                     <div className="space-y-3">
                       {content.assumptions.subsections.measurement.paragraphs.map((p, i) => (
-                        <p key={i} className="text-emerald-50 leading-relaxed">{p}</p>
+                        <p key={i} className="text-white/95 dark:text-emerald-50 leading-relaxed">{p}</p>
                       ))}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-5">
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-5">
                     <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-emerald-500/20 rounded-lg">
-                        <TrendingUp className="h-5 w-5 text-emerald-300" />
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
                       </div>
-                      <h4 className="font-semibold text-white">Discount Rate</h4>
+                      <h4 className="font-semibold text-slate-900 dark:text-white">Discount Rate</h4>
                     </div>
-                    <p className="text-white/80 text-sm">Present value calculated using the implicit rate in the lease or incremental borrowing rate</p>
+                    <p className="text-slate-700 dark:text-white/80 text-sm">Present value calculated using the implicit rate in the lease or incremental borrowing rate</p>
                   </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-5">
+                  <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-5">
                     <div className="flex items-center space-x-2 mb-3">
-                      <div className="p-2 bg-emerald-500/20 rounded-lg">
-                        <Calendar className="h-5 w-5 text-emerald-300" />
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg">
+                        <Calendar className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
                       </div>
-                      <h4 className="font-semibold text-white">Recognition Date</h4>
+                      <h4 className="font-semibold text-slate-900 dark:text-white">Recognition Date</h4>
                     </div>
-                    <p className="text-white/80 text-sm">Initial recognition occurs at commencement date when control of the asset begins</p>
+                    <p className="text-slate-700 dark:text-white/80 text-sm">Initial recognition occurs at commencement date when control of the asset begins</p>
                   </div>
                 </div>
               </div>
@@ -514,21 +514,21 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
             {activeSection === 'lease-term' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl shadow-xl p-8 text-white">
+                <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl shadow-xl p-8 text-white border border-amber-300 dark:border-white/10">
                   <div className="flex items-center space-x-3 mb-4">
                     <Calendar className="h-7 w-7" />
                     <h2 className="text-2xl font-bold">Lease Term</h2>
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                  <div className="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/30 dark:border-white/20">
                     <div className="space-y-3">
                       {content.assumptions.subsections.other.subsections['lease-term'].paragraphs.map((p, i) => (
-                        <p key={i} className="text-amber-50 leading-relaxed">{p}</p>
+                        <p key={i} className="text-white/95 dark:text-amber-50 leading-relaxed">{p}</p>
                       ))}
                       <ul className="space-y-2 mt-4">
                         {content.assumptions.subsections.other.subsections['lease-term'].bullets.map((b, i) => (
                           <li key={i} className="flex items-start">
                             <CheckCircle2 className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                            <span className="text-amber-50">{b}</span>
+                            <span className="text-white/95 dark:text-amber-50">{b}</span>
                           </li>
                         ))}
                       </ul>
@@ -537,26 +537,26 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {content.assumptions.subsections.other.subsections['lease-term'].additional.map((p, i) => (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                  <div key={i} className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                     <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-amber-500/20 rounded-lg">
-                        <Info className="h-5 w-5 text-amber-300" />
+                      <div className="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-lg">
+                        <Info className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                       </div>
-                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                      <p className="text-slate-800 dark:text-white/90 leading-relaxed flex-1">{p}</p>
                     </div>
                   </div>
                 ))}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {content.assumptions.subsections.other.subsections['lease-term'].considerations.map((c, i) => (
-                    <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-amber-500/20">
+                    <div key={i} className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-amber-300 dark:border-amber-500/20">
                       <div className="flex items-center space-x-2 mb-3">
-                        <div className="p-2 bg-amber-500/20 rounded-lg">
-                          <Target className="h-5 w-5 text-amber-300" />
+                        <div className="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-lg">
+                          <Target className="h-5 w-5 text-amber-700 dark:text-amber-300" />
                         </div>
-                        <h4 className="font-bold text-white">{c.title}</h4>
+                        <h4 className="font-bold text-slate-900 dark:text-white">{c.title}</h4>
                       </div>
-                      <p className="text-white/80 text-sm leading-relaxed">{c.text}</p>
+                      <p className="text-slate-700 dark:text-white/80 text-sm leading-relaxed">{c.text}</p>
                     </div>
                   ))}
                 </div>
@@ -578,12 +578,12 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {content.assumptions.subsections.other.subsections['future-payments'].additional.map((p, i) => (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                  <div key={i} className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                     <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-rose-500/20 rounded-lg">
-                        <TrendingUp className="h-5 w-5 text-rose-300" />
+                      <div className="p-2 bg-rose-100 dark:bg-rose-500/20 rounded-lg">
+                        <TrendingUp className="h-5 w-5 text-rose-600 dark:text-rose-300" />
                       </div>
-                      <p className="text-white/90 leading-relaxed flex-1">{p}</p>
+                      <p className="text-slate-800 dark:text-white/90 leading-relaxed flex-1">{p}</p>
                     </div>
                   </div>
                 ))}
@@ -604,26 +604,26 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
-                  <div className="bg-gradient-to-r from-cyan-500/30 to-blue-500/30 p-5 border-b border-white/10">
-                    <h3 className="font-bold text-white flex items-center">
-                      <Calculator className="h-5 w-5 mr-2 text-cyan-300" />
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
+                  <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 dark:from-cyan-500/30 dark:to-blue-500/30 p-5 border-b border-slate-300 dark:border-white/10">
+                    <h3 className="font-bold text-slate-900 dark:text-white flex items-center">
+                      <Calculator className="h-5 w-5 mr-2 text-cyan-600 dark:text-cyan-300" />
                       IBR Calculation Factors
                     </h3>
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {content.assumptions.subsections.other.subsections['discount-rate'].bullets.map((b, i) => (
-                        <div key={i} className="flex items-center space-x-3 p-4 bg-cyan-500/20 rounded-lg">
-                          <CheckCircle2 className="h-5 w-5 text-cyan-300 flex-shrink-0" />
-                          <span className="text-white/90 font-medium">{b}</span>
+                        <div key={i} className="flex items-center space-x-3 p-4 bg-cyan-100 dark:bg-cyan-500/20 rounded-lg">
+                          <CheckCircle2 className="h-5 w-5 text-cyan-600 dark:text-cyan-300 flex-shrink-0" />
+                          <span className="text-slate-800 dark:text-white/90 font-medium">{b}</span>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-6 p-4 bg-blue-500/20 rounded-xl border-l-4 border-blue-400">
+                    <div className="mt-6 p-4 bg-blue-100 dark:bg-blue-500/20 rounded-xl border-l-4 border-blue-500 dark:border-blue-400">
                       <div className="flex items-start space-x-2">
-                        <AlertCircle className="h-5 w-5 text-blue-300 mt-0.5 flex-shrink-0" />
-                        <p className="text-white/90 text-sm leading-relaxed">{content.assumptions.subsections.other.subsections['discount-rate'].note}</p>
+                        <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-300 mt-0.5 flex-shrink-0" />
+                        <p className="text-slate-800 dark:text-white/90 text-sm leading-relaxed">{content.assumptions.subsections.other.subsections['discount-rate'].note}</p>
                       </div>
                     </div>
                   </div>
@@ -645,14 +645,14 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 p-6">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                   <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-violet-500/20 rounded-lg">
-                      <Lightbulb className="h-5 w-5 text-violet-300" />
+                    <div className="p-2 bg-violet-100 dark:bg-violet-500/20 rounded-lg">
+                      <Lightbulb className="h-5 w-5 text-violet-600 dark:text-violet-300" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white mb-2">Key Assumption</h4>
-                      <p className="text-white/90">All lease payments are assumed to be made in advance at inception, with consistent monthly allocations for prepaid periods.</p>
+                      <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Key Assumption</h4>
+                      <p className="text-slate-800 dark:text-white/90">All lease payments are assumed to be made in advance at inception, with consistent monthly allocations for prepaid periods.</p>
                     </div>
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {/* Right of Use Asset */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                   <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-5">
                     <h3 className="font-bold text-white text-lg flex items-center">
                       <Target className="h-6 w-6 mr-2" />
@@ -681,10 +681,10 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                     <ul className="space-y-3">
                       {content.assumptions.subsections.modelLogics.subsections.rou.bullets.map((b, i) => (
                         <li key={i} className="flex items-start">
-                          <div className="p-1.5 rounded-lg bg-indigo-500/20 mr-3 mt-0.5">
-                            <ArrowRight className="h-4 w-4 text-indigo-300" />
+                          <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 mr-3 mt-0.5">
+                            <ArrowRight className="h-4 w-4 text-indigo-600 dark:text-indigo-300" />
                           </div>
-                          <span className="text-white/90">{b}</span>
+                          <span className="text-slate-800 dark:text-white/90">{b}</span>
                         </li>
                       ))}
                     </ul>
@@ -692,7 +692,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {/* Lease Liability */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-5">
                     <h3 className="font-bold text-white text-lg flex items-center">
                       <DollarSign className="h-6 w-6 mr-2" />
@@ -701,10 +701,10 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                   </div>
                   <div className="p-6 space-y-4">
                     {content.assumptions.subsections.modelLogics.subsections.liability.paragraphs.map((p, i) => (
-                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                      <p key={i} className="text-slate-800 dark:text-white/90 leading-relaxed">{p}</p>
                     ))}
-                    <div className="bg-blue-500/20 rounded-xl p-4 border-l-4 border-blue-400">
-                      <code className="text-blue-200 text-sm font-mono">
+                    <div className="bg-blue-100 dark:bg-blue-500/20 rounded-xl p-4 border-l-4 border-blue-500 dark:border-blue-400">
+                      <code className="text-blue-700 dark:text-blue-200 text-sm font-mono">
                         liability = pv(extension amount) = extension amount × 1 / (1+r)^(-t)
                       </code>
                     </div>
@@ -712,7 +712,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {/* Depreciation */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                   <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-5">
                     <h3 className="font-bold text-white text-lg flex items-center">
                       <TrendingUp className="h-6 w-6 mr-2" />
@@ -721,13 +721,13 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                   </div>
                   <div className="p-6 space-y-4">
                     {content.assumptions.subsections.modelLogics.subsections.depreciation.paragraphs.map((p, i) => (
-                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                      <p key={i} className="text-slate-800 dark:text-white/90 leading-relaxed">{p}</p>
                     ))}
                     <ul className="space-y-2">
                       {content.assumptions.subsections.modelLogics.subsections.depreciation.bullets.map((b, i) => (
                         <li key={i} className="flex items-start">
-                          <CheckCircle2 className="h-5 w-5 text-emerald-300 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-white/90">{b}</span>
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-300 mr-2 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-800 dark:text-white/90">{b}</span>
                         </li>
                       ))}
                     </ul>
@@ -735,7 +735,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 </div>
 
                 {/* Interest Expense */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-white/10 overflow-hidden">
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
                   <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-5">
                     <h3 className="font-bold text-white text-lg flex items-center">
                       <Percent className="h-6 w-6 mr-2" />
@@ -744,10 +744,10 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                   </div>
                   <div className="p-6 space-y-4">
                     {content.assumptions.subsections.modelLogics.subsections.interest.paragraphs.map((p, i) => (
-                      <p key={i} className="text-white/90 leading-relaxed">{p}</p>
+                      <p key={i} className="text-slate-800 dark:text-white/90 leading-relaxed">{p}</p>
                     ))}
-                    <div className="bg-rose-500/20 rounded-xl p-4 border-l-4 border-rose-400">
-                      <code className="text-rose-200 text-sm font-mono">
+                    <div className="bg-rose-100 dark:bg-rose-500/20 rounded-xl p-4 border-l-4 border-rose-500 dark:border-rose-400">
+                      <code className="text-rose-700 dark:text-rose-200 text-sm font-mono">
                         Lease interest expense = lease liability_(t) - lease liability_(t-1)
                       </code>
                     </div>
