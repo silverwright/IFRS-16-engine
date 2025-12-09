@@ -1,14 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
 import { Download, FileText, Eye, ArrowLeft } from 'lucide-react';
 import { generateContractHTML } from '../../utils/contractGenerator';
 import { useRef } from 'react';
 import jsPDF from 'jspdf';
+import { ContractPreviewModal } from './ContractPreviewModal';
 
 export function ContractPreview() {
   const { state, dispatch } = useLeaseContext();
   const { leaseData, mode, contractHtml } = state;
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     // Generate contract HTML when component mounts
@@ -216,12 +218,20 @@ export function ContractPreview() {
     pdf.save(`LeaseContract_${mode.toLowerCase()}_${leaseData.ContractID}.pdf`);
   };
 
-  
+  const handleGenerateContract = () => {
+    setShowModal(true);
+  };
+
+  const handleSendContract = () => {
+    // TODO: Implement email sending functionality
+    alert('Contract will be sent via email');
+    setShowModal(false);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">Contract Preview</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Contract Preview</h3>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -232,57 +242,73 @@ export function ContractPreview() {
             <Download className="w-4 h-4" />
             Download PDF
           </Button>
+          <Button
+            onClick={handleGenerateContract}
+            disabled={!contractHtml}
+            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600"
+          >
+            <Eye className="w-4 h-4" />
+            Generate Contract
+          </Button>
         </div>
       </div>
 
+      <ContractPreviewModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        contractHtml={contractHtml || ''}
+        onSend={handleSendContract}
+        onDownload={downloadContract}
+      />
+
       {/* Contract Summary */}
-      <div className="bg-slate-50 rounded-lg p-6 space-y-4">
-        <h4 className="font-semibold text-slate-900">Contract Summary</h4>
+      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 space-y-4">
+        <h4 className="font-semibold text-slate-900 dark:text-white">Contract Summary</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
           <div>
-            <span className="text-slate-600">Contract ID:</span>
-            <span className="ml-2 font-medium">{leaseData.ContractID || 'N/A'}</span>
+            <span className="text-slate-600 dark:text-slate-400">Contract ID:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">{leaseData.ContractID || 'N/A'}</span>
           </div>
           <div>
-            <span className="text-slate-600">Mode:</span>
-            <span className="ml-2 font-medium">{mode}</span>
+            <span className="text-slate-600 dark:text-slate-400">Mode:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">{mode}</span>
           </div>
           <div>
-            <span className="text-slate-600">Asset:</span>
-            <span className="ml-2 font-medium">{leaseData.AssetDescription || 'N/A'}</span>
+            <span className="text-slate-600 dark:text-slate-400">Asset:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">{leaseData.AssetDescription || 'N/A'}</span>
           </div>
           <div>
-            <span className="text-slate-600">Term:</span>
-            <span className="ml-2 font-medium">{leaseData.NonCancellableYears || 0} years</span>
+            <span className="text-slate-600 dark:text-slate-400">Term:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">{leaseData.NonCancellableYears || 0} years</span>
           </div>
           <div>
-            <span className="text-slate-600">Payment:</span>
-            <span className="ml-2 font-medium">
+            <span className="text-slate-600 dark:text-slate-400">Payment:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">
               {leaseData.Currency} {(leaseData.FixedPaymentPerPeriod || 0).toLocaleString()} / {leaseData.PaymentFrequency}
             </span>
           </div>
           <div>
-            <span className="text-slate-600">IBR:</span>
-            <span className="ml-2 font-medium">{((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%</span>
+            <span className="text-slate-600 dark:text-slate-400">IBR:</span>
+            <span className="ml-2 font-medium text-slate-900 dark:text-white">{((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%</span>
           </div>
         </div>
       </div>
 
       {/* Contract Preview */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden">
-        <div className="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
-          <Eye className="w-4 h-4 text-slate-600" />
-          <span className="text-sm font-medium text-slate-700">Contract Preview</span>
+      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+        <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+          <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Contract Preview</span>
         </div>
-        <div className="max-h-96 overflow-y-auto">
+        <div className="max-h-96 overflow-y-auto bg-white dark:bg-slate-800">
           {contractHtml ? (
-            <div 
-              className="p-6 prose prose-sm max-w-none"
+            <div
+              className="p-6 prose prose-sm dark:prose-invert max-w-none [&_h1]:dark:text-white [&_h2]:dark:text-white [&_h3]:dark:text-white [&_h4]:dark:text-white [&_h5]:dark:text-white [&_p]:dark:text-slate-200 [&_li]:dark:text-slate-200 [&_td]:dark:text-slate-200 [&_strong]:dark:text-white"
               dangerouslySetInnerHTML={{ __html: contractHtml }}
             />
           ) : (
-            <div className="p-6 text-center text-slate-500">
-              <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+            <div className="p-6 text-center text-slate-500 dark:text-slate-400">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-500" />
               <p>Complete the form to generate contract preview</p>
             </div>
           )}

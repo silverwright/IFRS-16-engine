@@ -41,7 +41,7 @@ export function ProgressBar({ steps, currentStep }: ProgressBarProps) {
           </div>
         ))}
       </div>
-      <div className="flex justify-between text-xs text-slate-600">
+      <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300">
         {steps.map((step) => (
           <span key={step.id} className="max-w-20 text-center">
             {step.name}

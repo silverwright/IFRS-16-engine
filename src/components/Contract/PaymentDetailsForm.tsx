@@ -60,8 +60,8 @@ export function PaymentDetailsForm() {
       </div>
 
       {/* Escalation Section */}
-      <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-emerald-400 mb-4">Escalation</h4>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Escalation</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
@@ -106,8 +106,8 @@ export function PaymentDetailsForm() {
       </div>
 
       {/* Rate & Financial Details */}
-      <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-emerald-400 mb-4">Financial Details</h4>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Financial Details</h4>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
@@ -146,22 +146,22 @@ export function PaymentDetailsForm() {
             placeholder="100000"
           />
           
-          <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-lg">
+          <div className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
             <Switch
               checked={leaseData.PrepaidFirstPayment || false}
               onChange={(checked) => updateField('PrepaidFirstPayment', checked)}
             />
             <div>
-              <label className="text-sm font-medium text-slate-900">Prepaid First Payment</label>
-              <p className="text-xs text-slate-600">First payment made before commencement</p>
+              <label className="text-sm font-medium text-slate-900 dark:text-white">Prepaid First Payment</label>
+              <p className="text-xs text-slate-600 dark:text-slate-400">First payment made before commencement</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bank Payment Details */}
-      <div className="border-t pt-6">
-        <h4 className="text-md font-semibold text-emerald-400 mb-4">Bank Payment Details</h4>
+      <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Bank Payment Details</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField

@@ -266,20 +266,10 @@ export function ContractInitiation() {
                     Save Contract
                   </Button>
 
-                  {currentStep < activeSteps[activeSteps.length - 1].id ? (
+                  {currentStep < activeSteps[activeSteps.length - 1].id && (
                     <Button onClick={nextStep} className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:from-emerald-500 dark:to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 dark:hover:from-emerald-600 dark:hover:to-cyan-600 text-white border-0 shadow-lg shadow-emerald-500/30">
                       Next
                       <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => {
-                        console.log('Generating contract...');
-                      }}
-                      className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:from-emerald-500 dark:to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 dark:hover:from-emerald-600 dark:hover:to-cyan-600 text-white border-0 shadow-lg shadow-emerald-500/30"
-                    >
-                      Generate Contract
-                      <FileText className="w-4 h-4" />
                     </Button>
                   )}
                 </div>

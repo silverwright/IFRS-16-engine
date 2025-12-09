@@ -49,6 +49,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
 
   const mapDataToLeaseData = (data: any) => {
     const mapping: { [key: string]: string } = {
+      // Basic identifiers
       'Contract ID': 'ContractID',
       'ContractID': 'ContractID',
       'Lessee Entity': 'LesseeEntity',
@@ -59,6 +60,8 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       'AssetClass': 'AssetClass',
       'Asset Description': 'AssetDescription',
       'AssetDescription': 'AssetDescription',
+
+      // Dates
       'Contract Date': 'ContractDate',
       'ContractDate': 'ContractDate',
       'Commencement Date': 'CommencementDate',
@@ -66,39 +69,202 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       'End Date': 'EndDateOriginal',
       'EndDateOriginal': 'EndDateOriginal',
       'Original End Date': 'EndDateOriginal',
+
+      // Term & Options
       'Non-cancellable Years': 'NonCancellableYears',
       'NonCancellableYears': 'NonCancellableYears',
       'Non-cancellable Period': 'NonCancellableYears',
-      'Useful Life Years': 'UsefulLifeYears',
-      'UsefulLifeYears': 'UsefulLifeYears',
-      'Useful Life': 'UsefulLifeYears',
+      'Renewal Option Years': 'RenewalOptionYears',
+      'RenewalOptionYears': 'RenewalOptionYears',
+      'Renewal Option Likelihood': 'RenewalOptionLikelihood',
+      'RenewalOptionLikelihood': 'RenewalOptionLikelihood',
+      'Termination Option Point': 'TerminationOptionPoint',
+      'TerminationOptionPoint': 'TerminationOptionPoint',
+      'Termination Option Likelihood': 'TerminationOptionLikelihood',
+      'TerminationOptionLikelihood': 'TerminationOptionLikelihood',
+      'Termination Penalty Expected': 'TerminationPenaltyExpected',
+      'TerminationPenaltyExpected': 'TerminationPenaltyExpected',
+      'Termination Reasonably Certain': 'TerminationReasonablyCertain',
+      'TerminationReasonablyCertain': 'TerminationReasonablyCertain',
+
+      // Payments
       'Fixed Payment': 'FixedPaymentPerPeriod',
       'FixedPaymentPerPeriod': 'FixedPaymentPerPeriod',
       'Fixed Payment Per Period': 'FixedPaymentPerPeriod',
-      'Currency': 'Currency',
       'Payment Frequency': 'PaymentFrequency',
       'PaymentFrequency': 'PaymentFrequency',
       'Payment Timing': 'PaymentTiming',
       'PaymentTiming': 'PaymentTiming',
+
+      // Escalation
+      'Escalation Type': 'EscalationType',
+      'EscalationType': 'EscalationType',
+      'Base CPI': 'BaseCPI',
+      'BaseCPI': 'BaseCPI',
+      'CPI Reset Month': 'CPIResetMonth',
+      'CPIResetMonth': 'CPIResetMonth',
+      'First Reset Year Offset': 'FirstResetYearOffset',
+      'FirstResetYearOffset': 'FirstResetYearOffset',
+      'Fixed Escalation Pct': 'FixedEscalationPct',
+      'FixedEscalationPct': 'FixedEscalationPct',
+
+      // Variable & Other
+      'Variable Payments In Substance Fixed': 'VariablePaymentsInSubstanceFixed',
+      'VariablePaymentsInSubstanceFixed': 'VariablePaymentsInSubstanceFixed',
+      'Variable Payments Usage Expected': 'VariablePaymentsUsageExpected',
+      'VariablePaymentsUsageExpected': 'VariablePaymentsUsageExpected',
+      'RVG Expected': 'RVGExpected',
+      'RVGExpected': 'RVGExpected',
+      'RVG Reasonably Certain': 'RVGReasonablyCertain',
+      'RVGReasonablyCertain': 'RVGReasonablyCertain',
+      'Purchase Option Price': 'PurchaseOptionPrice',
+      'PurchaseOptionPrice': 'PurchaseOptionPrice',
+      'Purchase Option Reasonably Certain': 'PurchaseOptionReasonablyCertain',
+      'PurchaseOptionReasonablyCertain': 'PurchaseOptionReasonablyCertain',
+
+      // Asset Valuation
+      'Carrying Amount': 'CarryingAmount',
+      'CarryingAmount': 'CarryingAmount',
+      'Fair Value': 'FairValue',
+      'FairValue': 'FairValue',
+      'Sales Proceeds': 'SalesProceeds',
+      'SalesProceeds': 'SalesProceeds',
+
+      // ROU Adjustments
+      'Initial Direct Costs': 'InitialDirectCosts',
+      'InitialDirectCosts': 'InitialDirectCosts',
+      'Prepayments Before Commencement': 'PrepaymentsBeforeCommencement',
+      'PrepaymentsBeforeCommencement': 'PrepaymentsBeforeCommencement',
+      'Lease Incentives': 'LeaseIncentives',
+      'LeaseIncentives': 'LeaseIncentives',
+      'Prepaid First Payment': 'PrepaidFirstPayment',
+      'PrepaidFirstPayment': 'PrepaidFirstPayment',
+
+      // Currency & Rates
+      'Currency': 'Currency',
       'IBR Annual': 'IBR_Annual',
       'IBR_Annual': 'IBR_Annual',
       'IBR': 'IBR_Annual',
+      'FX Policy': 'FXPolicy',
+      'FXPolicy': 'FXPolicy',
+
+      // Asset Life
+      'Useful Life Years': 'UsefulLifeYears',
+      'UsefulLifeYears': 'UsefulLifeYears',
+      'Useful Life': 'UsefulLifeYears',
+
+      // Policy Flags
+      'Low Value Exemption': 'LowValueExemption',
+      'LowValueExemption': 'LowValueExemption',
+      'Short Term Exemption': 'ShortTermExemption',
+      'ShortTermExemption': 'ShortTermExemption',
+      'Separate Non Lease Components': 'SeparateNonLeaseComponents',
+      'SeparateNonLeaseComponents': 'SeparateNonLeaseComponents',
+      'Allocation Basis': 'AllocationBasis',
+      'AllocationBasis': 'AllocationBasis',
+
+      // Governance
+      'Judgement Notes': 'JudgementNotes',
+      'JudgementNotes': 'JudgementNotes',
+      'Approval Signoff': 'ApprovalSignoff',
+      'ApprovalSignoff': 'ApprovalSignoff',
+
+      // Full mode extensions - Legal and Administrative
+      'Lessor Jurisdiction': 'LessorJurisdiction',
+      'LessorJurisdiction': 'LessorJurisdiction',
+      'Lessee Jurisdiction': 'LesseeJurisdiction',
+      'LesseeJurisdiction': 'LesseeJurisdiction',
+      'Lessor Address': 'LessorAddress',
+      'LessorAddress': 'LessorAddress',
+      'Lessee Address': 'LesseeAddress',
+      'LesseeAddress': 'LesseeAddress',
+      'Lessor RC Number': 'LessorRCNumber',
+      'LessorRCNumber': 'LessorRCNumber',
+      'Lessee RC Number': 'LesseeRCNumber',
+      'LesseeRCNumber': 'LesseeRCNumber',
+      'Asset Location': 'AssetLocation',
+      'AssetLocation': 'AssetLocation',
+      'Delivery Date Latest': 'DeliveryDateLatest',
+      'DeliveryDateLatest': 'DeliveryDateLatest',
+      'Risk Transfer Event': 'RiskTransferEvent',
+      'RiskTransferEvent': 'RiskTransferEvent',
+      'Insurance Sum Insured': 'InsuranceSumInsured',
+      'InsuranceSumInsured': 'InsuranceSumInsured',
+      'Insurance TP Limit': 'InsuranceTPLimit',
+      'InsuranceTPLimit': 'InsuranceTPLimit',
+      'Insurer Rating Min': 'InsurerRatingMin',
+      'InsurerRatingMin': 'InsurerRatingMin',
+      'Permitted Use': 'PermittedUse',
+      'PermittedUse': 'PermittedUse',
+      'Move Restriction': 'MoveRestriction',
+      'MoveRestriction': 'MoveRestriction',
+      'Software License': 'SoftwareLicense',
+      'SoftwareLicense': 'SoftwareLicense',
+      'Bank Name': 'BankName',
+      'BankName': 'BankName',
+      'Bank Account Name': 'BankAccountName',
+      'BankAccountName': 'BankAccountName',
+      'Bank Account No': 'BankAccountNo',
+      'BankAccountNo': 'BankAccountNo',
+      'Arbitration Rules': 'ArbitrationRules',
+      'ArbitrationRules': 'ArbitrationRules',
+      'Seat Of Arbitration': 'SeatOfArbitration',
+      'SeatOfArbitration': 'SeatOfArbitration',
+      'Language': 'Language',
+      'Governing Law': 'GoverningLaw',
+      'GoverningLaw': 'GoverningLaw',
+      'Lessor Signatory Title': 'LessorSignatoryTitle',
+      'LessorSignatoryTitle': 'LessorSignatoryTitle',
+      'Lessee Signatory Title': 'LesseeSignatoryTitle',
+      'LesseeSignatoryTitle': 'LesseeSignatoryTitle',
     };
 
     const leaseData: any = {};
+
+    // Numeric fields that need parsing
+    const numericFields = [
+      'NonCancellableYears', 'RenewalOptionYears', 'RenewalOptionLikelihood',
+      'TerminationOptionLikelihood', 'TerminationPenaltyExpected',
+      'FixedPaymentPerPeriod', 'BaseCPI', 'CPIResetMonth', 'FirstResetYearOffset',
+      'FixedEscalationPct', 'VariablePaymentsInSubstanceFixed', 'VariablePaymentsUsageExpected',
+      'RVGExpected', 'PurchaseOptionPrice', 'CarryingAmount', 'FairValue', 'SalesProceeds',
+      'InitialDirectCosts', 'PrepaymentsBeforeCommencement', 'LeaseIncentives',
+      'IBR_Annual', 'UsefulLifeYears', 'InsuranceSumInsured', 'InsuranceTPLimit'
+    ];
+
+    // Boolean fields that need parsing
+    const booleanFields = [
+      'TerminationReasonablyCertain', 'RVGReasonablyCertain', 'PurchaseOptionReasonablyCertain',
+      'PrepaidFirstPayment', 'LowValueExemption', 'ShortTermExemption', 'SeparateNonLeaseComponents'
+    ];
+
+    // Date fields that need parsing
+    const dateFields = ['ContractDate', 'CommencementDate', 'EndDateOriginal', 'DeliveryDateLatest'];
+
     Object.keys(data).forEach(key => {
       const leaseKey = mapping[key];
       if (leaseKey && data[key] !== undefined && data[key] !== null && data[key] !== '') {
         let value = data[key];
 
-        if (['NonCancellableYears', 'FixedPaymentPerPeriod', 'IBR_Annual', 'UsefulLifeYears'].includes(leaseKey)) {
+        // Parse numeric fields
+        if (numericFields.includes(leaseKey)) {
           value = parseFloat(value);
           if (leaseKey === 'IBR_Annual' && value > 1) {
             value = value / 100;
           }
         }
 
-        if (['ContractDate', 'CommencementDate', 'EndDateOriginal'].includes(leaseKey)) {
+        // Parse boolean fields
+        if (booleanFields.includes(leaseKey)) {
+          if (typeof value === 'string') {
+            value = value.toLowerCase() === 'true' || value.toLowerCase() === 'yes' || value === '1';
+          } else {
+            value = Boolean(value);
+          }
+        }
+
+        // Parse date fields
+        if (dateFields.includes(leaseKey)) {
           if (typeof value === 'number') {
             const date = XLSX.SSF.parse_date_code(value);
             value = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;

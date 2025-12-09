@@ -239,7 +239,7 @@ return `
     <p>6.3 Embedded software is licensed on a non-exclusive, non-transferable, term-limited basis. Lessee shall not tamper with firmware or controls.</p>
 
     <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">7. Insurance</h2>
-    <p>Lessee shall insure the Asset for not less than ${leaseData.SumInsured || '200,000,000.00'} and maintain third-party liability of at least ${leaseData.ThirdPartyLiability || '50,000,000.00'} with an insurer rated at least “A”.</p>
+    <p>Lessee shall insure the Asset for not less than ${leaseData.Currency || 'NGN'} ${formatCurrency(leaseData.InsuranceSumInsured || 0)} and maintain third-party liability of at least ${leaseData.Currency || 'NGN'} ${formatCurrency(leaseData.InsuranceTPLimit || 0)} with an insurer rated at least "${leaseData.InsurerRatingMin || 'A'}".</p>
 
     <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">8. Compliance Undertakings</h2>
     <p>Lessee shall comply with applicable law, maintain anti-bribery and sanctions controls, and operate the Asset in line with ESG requirements (Schedule 5).</p>
@@ -286,9 +286,12 @@ return `
     </table>
 
     <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">Schedule 4 — Acceptance Certificate (Template)</h2>
-    <p>Contract ID: ${leaseData.ContractID || 'N/A'} | Asset: ${leaseData.AssetDescription || 'N/A'} | Site: ${leaseData.AssetLocation || 'N/A'}<br>
-    Commissioning completed on: _____________. Lessee confirms the Asset has been installed, tested and is operational in accordance with specifications, save for the punch-list (if any) attached.<br>
-    Signed for Lessee: ____________________ Date: __________</p>
+    <p><strong>Contract ID:</strong> ${leaseData.ContractID || 'N/A'}</p>
+    <p><strong>Asset:</strong> ${leaseData.AssetDescription || 'N/A'}</p>
+    <p><strong>Site:</strong> ${leaseData.AssetLocation || 'N/A'}</p>
+    <p><strong>Commissioning completed on:</strong> _____________</p>
+    <p>Lessee confirms the Asset has been installed, tested and is operational in accordance with specifications, save for the punch-list (if any) attached.</p>
+    <p><strong>Signed for Lessee:</strong> ____________________ <strong>Date:</strong> __________</p>
 
     <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">Schedule 5 — ESG & Compliance Undertakings</h2>
     <ul>
@@ -301,7 +304,10 @@ return `
     <p>Purchase Option Price: ${leaseData.PurchaseOptionPrice || '0.00'}. Exercise mechanics, timing and conditions precedent to be set out in the implementing notice. RVG (if any) applies as per Schedule 1; calculation methodology to be appended if required.</p>
 
     <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">Schedule 7 — Insurance Details</h2>
-    <p>Sum Insured: ${leaseData.SumInsured || '200,000,000.00'}; TPL: ${leaseData.ThirdPartyLiability || '50,000,000.00'}; Insurer minimum rating: A. Lessor named as loss payee and additional insured where applicable.</p>
+    <p><strong>Sum Insured:</strong> ${leaseData.Currency || 'NGN'} ${formatCurrency(leaseData.InsuranceSumInsured || 0)}</p>
+    <p><strong>Third Party Liability (TPL):</strong> ${leaseData.Currency || 'NGN'} ${formatCurrency(leaseData.InsuranceTPLimit || 0)}</p>
+    <p><strong>Insurer Minimum Rating:</strong> ${leaseData.InsurerRatingMin || 'A'}</p>
+    <p>Lessor named as loss payee and additional insured where applicable.</p>
 
     <p style="margin-bottom: 1rem;"> </p>
     <p>Note: Commercial terms above may be redacted or replaced by a pricing schedule in executed versions.</p>
