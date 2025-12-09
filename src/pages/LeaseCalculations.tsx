@@ -29,7 +29,7 @@ export function LeaseCalculations() {
 
   const handleBackToSelection = () => {
     setSelectedContract(null);
-    dispatch({ type: 'RESET' });
+    dispatch({ type: 'SET_CALCULATIONS', payload: null });
   };
 
   // Automatically calculate when contract is selected and has required data

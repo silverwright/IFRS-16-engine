@@ -1,12 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
-import { FileText, Search, ChevronRight } from 'lucide-react';
+import { FileText, Search, ChevronRight, Download, FileSpreadsheet } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
 
 interface ContractSelectorProps {
   onSelect: (contract: SavedContract) => void;
+  showCalculateButton?: boolean;
 }
 
-export function ContractSelector({ onSelect }: ContractSelectorProps) {
+export function ContractSelector({ onSelect, showCalculateButton = true }: ContractSelectorProps) {
   const { state } = useLeaseContext();
   const contracts = state.savedContracts || [];
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,6 +21,113 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-GB');
+  };
+
+  const calculateEndDate = (startDate: string, years: number) => {
+    if (!startDate || !years) return 'N/A';
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setFullYear(start.getFullYear() + years);
+    return end.toLocaleDateString('en-GB');
+  };
+
+  const prepareContractData = () => {
+    return contracts.map(contract => {
+      let calculations = null;
+      try {
+        calculations = calculateIFRS16(contract.data);
+      } catch (error) {
+        console.error(`Failed to calculate for contract ${contract.contractId}:`, error);
+      }
+
+      const leaseTermYears = calculations?.leaseTermYears || contract.data.NonCancellableYears || 0;
+      const endDate = calculateEndDate(contract.commencementDate, leaseTermYears);
+
+      return {
+        contractId: contract.contractId || 'N/A',
+        assetDescription: contract.assetDescription || 'N/A',
+        commencementDate: formatDate(contract.commencementDate),
+        endDate: endDate,
+        leaseTermYears: leaseTermYears,
+        initialDirectCost: contract.data.InitialDirectCosts || 0,
+        initialLiability: calculations?.initialLiability || 0,
+        initialROU: calculations?.initialROU || 0,
+        totalInterest: calculations?.totalInterest || 0,
+        totalDepreciation: calculations?.totalDepreciation || 0
+      };
+    });
+  };
+
+  const exportToExcel = () => {
+    const data = prepareContractData();
+
+    const worksheet = XLSX.utils.json_to_sheet(data.map(item => ({
+      'Contract ID': item.contractId,
+      'Asset Description': item.assetDescription,
+      'Commencement Date': item.commencementDate,
+      'End Date': item.endDate,
+      'Lease Term (Years)': item.leaseTermYears,
+      'Initial Direct Cost': item.initialDirectCost,
+      'Initial Liability': item.initialLiability,
+      'Initial ROU': item.initialROU,
+      'Total Interest': item.totalInterest,
+      'Total Depreciation': item.totalDepreciation
+    })));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Contracts');
+
+    XLSX.writeFile(workbook, `IFRS16_Contracts_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const data = prepareContractData();
+
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    doc.setFontSize(16);
+    doc.text('IFRS 16 Lease Contracts Summary', 14, 15);
+
+    doc.setFontSize(10);
+    const now = new Date();
+    const dateTime = `${now.toLocaleDateString('en-GB')} ${now.toLocaleTimeString('en-GB')}`;
+    doc.text(`Generated: ${dateTime}`, 14, 22);
+
+    autoTable(doc, {
+      startY: 28,
+      head: [[
+        'Contract ID',
+        'Asset Description',
+        'Commencement Date',
+        'End Date',
+        'Lease Term (Years)',
+        'Initial Direct Cost',
+        'Initial Liability',
+        'Initial ROU',
+        'Total Interest',
+        'Total Depreciation'
+      ]],
+      body: data.map(item => [
+        item.contractId,
+        item.assetDescription,
+        item.commencementDate,
+        item.endDate,
+        item.leaseTermYears,
+        item.initialDirectCost.toLocaleString(),
+        item.initialLiability.toLocaleString(),
+        item.initialROU.toLocaleString(),
+        item.totalInterest.toLocaleString(),
+        item.totalDepreciation.toLocaleString()
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [22, 163, 74], textColor: 255 }
+    });
+
+    doc.save(`IFRS16_Contracts_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const filteredContracts = useMemo(() => {
@@ -50,11 +162,33 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Select a Contract for Calculation</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Choose a contract to perform IFRS 16 calculations and generate amortization schedules
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Select a Contract for Calculation</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Choose a contract to perform IFRS 16 calculations and generate amortization schedules
+          </p>
+        </div>
+
+        {/* Export Buttons */}
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={exportToExcel}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+            title="Export all contracts to Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export Excel
+          </button>
+          <button
+            onClick={exportToPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+            title="Export all contracts to PDF"
+          >
+            <Download className="w-4 h-4" />
+            Export PDF
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -108,7 +242,9 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Commencement</th>
                 <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Mode</th>
                 <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Status</th>
-                <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Action</th>
+                {showCalculateButton && (
+                  <th className="text-center py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Action</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -149,15 +285,17 @@ export function ContractSelector({ onSelect }: ContractSelectorProps) {
                       {contract.status}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-center">
-                    <button
-                      onClick={() => onSelect(contract)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
-                    >
-                      Calculate
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </td>
+                  {showCalculateButton && (
+                    <td className="py-4 px-4 text-center">
+                      <button
+                        onClick={() => onSelect(contract)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
+                      >
+                        Calculate
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

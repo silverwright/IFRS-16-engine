@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 10 bash:*)",
+      "Bash(timeout 15 bash:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

@@ -16,11 +16,18 @@ export function DisclosureJournals() {
     setSelectedContract(contract);
     dispatch({ type: 'LOAD_CONTRACT', payload: contract.data });
     dispatch({ type: 'SET_MODE', payload: contract.mode });
+
+    // Trigger calculations if not already present
+    if (contract.data.ContractID && contract.data.CommencementDate && contract.data.NonCancellableYears && contract.data.FixedPaymentPerPeriod && contract.data.IBR_Annual) {
+      const { calculateIFRS16 } = require('../utils/ifrs16Calculator');
+      const results = calculateIFRS16(contract.data);
+      dispatch({ type: 'SET_CALCULATIONS', payload: results });
+    }
   };
 
   const handleBackToSelection = () => {
     setSelectedContract(null);
-    dispatch({ type: 'RESET' });
+    dispatch({ type: 'SET_CALCULATIONS', payload: null });
   };
 
   const tabs = [
@@ -89,7 +96,7 @@ export function DisclosureJournals() {
       {/* Contract Selector */}
       {!selectedContract && (
         <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-white/10 shadow-xl p-6">
-          <ContractSelector onSelect={handleSelectContract} />
+          <ContractSelector onSelect={handleSelectContract} showCalculateButton={false} />
         </div>
       )}
 

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { KPICard } from '../Dashboard/KPICard';
 import { Button } from '../UI/Button';
-import { DollarSign, TrendingDown, FileText, Download, BarChart3, RefreshCw, Edit2 } from 'lucide-react';
+import { DollarSign, TrendingDown, FileText, Download, BarChart3, RefreshCw, Edit2, FileSpreadsheet, Calendar } from 'lucide-react';
 import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export function ResultsDisplay() {
   const navigate = useNavigate();
@@ -33,7 +36,139 @@ export function ResultsDisplay() {
   ];
 
   const exportToExcel = () => {
-    console.log('Exporting to Excel...');
+    const workbook = XLSX.utils.book_new();
+
+    // Get payment frequency label for first column
+    const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+    const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
+                       paymentFrequency === 'Quarterly' ? 'Quarter' :
+                       paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
+                       paymentFrequency === 'Annual' ? 'Year' : 'Period';
+
+    // Summary Sheet
+    const summaryData = [
+      ['IFRS 16 Lease Calculation Results'],
+      ['Contract ID', leaseData.ContractID || 'N/A'],
+      ['Lessee Name', leaseData.LesseeName || 'N/A'],
+      ['Asset Description', leaseData.AssetDescription || 'N/A'],
+      [''],
+      ['Key Metrics'],
+      ['Initial Liability', calculations.initialLiability],
+      ['Initial ROU Asset', calculations.initialROU],
+      ['Total Interest', calculations.totalInterest],
+      ['Total Depreciation', calculations.totalDepreciation],
+      ['Payment Frequency', leaseData.PaymentFrequency || 'N/A'],
+      ['Lease Term (Years)', calculations.leaseTermYears],
+      [''],
+      ['Generated', `${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString('en-GB')}`]
+    ];
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+    // Cashflow Schedule Sheet
+    const cashflowData = calculations.cashflowSchedule.map(row => ({
+      'Period': row.period,
+      'Date': row.date,
+      'Rent Amount': row.rent
+    }));
+    const cashflowSheet = XLSX.utils.json_to_sheet(cashflowData);
+    XLSX.utils.book_append_sheet(workbook, cashflowSheet, 'Cashflow Schedule');
+
+    // Amortization Schedule Sheet with dynamic column header
+    const amortData = calculations.amortizationSchedule.map(row => ({
+      [periodLabel]: row.month,
+      'Payment': row.payment,
+      'Interest': row.interest,
+      'Principal': row.principal,
+      'Remaining Liability': row.remainingLiability,
+      'SOFP Current Liability': row.sofpCurrLiab,
+      'SOFP Non-Current Liability': row.sofpNonCurrLiab,
+      'Depreciation': row.depreciation,
+      'Remaining Asset': row.remainingAsset
+    }));
+    const amortSheet = XLSX.utils.json_to_sheet(amortData);
+    XLSX.utils.book_append_sheet(workbook, amortSheet, 'Amortization Schedule');
+
+    XLSX.writeFile(workbook, `IFRS16_${leaseData.ContractID || 'Contract'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Get payment frequency label for first column
+    const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+    const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
+                       paymentFrequency === 'Quarterly' ? 'Quarter' :
+                       paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
+                       paymentFrequency === 'Annual' ? 'Year' : 'Period';
+
+    // Title and Header
+    doc.setFontSize(18);
+    doc.text('IFRS 16 Lease Calculation Results', 14, 15);
+
+    doc.setFontSize(10);
+    const now = new Date();
+    const dateTime = `${now.toLocaleDateString('en-GB')} ${now.toLocaleTimeString('en-GB')}`;
+    doc.text(`Contract ID: ${leaseData.ContractID || 'N/A'}`, 14, 22);
+    doc.text(`Generated: ${dateTime}`, 14, 27);
+
+    // Key Metrics Table
+    doc.setFontSize(12);
+    doc.text('Key Metrics', 14, 37);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Initial Liability', formatCurrency(calculations.initialLiability)],
+        ['Initial ROU Asset', formatCurrency(calculations.initialROU)],
+        ['Total Interest', formatCurrency(calculations.totalInterest)],
+        ['Total Depreciation', formatCurrency(calculations.totalDepreciation)],
+        ['Payment Frequency', leaseData.PaymentFrequency || 'N/A'],
+        ['Lease Term (Years)', calculations.leaseTermYears.toString()]
+      ],
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [22, 163, 74], textColor: 255 }
+    });
+
+    // Add new page for Amortization Schedule
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.text('Amortization Schedule', 14, 15);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [[
+        periodLabel,
+        'Payment',
+        'Interest',
+        'Principal',
+        'Remaining Liability',
+        'SOFP Curr Liab',
+        'SOFP Non-Curr Liab',
+        'Depreciation',
+        'Remaining Asset'
+      ]],
+      body: calculations.amortizationSchedule.map(row => [
+        row.month,
+        row.payment.toLocaleString(),
+        row.interest.toLocaleString(),
+        row.principal.toLocaleString(),
+        row.remainingLiability.toLocaleString(),
+        row.sofpCurrLiab.toLocaleString(),
+        row.sofpNonCurrLiab.toLocaleString(),
+        row.depreciation.toLocaleString(),
+        row.remainingAsset.toLocaleString()
+      ]),
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [22, 163, 74], textColor: 255 }
+    });
+
+    doc.save(`IFRS16_${leaseData.ContractID || 'Contract'}_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const handleRecalculate = async () => {
@@ -57,6 +192,13 @@ export function ResultsDisplay() {
   const formatCurrency = (value: number) => {
     return `${leaseData.Currency || 'NGN'} ${value.toLocaleString()}`;
   };
+
+  // Get payment frequency label for first column
+  const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+  const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
+                     paymentFrequency === 'Quarterly' ? 'Quarter' :
+                     paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
+                     paymentFrequency === 'Annual' ? 'Year' : 'Period';
 
   return (
     <div className="space-y-6">
@@ -89,19 +231,27 @@ export function ResultsDisplay() {
               </>
             )}
           </Button>
-          <Button
-            variant="outline"
+          <button
             onClick={exportToExcel}
-            className="flex items-center gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+            title="Export to Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Export Excel
+          </button>
+          <button
+            onClick={exportToPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+            title="Export to PDF"
           >
             <Download className="w-4 h-4" />
-            Export to Excel
-          </Button>
+            Export PDF
+          </button>
         </div>
       </div>
 
       {/* Enhanced KPI Summary with gradient backgrounds */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
@@ -133,7 +283,7 @@ export function ResultsDisplay() {
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm font-medium">Total Interest to be paid</p>
+              <p className="text-purple-100 text-sm font-medium">Total Interest</p>
               <p className="text-2xl font-bold mt-1">
                 {formatCurrency(calculations.totalInterest)}
               </p>
@@ -154,6 +304,34 @@ export function ResultsDisplay() {
             </div>
             <div className="bg-white/20 p-3 rounded-lg">
               <TrendingDown className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-cyan-100 text-sm font-medium">Payment Frequency</p>
+              <p className="text-2xl font-bold mt-1">
+                {leaseData.PaymentFrequency || 'Monthly'}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <Calendar className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-indigo-100 text-sm font-medium">Lease Term</p>
+              <p className="text-2xl font-bold mt-1">
+                {calculations.leaseTermYears} Years
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <BarChart3 className="w-6 h-6" />
             </div>
           </div>
         </div>
@@ -278,9 +456,9 @@ export function ResultsDisplay() {
             <h4 className="text-xl font-bold text-slate-900 dark:text-white">Amortization Schedule</h4>
             <div className="overflow-x-auto border border-slate-300 dark:border-white/10 rounded-lg shadow-xl max-h-[600px] overflow-y-auto">
               <table className="min-w-full divide-y divide-slate-300 dark:divide-white/10">
-                <thead className="bg-gradient-to-r from-indigo-500 to-blue-500 dark:from-indigo-600/30 dark:to-blue-600/30 text-white sticky top-0 z-10">
+                <thead className="bg-gradient-to-r from-indigo-500 to-blue-500 dark:from-indigo-600 dark:to-blue-600 text-white sticky top-0 z-20">
                   <tr>
-                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">Month</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">{periodLabel}</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Payment</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Interest</th>
                     <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Principal</th>
@@ -325,7 +503,7 @@ export function ResultsDisplay() {
               </table>
             </div>
             <div className="text-sm text-slate-600 dark:text-white/80 text-center">
-              Showing all {calculations.amortizationSchedule.length} months (scroll to view more)
+              Showing all {calculations.amortizationSchedule.length} {periodLabel.toLowerCase()}s (scroll to view more)
             </div>
           </div>
         )}

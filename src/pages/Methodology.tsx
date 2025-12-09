@@ -288,7 +288,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Professional Header with Gradient */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900 text-white shadow-xl">
         <div className="w-full px-6 py-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
@@ -302,7 +302,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
             </div>
             <button
               onClick={handleDownload}
-              className="flex items-center space-x-2 bg-white text-blue-700 dark:text-slate-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-blue-50 dark:hover:bg-slate-100 transition-all duration-200 font-medium"
+              className="flex items-center space-x-2 bg-white text-emerald-700 dark:text-slate-800 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:bg-emerald-50 dark:hover:bg-slate-100 transition-all duration-200 font-medium"
             >
               <Download className="h-5 w-5" />
               <span>Export PDF</span>
@@ -316,15 +316,15 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
           {/* Sidebar Navigation */}
           <div className="w-72 flex-shrink-0">
             <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 sticky top-6 overflow-hidden h-[calc(100vh-8rem)]">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600/30 dark:to-indigo-600/30 p-4 border-b border-slate-300 dark:border-white/10">
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-emerald-600/30 dark:to-teal-600/30 p-4 border-b border-slate-300 dark:border-white/10">
                 <h3 className="font-semibold text-white flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2 text-white dark:text-blue-300" />
+                  <BookOpen className="h-5 w-5 mr-2 text-white dark:text-emerald-300" />
                   Table of Contents
                 </h3>
               </div>
               <nav className="p-2 overflow-y-auto h-[calc(100%-4rem)]">
                 {[
-                  { id: 'introduction', title: 'Introduction & Scope', icon: Shield, color: 'blue' },
+                  { id: 'introduction', title: 'Introduction & Scope', icon: Shield, color: 'emerald' },
                   { id: 'identification', title: 'Identification of ROU', icon: Target, color: 'purple' },
                   { id: 'measurement', title: 'Measurement of Liability', icon: Calculator, color: 'emerald' },
                   { id: 'lease-term', title: 'Lease Term', icon: Calendar, color: 'amber' },
@@ -341,12 +341,12 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                       onClick={() => setActiveSection(section.id)}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left mb-1 ${
                         isActive
-                          ? 'bg-blue-100 dark:bg-blue-500/30 text-blue-700 dark:text-white shadow-lg border border-blue-300 dark:border-blue-400/30'
+                          ? 'bg-emerald-100 dark:bg-emerald-500/30 text-emerald-700 dark:text-white shadow-lg border border-emerald-300 dark:border-emerald-400/30'
                           : 'text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/10'
                       }`}
                     >
-                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-blue-200 dark:bg-blue-400/30' : 'bg-slate-200 dark:bg-white/5'}`}>
-                        <Icon className={`h-4 w-4 ${isActive ? 'text-blue-700 dark:text-white' : 'text-slate-600 dark:text-white/60'}`} />
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-emerald-200 dark:bg-emerald-400/30' : 'bg-slate-200 dark:bg-white/5'}`}>
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-emerald-700 dark:text-white' : 'text-slate-600 dark:text-white/60'}`} />
                       </div>
                       <span className="text-sm font-medium flex-1">{section.title}</span>
                       {isActive && <ArrowRight className="h-4 w-4" />}
@@ -362,7 +362,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
             {activeSection === 'introduction' && (
               <div className="space-y-6">
                 {/* Hero Card */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-slate-700 dark:to-slate-800 rounded-2xl shadow-xl p-8 text-white border border-blue-300 dark:border-white/10">
+                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 dark:from-slate-700 dark:to-slate-800 rounded-2xl shadow-xl p-8 text-white border border-emerald-300 dark:border-white/10">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-3">
@@ -431,8 +431,8 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                 {content.introduction.closing.map((p, i) => (
                   <div key={i} className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 p-6">
                     <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg mt-1">
-                        <Info className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+                      <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg mt-1">
+                        <Info className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
                       </div>
                       <p className="text-slate-800 dark:text-white/90 leading-relaxed flex-1">{p}</p>
                     </div>
@@ -693,7 +693,7 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
 
                 {/* Lease Liability */}
                 <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-xl shadow-xl border border-slate-300 dark:border-white/10 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-5">
+                  <div className="bg-gradient-to-r from-teal-500 to-cyan-500 p-5">
                     <h3 className="font-bold text-white text-lg flex items-center">
                       <DollarSign className="h-6 w-6 mr-2" />
                       {content.assumptions.subsections.modelLogics.subsections.liability.title}
@@ -703,8 +703,8 @@ export const Methodology: React.FC = () => {   // 👈 named export instead of c
                     {content.assumptions.subsections.modelLogics.subsections.liability.paragraphs.map((p, i) => (
                       <p key={i} className="text-slate-800 dark:text-white/90 leading-relaxed">{p}</p>
                     ))}
-                    <div className="bg-blue-100 dark:bg-blue-500/20 rounded-xl p-4 border-l-4 border-blue-500 dark:border-blue-400">
-                      <code className="text-blue-700 dark:text-blue-200 text-sm font-mono">
+                    <div className="bg-teal-100 dark:bg-teal-500/20 rounded-xl p-4 border-l-4 border-teal-500 dark:border-teal-400">
+                      <code className="text-teal-700 dark:text-teal-200 text-sm font-mono">
                         liability = pv(extension amount) = extension amount × 1 / (1+r)^(-t)
                       </code>
                     </div>
