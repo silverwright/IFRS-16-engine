@@ -3,10 +3,31 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Play,
+  FileText,
+  Calculator,
+  BookOpen,
+  BarChart3,
+  ScrollText,
+  LayoutDashboard,
+  GraduationCap,
+  TrendingUp,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export function Home() {
   const navigate = useNavigate();
+  const { user, openLoginModal, showLoginModal } = useAuth();
+
+  // Handle module click - open login modal if not authenticated, stay on home page
+  const handleModuleClick = (moduleId: string) => {
+    if (!user) {
+      // Open modal and set intended route, but DON'T navigate
+      openLoginModal(moduleId);
+    } else {
+      // User is authenticated, navigate to the module
+      navigate(moduleId);
+    }
+  };
 
   const modules = [
     {
@@ -14,7 +35,8 @@ export function Home() {
       title: "Contract Initiation & Approval",
       description:
         "Streamline lease contract creation and approval processes with comprehensive data capture and validation.",
-      image: "https://images.pexels.com/photos/48148/document-agreement-documents-sign-48148.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: FileText,
       color: "from-blue-600 to-blue-700"
     },
     {
@@ -22,7 +44,8 @@ export function Home() {
       title: "Lease Calculation Engine",
       description:
         "Advanced calculations for lease liability and right-of-use assets with automated amortization schedules.",
-      image: "https://images.pexels.com/photos/6801647/pexels-photo-6801647.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/6801648/pexels-photo-6801648.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: Calculator,
       color: "from-emerald-600 to-emerald-700"
     },
     {
@@ -30,7 +53,8 @@ export function Home() {
       title: "Disclosure & Journal Entries",
       description:
         "Generate compliant disclosures and accounting journal entries automatically with maturity analysis.",
-      image: "https://images.pexels.com/photos/534216/pexels-photo-534216.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/7681089/pexels-photo-7681089.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: ScrollText,
       color: "from-violet-600 to-violet-700"
     },
     {
@@ -38,7 +62,8 @@ export function Home() {
       title: "Reports & Analytics",
       description:
         "Comprehensive reporting and analytics for lease portfolio management.",
-      image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/7947662/pexels-photo-7947662.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: BarChart3,
       color: "from-amber-600 to-amber-700"
     },
     {
@@ -46,7 +71,8 @@ export function Home() {
       title: "IFRS 16 Methodology",
       description:
         "Comprehensive methodology guide covering assumptions, processes, and best practices.",
-      image: "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/159519/back-to-school-paper-colored-paper-stationery-159519.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: BookOpen,
       color: "from-cyan-600 to-cyan-700"
     },
     {
@@ -54,7 +80,8 @@ export function Home() {
       title: "Dashboard",
       description:
         "Comprehensive analytics and insights into your lease portfolio with interactive visualizations.",
-      image: "https://images.pexels.com/photos/265087/pexels-photo-265087.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/669615/pexels-photo-669615.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: LayoutDashboard,
       color: "from-pink-600 to-pink-700"
     },
     {
@@ -62,7 +89,8 @@ export function Home() {
       title: "Learn IFRS 16",
       description:
         "Self-paced e-learning platform to master IFRS 16 lease accounting fundamentals.",
-      image: "https://images.pexels.com/photos/6238050/pexels-photo-6238050.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/4226256/pexels-photo-4226256.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: GraduationCap,
       color: "from-indigo-600 to-indigo-700"
     },
     {
@@ -70,13 +98,14 @@ export function Home() {
       title: "IBMR Calculator",
       description:
         "Calculate Incremental Borrowing Rate (IBR) with precision using advanced financial models and market data.",
-      image: "https://images.pexels.com/photos/53621/calculator-calculation-insurance-finance-53621.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "https://images.pexels.com/photos/8919544/pexels-photo-8919544.jpeg?auto=compress&cs=tinysrgb&w=800",
+      icon: TrendingUp,
       color: "from-teal-600 to-teal-700"
     },
   ];
 
   return (
-    <div className="w-full font-sans bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
+    <div className={`w-full font-sans bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen transition-all duration-300 ${showLoginModal ? 'blur-sm' : ''}`}>
       {/* Hero Section */}
       <section className="relative w-full h-screen flex items-center -mt-16 md:-mt-20 overflow-hidden">
         {/* Full-width Background Image */}
@@ -131,14 +160,14 @@ export function Home() {
 
               <div className="flex flex-wrap gap-4 pt-4">
                 <button
-                  onClick={() => navigate("/contract")}
+                  onClick={() => handleModuleClick("/contract")}
                   className="group bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg shadow-emerald-500/50"
                 >
                   Learn More
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
-                  onClick={() => navigate("/education")}
+                  onClick={() => handleModuleClick("/education")}
                   className="group bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white px-8 py-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2"
                 >
                   Watch Demo
@@ -167,52 +196,51 @@ export function Home() {
           </div>
 
           {/* Modules Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {modules.map((module, index) => (
-              <div
-                key={module.id}
-                className="group relative bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer shadow-lg"
-                onClick={() => navigate(module.id)}
-              >
-                {/* Module Image */}
-                <div className="relative h-96 overflow-hidden">
-                  <img
-                    src={module.image}
-                    alt={module.title}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-white/50 dark:via-slate-900/50 to-transparent"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-8">
+            {modules.map((module, index) => {
+              const Icon = module.icon;
+              return (
+                <div
+                  key={module.id}
+                  className="group relative bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 hover:border-emerald-500/50 transition-all duration-300 cursor-pointer shadow-lg"
+                  onClick={() => handleModuleClick(module.id)}
+                >
+                  {/* Module Image */}
+                  <div className="relative h-96 overflow-hidden">
+                    <img
+                      src={module.image}
+                      alt={module.title}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
+                  </div>
 
-                  {/* Module Number Badge */}
-                  <div className="absolute top-4 right-4 w-10 h-10 bg-emerald-500 dark:bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    {index + 1}
+                  {/* Module Content */}
+                  <div className="px-2.5 py-5 space-y-3">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+                      {module.title}
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                      {module.description}
+                    </p>
+
+                    {/* CTA */}
+                    <div className="pt-4">
+                      <button className="w-full bg-emerald-500/10 dark:bg-emerald-500/10 hover:bg-emerald-500 dark:hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn">
+                        <span>Open Solution</span>
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Hover Glow Effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    <div className={`absolute inset-0 bg-gradient-to-t ${module.color} opacity-10`}></div>
                   </div>
                 </div>
-
-                {/* Module Content */}
-                <div className="p-6 space-y-3">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
-                    {module.title}
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                    {module.description}
-                  </p>
-
-                  {/* CTA */}
-                  <div className="pt-4">
-                    <button className="w-full bg-emerald-500/10 dark:bg-emerald-500/10 hover:bg-emerald-500 dark:hover:bg-emerald-500 text-emerald-600 dark:text-emerald-400 hover:text-white dark:hover:text-white py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 group/btn">
-                      <span>Open Solution</span>
-                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  <div className={`absolute inset-0 bg-gradient-to-t ${module.color} opacity-10`}></div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -238,13 +266,13 @@ export function Home() {
               </p>
               <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <button
-                  onClick={() => navigate("/contract")}
+                  onClick={() => handleModuleClick("/contract")}
                   className="bg-white dark:bg-white text-emerald-600 dark:text-emerald-600 px-8 py-4 rounded-lg font-semibold hover:bg-slate-100 dark:hover:bg-slate-100 transition-colors shadow-lg"
                 >
                   Start with Contract Initiation
                 </button>
                 <button
-                  onClick={() => navigate("/methodology")}
+                  onClick={() => handleModuleClick("/methodology")}
                   className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-emerald-600 dark:hover:bg-white dark:hover:text-emerald-600 transition-all"
                 >
                   View Methodology

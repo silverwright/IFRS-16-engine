@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FileText,
   Calculator,
@@ -11,8 +11,10 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  LogOut,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -31,14 +33,42 @@ const navigation = [
   },
   { name: "Learn IFRS 16", href: "/education" },
   { name: "Dashboard", href: "/dashboard" },
+  { name: "Approvals", href: "/approvals", requiredRoles: ['approver', 'admin'] },
   { name: "Reports", href: "/reports" },
 ];
 
 export function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { user, userProfile, signOut, openLoginModal } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Handle navigation click - check authentication before navigating
+  const handleNavClick = (href: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    // Always allow navigation to home page
+    if (href === '/') {
+      navigate(href);
+      return;
+    }
+    // For protected routes, check authentication
+    if (!user) {
+      openLoginModal(href);
+    } else {
+      navigate(href);
+      setOpenDropdown(false);
+    }
+  };
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -48,6 +78,12 @@ export function Header() {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setOpenDropdown(false);
+      }
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setUserMenuOpen(false);
       }
     };
 
@@ -76,7 +112,13 @@ export function Header() {
         <div className="flex items-center gap-6">
           {/* Navigation links */}
           <nav className="flex items-center gap-4 relative">
-            {navigation.map((item) => {
+            {navigation.filter((item) => {
+              // Filter out items that require specific roles
+              if ('requiredRoles' in item && item.requiredRoles) {
+                return userProfile?.role && item.requiredRoles.includes(userProfile.role);
+              }
+              return true;
+            }).map((item) => {
               if (item.children) {
                 // Dropdown menu
                 return (
@@ -105,22 +147,21 @@ export function Header() {
                         {item.children.map((child) => {
                           const isActive = location.pathname === child.href;
                           return (
-                            <Link
+                            <button
                               key={child.name}
-                              to={child.href}
+                              onClick={(e) => handleNavClick(child.href, e)}
                               className={`
-                                flex items-center gap-2 px-4 py-2 text-sm transition-colors
+                                w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors text-left
                                 ${
                                   isActive
                                     ? "text-emerald-500 dark:text-emerald-400 bg-slate-100 dark:bg-slate-700"
                                     : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white"
                                 }
                               `}
-                              onClick={() => setOpenDropdown(false)}
                             >
-                              {child.icon && <child.icon className="w-4 h-4" />}
-                              {child.name}
-                            </Link>
+                              {child.icon && <child.icon className="w-4 h-4 flex-shrink-0" />}
+                              <span className="text-left">{child.name}</span>
+                            </button>
                           );
                         })}
                       </div>
@@ -131,9 +172,9 @@ export function Header() {
 
               const isActive = location.pathname === item.href;
               return (
-                <Link
+                <button
                   key={item.name}
-                  to={item.href}
+                  onClick={(e) => handleNavClick(item.href, e)}
                   className={`
                     px-2 py-1 rounded-md text-sm font-medium transition-colors
                     ${
@@ -144,7 +185,7 @@ export function Header() {
                   `}
                 >
                   {item.name}
-                </Link>
+                </button>
               );
             })}
           </nav>
@@ -168,13 +209,61 @@ export function Header() {
             )}
           </button>
 
-          {/* User */}
-          <div className="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg">
-            <User className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-            <span className="text-sm font-medium text-slate-900 dark:text-white">
-              Admin
-            </span>
-          </div>
+          {/* User Menu / Sign In */}
+          {user ? (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+              >
+                <User className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                <span className="text-sm font-medium text-slate-900 dark:text-white">
+                  {userProfile?.first_name || userProfile?.email || 'User'}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${
+                    userMenuOpen ? 'rotate-180' : 'rotate-0'
+                  }`}
+                />
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg shadow-lg z-50">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {userProfile?.first_name && userProfile?.last_name
+                        ? `${userProfile.first_name} ${userProfile.last_name}`
+                        : userProfile?.email}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      {userProfile?.email}
+                    </p>
+                    <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 capitalize">
+                      Role: {userProfile?.role || 'User'}
+                    </p>
+                  </div>
+
+                  {/* Sign Out */}
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => openLoginModal()}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white rounded-lg hover:from-emerald-700 hover:to-cyan-700 transition-colors shadow-md"
+            >
+              <User className="w-4 h-4" />
+              <span className="text-sm font-medium">Sign In</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

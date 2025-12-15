@@ -535,3 +535,230 @@ The IBMR (Incremental Borrowing Rate) Calculator is a critical tool for IFRS 16 
 
 ---
 
+### Session 2: Backend Integration & Approval Workflow Planning
+**Date:** 2025-12-10
+**Focus:** Supabase backend integration, contract saving fixes, approval workflow architecture
+
+---
+
+#### Request 10: Backend Integration Setup
+**User:** Setup backend with Supabase for contract persistence
+
+**Claude Actions:**
+1. Created Express.js backend server ([backend/src/server.ts](../backend/src/server.ts))
+2. Set up Supabase database connection ([backend/src/db.ts](../backend/src/db.ts))
+3. Created contract API routes ([backend/src/routes/contracts.ts](../backend/src/routes/contracts.ts))
+4. Integrated frontend with backend API ([src/hooks/useContracts.ts](../src/hooks/useContracts.ts))
+
+**Technical Implementation:**
+- Backend running on port 3001
+- Frontend on port 5173
+- CORS enabled for cross-origin requests
+- Request logging middleware
+- Supabase connection with service role key
+
+**API Endpoints Created:**
+- `GET /api/contracts` - List all contracts
+- `GET /api/contracts/:id` - Get single contract
+- `POST /api/contracts` - Create contract
+- `PUT /api/contracts/:id` - Update contract
+- `DELETE /api/contracts/:id` - Delete contract
+- `POST /api/contracts/bulk` - Bulk import
+- `GET /api/health` - Health check
+
+**Status:** ✓ Completed
+
+---
+
+#### Request 11: Contract Import Save Issue
+**User:** "the table is empty even after saving a contract from my front end"
+
+**Problem Identified:**
+Frontend was using direct dispatch to context instead of API calls, so contracts were only saved to localStorage, not the database.
+
+**Claude Actions:**
+1. Updated [ContractInitiation.tsx](../src/pages/ContractInitiation.tsx) to use `useContracts` hook
+2. Changed `handleSaveContract` from synchronous dispatch to async API calls
+3. Added proper error handling with user feedback
+
+**Code Changes:**
+```typescript
+// Before: Direct dispatch
+dispatch({ type: 'SAVE_CONTRACT', payload: contractData });
+
+// After: API call
+const savedContract = await saveContract(contractData);
+```
+
+**Status:** ✓ Completed
+
+---
+
+#### Request 12: Imported Contracts Not Saving
+**User:** "if i use the create button and manually type and create a contract it saves to the database but when i use the import and try to save it says contract not found"
+
+**Root Cause Analysis:**
+Imported contracts from Excel had timestamp-based IDs (e.g., `1765410027849-0`), making the code think they were existing contracts to update. But these IDs didn't exist in the database, causing "Contract not found" errors.
+
+**Solution Implemented:**
+Added UUID pattern detection to distinguish database contracts from imported contracts:
+
+```typescript
+// Check if ID is a database UUID vs import timestamp
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isExistingDbContract = editingContract &&
+  editingContract.id &&
+  uuidPattern.test(editingContract.id);
+
+if (isExistingDbContract) {
+  await updateContract(editingContract.id, contractData); // Update
+} else {
+  await saveContract(contractData); // Create new
+}
+```
+
+**Files Modified:**
+- [src/pages/ContractInitiation.tsx](../src/pages/ContractInitiation.tsx) - UUID pattern check logic
+
+**Status:** ✓ Completed
+
+---
+
+#### Request 13: Home Page Module Card Adjustments
+**User:** Multiple requests to adjust card dimensions
+
+**Changes Made:**
+- Initial: Increased card height from h-56 to h-72, then to h-96 (384px)
+- Width adjustments: Multiple iterations of grid column changes
+- Final grid layout: `grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4`
+- Removed numbered badges from module cards
+
+**Visual Result:**
+- Taller cards (h-96) showcase images better
+- Optimal 4-column layout on large screens
+- Clean design without numbers
+
+**Status:** ✓ Completed
+
+---
+
+#### Request 14: Approval Workflow Planning
+**User:** "now lets structure how to work on the approval workflow"
+**User:** "i want full 5 status workflow and added user roles and authentication, how can we go about this"
+
+**Claude Actions:**
+Created comprehensive implementation plan with documentation:
+
+**1. Database Migration File Created:** [backend/database-migrations.sql](../backend/database-migrations.sql)
+- Users table with authentication fields
+- Extended contracts table with approval columns
+- Approval history/audit log table
+- User sessions table
+- Proper indexes and constraints
+
+**2. Implementation Guide Created:** [APPROVAL_WORKFLOW_IMPLEMENTATION.md](../APPROVAL_WORKFLOW_IMPLEMENTATION.md)
+- 5-phase implementation plan (14 days)
+- Complete file structure overview
+- API endpoints summary
+- Security considerations
+- Testing checklist
+
+**3. Quick Start Guide Created:** [QUICK_START_CHECKLIST.md](../QUICK_START_CHECKLIST.md)
+- Pre-implementation checklist
+- Week-by-week implementation order
+- Decision points and recommendations
+- Tools and environment setup
+
+**Workflow Design:**
+
+**5 Status Flow:**
+```
+draft → pending → under_review → approved/rejected
+```
+
+**3 User Roles:**
+- **Creator**: Create/edit drafts, submit for approval
+- **Approver**: Review and approve/reject contracts
+- **Admin**: Full system access + user management
+
+**Key Features Planned:**
+- JWT-based authentication
+- Role-based access control (RBAC)
+- Approval history/audit trail
+- Status transitions with validation
+- Bulk approval capabilities
+- User management interface
+- Email notifications (optional)
+
+**Database Schema:**
+- `users` table - Authentication and roles
+- `user_profiles` table - Extended user information
+- `contracts` table - Extended with approval fields:
+  - `created_by`, `submitted_by`, `reviewer_id`, `approver_id`
+  - `submitted_at`, `reviewed_at`, `approved_at`, `rejected_at`
+  - `rejection_reason`, `approval_notes`
+- `approval_history` table - Audit log of all actions
+- `user_sessions` table - Session management
+
+**API Endpoints Planned:**
+- Authentication: `/api/auth/login`, `/api/auth/register`, `/api/auth/me`
+- Users: `/api/users` (CRUD operations)
+- Approval: `/api/contracts/:id/submit`, `/api/contracts/:id/approve`, `/api/contracts/:id/reject`
+- History: `/api/contracts/:id/history`
+- Bulk: `/api/contracts/bulk-approve`
+
+**Frontend Components Planned:**
+- `AuthContext` - User authentication state
+- `LoginForm` - Login page
+- `ProtectedRoute` - Route guard
+- `StatusBadge` - Color-coded status indicators
+- `ApprovalDashboard` - Main approval interface
+- `ApprovalHistory` - Timeline view
+- `UserManagement` - Admin user management
+
+**Security Features:**
+- bcrypt password hashing (10+ rounds)
+- JWT tokens with expiration
+- Role-based authorization middleware
+- Input validation on all endpoints
+- Audit logging for all approval actions
+
+**Status:** 📋 Planned (Implementation ready to begin)
+
+---
+
+#### Request 15: Supabase Auth Recommendation
+**User:** "can i do all this with my current supabase backend?"
+
+**Claude Response:**
+Yes! Recommended using Supabase's built-in authentication instead of custom JWT implementation for faster, more secure implementation.
+
+**Comparison:**
+
+**Approach 1 (Planned):** Custom Express Auth
+- Build JWT authentication from scratch
+- Manage password hashing with bcrypt
+- Create custom user sessions
+
+**Approach 2 (Recommended):** Supabase Auth
+- ✅ User auth built-in and free
+- ✅ Security best practices included
+- ✅ Less code to write and maintain
+- ✅ Email verification, password reset included
+- ✅ Social login support available
+- ✅ Faster implementation
+
+**Simplified Schema with Supabase Auth:**
+- Use `auth.users` table (built-in)
+- Create `user_profiles` table for roles/department
+- Keep `contracts` and `approval_history` tables as planned
+
+**Next Step Decision Required:**
+User needs to choose between:
+- **Option A:** Supabase Auth (recommended, faster)
+- **Option B:** Custom Express Auth (more control)
+
+**Status:** ⏳ Awaiting user decision
+
+---
+

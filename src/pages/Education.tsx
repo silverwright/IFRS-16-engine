@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { 
-  GraduationCap, 
-  PlayCircle, 
-  CheckCircle, 
-  Clock, 
-  BookOpen, 
-  Award, 
+import {
+  GraduationCap,
+  PlayCircle,
+  CheckCircle,
+  Clock,
+  BookOpen,
+  Award,
   ArrowRight,
   FileText,
   Calculator,
-  Target
+  Target,
+  ChevronRight,
+  X,
+  AlertCircle
 } from 'lucide-react';
+import { educationContent, Question } from '../data/educationContent';
 
 const courseModules = [
   {
@@ -108,6 +112,72 @@ const assessmentResults = [
 export function Education() {
   const [activeTab, setActiveTab] = useState('courses');
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedTopicIndex, setSelectedTopicIndex] = useState<number | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
+
+  // Get module content
+  const getModuleContent = (moduleId: number) => {
+    return educationContent.find(content => content.moduleId === moduleId);
+  };
+
+  // Handle starting a topic
+  const handleStartTopic = (index: number) => {
+    setSelectedTopicIndex(index);
+    setShowQuiz(false);
+  };
+
+  // Handle starting quiz
+  const handleStartQuiz = () => {
+    setShowQuiz(true);
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    setQuizScore(0);
+    setSelectedTopicIndex(null);
+  };
+
+  // Handle quiz answer selection
+  const handleQuizAnswer = (questionId: number, answerIndex: number) => {
+    setQuizAnswers(prev => ({
+      ...prev,
+      [questionId]: answerIndex
+    }));
+  };
+
+  // Handle quiz submission
+  const handleSubmitQuiz = () => {
+    if (!selectedCourse) return;
+
+    const moduleContent = getModuleContent(selectedCourse.id);
+    if (!moduleContent) return;
+
+    let correct = 0;
+    moduleContent.quiz.forEach((question) => {
+      if (quizAnswers[question.id] === question.correctAnswer) {
+        correct++;
+      }
+    });
+
+    const score = Math.round((correct / moduleContent.quiz.length) * 100);
+    setQuizScore(score);
+    setQuizSubmitted(true);
+  };
+
+  // Reset quiz
+  const handleResetQuiz = () => {
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+    setQuizScore(0);
+  };
+
+  // Back to course overview
+  const handleBackToCourse = () => {
+    setSelectedTopicIndex(null);
+    setShowQuiz(false);
+    setQuizSubmitted(false);
+  };
 
   return (
     <div className="w-full px-6 py-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 min-h-screen">
@@ -192,7 +262,242 @@ export function Education() {
                 </div>
               ))}
             </div>
+          ) : selectedTopicIndex !== null && selectedCourse ? (
+            // Topic Detail View
+            (() => {
+              const moduleContent = getModuleContent(selectedCourse.id);
+              if (!moduleContent) return null;
+              const topic = moduleContent.topics[selectedTopicIndex];
+
+              return (
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg shadow-xl border border-slate-300 dark:border-white/10 p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{topic.title}</h2>
+                    <button
+                      onClick={handleBackToCourse}
+                      className="flex items-center gap-2 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="prose dark:prose-invert max-w-none">
+                    <p className="text-lg text-slate-700 dark:text-white/90 leading-relaxed mb-6">
+                      {topic.content}
+                    </p>
+
+                    <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-6 mb-6">
+                      <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-4 flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        Key Points
+                      </h3>
+                      <ul className="space-y-2">
+                        {topic.keyPoints.map((point, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-slate-700 dark:text-white/80">
+                            <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {topic.example && (
+                      <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg p-6 mb-6">
+                        <h3 className="text-lg font-semibold text-emerald-900 dark:text-emerald-200 mb-3 flex items-center gap-2">
+                          <Calculator className="w-5 h-5" />
+                          Practical Example
+                        </h3>
+                        <p className="text-slate-700 dark:text-white/80 leading-relaxed whitespace-pre-line">
+                          {topic.example}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between mt-8">
+                    <button
+                      onClick={() => selectedTopicIndex > 0 && handleStartTopic(selectedTopicIndex - 1)}
+                      disabled={selectedTopicIndex === 0}
+                      className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous Topic
+                    </button>
+                    <button
+                      onClick={() => selectedTopicIndex < moduleContent.topics.length - 1 ? handleStartTopic(selectedTopicIndex + 1) : handleBackToCourse()}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      {selectedTopicIndex < moduleContent.topics.length - 1 ? 'Next Topic' : 'Back to Overview'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()
+          ) : showQuiz && selectedCourse ? (
+            // Quiz View
+            (() => {
+              const moduleContent = getModuleContent(selectedCourse.id);
+              if (!moduleContent) return null;
+
+              return (
+                <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg shadow-xl border border-slate-300 dark:border-white/10 p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {selectedCourse.title} - Quiz
+                    </h2>
+                    <button
+                      onClick={handleBackToCourse}
+                      className="flex items-center gap-2 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                      Close
+                    </button>
+                  </div>
+
+                  {!quizSubmitted ? (
+                    <div className="space-y-8">
+                      {moduleContent.quiz.map((question, qIndex) => (
+                        <div key={question.id} className="border border-slate-300 dark:border-white/10 rounded-lg p-6 bg-slate-50 dark:bg-white/5">
+                          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                            Question {qIndex + 1}: {question.question}
+                          </h3>
+                          <div className="space-y-3">
+                            {question.options.map((option, optIndex) => (
+                              <label
+                                key={optIndex}
+                                className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                  quizAnswers[question.id] === optIndex
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/20'
+                                    : 'border-slate-300 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-500/50'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`question-${question.id}`}
+                                  checked={quizAnswers[question.id] === optIndex}
+                                  onChange={() => handleQuizAnswer(question.id, optIndex)}
+                                  className="w-4 h-4 text-blue-600"
+                                />
+                                <span className="text-slate-900 dark:text-white">{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="flex justify-center gap-4">
+                        <button
+                          onClick={handleBackToCourse}
+                          className="px-8 py-3 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSubmitQuiz}
+                          disabled={Object.keys(quizAnswers).length !== moduleContent.quiz.length}
+                          className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Submit Quiz
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Quiz Results
+                    <div>
+                      <div className={`p-6 rounded-lg mb-8 ${
+                        quizScore >= 70
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30'
+                          : 'bg-red-50 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30'
+                      }`}>
+                        <div className="flex items-center justify-center mb-4">
+                          {quizScore >= 70 ? (
+                            <CheckCircle className="w-16 h-16 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <AlertCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
+                          )}
+                        </div>
+                        <h3 className={`text-2xl font-bold text-center mb-2 ${
+                          quizScore >= 70 ? 'text-emerald-900 dark:text-emerald-200' : 'text-red-900 dark:text-red-200'
+                        }`}>
+                          {quizScore >= 70 ? 'Congratulations!' : 'Keep Learning!'}
+                        </h3>
+                        <p className={`text-center text-lg ${
+                          quizScore >= 70 ? 'text-emerald-800 dark:text-emerald-300' : 'text-red-800 dark:text-red-300'
+                        }`}>
+                          Your Score: {quizScore}% ({Object.values(quizAnswers).filter((ans, idx) => ans === moduleContent.quiz[idx].correctAnswer).length}/{moduleContent.quiz.length} correct)
+                        </p>
+                        <p className={`text-center mt-2 ${
+                          quizScore >= 70 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'
+                        }`}>
+                          {quizScore >= 70 ? 'You passed! Well done!' : 'You need 70% to pass. Review the material and try again.'}
+                        </p>
+                      </div>
+
+                      <div className="space-y-6 mb-8">
+                        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Review Answers</h3>
+                        {moduleContent.quiz.map((question, qIndex) => {
+                          const userAnswer = quizAnswers[question.id];
+                          const isCorrect = userAnswer === question.correctAnswer;
+
+                          return (
+                            <div key={question.id} className="border border-slate-300 dark:border-white/10 rounded-lg p-6 bg-slate-50 dark:bg-white/5">
+                              <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
+                                Question {qIndex + 1}: {question.question}
+                              </h4>
+                              <div className="space-y-2 mb-4">
+                                {question.options.map((option, optIndex) => (
+                                  <div
+                                    key={optIndex}
+                                    className={`p-3 rounded-lg ${
+                                      optIndex === question.correctAnswer
+                                        ? 'bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30'
+                                        : optIndex === userAnswer && !isCorrect
+                                        ? 'bg-red-100 dark:bg-red-500/20 border border-red-300 dark:border-red-500/30'
+                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      {optIndex === question.correctAnswer && (
+                                        <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                      )}
+                                      {optIndex === userAnswer && !isCorrect && (
+                                        <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                      )}
+                                      <span className="text-slate-900 dark:text-white">{option}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
+                                <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">Explanation:</p>
+                                <p className="text-sm text-blue-800 dark:text-blue-300">{question.explanation}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex justify-center gap-4">
+                        <button
+                          onClick={handleBackToCourse}
+                          className="px-8 py-3 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                        >
+                          Back to Course
+                        </button>
+                        <button
+                          onClick={handleResetQuiz}
+                          className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Retake Quiz
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           ) : (
+            // Course Overview
             <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg shadow-xl border border-slate-300 dark:border-white/10 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -210,41 +515,52 @@ export function Education() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {[
                   { label: 'Duration', value: selectedCourse.duration, icon: Clock, color: 'blue' },
-                  { label: 'Modules', value: selectedCourse.modules, icon: FileText, color: 'emerald' },
+                  { label: 'Topics', value: selectedCourse.topics.length, icon: FileText, color: 'emerald' },
                   { label: 'Level', value: selectedCourse.level, icon: Target, color: 'amber' },
                   { label: 'Progress', value: `${selectedCourse.progress}%`, icon: Calculator, color: 'purple' }
                 ].map((info, idx) => {
                   const Icon = info.icon;
                   return (
-                    <div key={idx} className={`bg-${info.color}-50 dark:bg-${info.color}-500/20 p-4 rounded-lg text-center border border-${info.color}-200 dark:border-${info.color}-500/30`}>
-                      <Icon className={`h-8 w-8 text-${info.color}-600 dark:text-${info.color}-400 mx-auto mb-2`} />
-                      <p className={`text-sm text-${info.color}-800 dark:text-${info.color}-200 font-medium`}>{info.label}</p>
-                      <p className={`text-lg font-bold text-${info.color}-700 dark:text-${info.color}-300`}>{info.value}</p>
+                    <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg text-center border border-slate-200 dark:border-white/10">
+                      <Icon className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 dark:text-white/70 font-medium">{info.label}</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white">{info.value}</p>
                     </div>
                   );
                 })}
               </div>
 
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Course Content</h3>
-              <div className="space-y-3">
-                {selectedCourse.topics.map((topic: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-slate-50 dark:bg-white/5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/10">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-full">
-                      <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">{index + 1}</span>
-                    </div>
-                    <span className="flex-1 text-slate-800 dark:text-white/90">{topic}</span>
-                    {index < selectedCourse.progress / (100 / selectedCourse.modules) ? (
-                      <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <PlayCircle className="h-5 w-5 text-slate-400 dark:text-white/50" />
-                    )}
-                  </div>
-                ))}
+              <div className="space-y-3 mb-8">
+                {(() => {
+                  const moduleContent = getModuleContent(selectedCourse.id);
+                  if (!moduleContent) return null;
+
+                  return moduleContent.topics.map((topic, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleStartTopic(index)}
+                      className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors border border-slate-200 dark:border-white/10 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-full">
+                          <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">{index + 1}</span>
+                        </div>
+                        <span className="text-left text-slate-800 dark:text-white/90 font-medium">{topic.title}</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-400 dark:text-white/50 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                    </button>
+                  ));
+                })()}
               </div>
 
-              <div className="mt-8 flex justify-center">
-                <button className="bg-blue-600 dark:bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors font-medium shadow-xl">
-                  {selectedCourse.progress > 0 ? 'Continue Learning' : 'Start Course'}
+              <div className="mt-8 flex justify-center gap-4">
+                <button
+                  onClick={handleStartQuiz}
+                  className="bg-blue-600 dark:bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-700 transition-colors font-medium shadow-xl flex items-center gap-2"
+                >
+                  <Target className="w-5 h-5" />
+                  Take Quiz
                 </button>
               </div>
             </div>

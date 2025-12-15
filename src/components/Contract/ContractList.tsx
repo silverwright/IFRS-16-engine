@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, CheckCircle, Clock, Code } from 'lucide-react';
+import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send } from 'lucide-react';
+import { StatusBadge } from './StatusBadge';
+import { useAuth } from '../../context/AuthContext';
+import { approvalApi } from '../../services/approvalApi';
+import { useContracts } from '../../hooks/useContracts';
 
 interface ContractListProps {
   onEditContract: (contract: SavedContract) => void;
@@ -11,9 +15,12 @@ interface ContractListProps {
 export function ContractList({ onEditContract, onNewContract }: ContractListProps) {
   const { state, dispatch } = useLeaseContext();
   const { savedContracts } = state;
+  const { user } = useAuth();
+  const { loadContracts } = useContracts();
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
   const [showDataModal, setShowDataModal] = useState(false);
   const [dataToShow, setDataToShow] = useState<any>(null);
+  const [submitting, setSubmitting] = useState<string | null>(null);
 
   const handleDeleteContract = (contractId: string) => {
     if (confirm('Are you sure you want to delete this contract?')) {
@@ -34,22 +41,35 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
     return new Date(dateStr).toLocaleDateString('en-GB');
   };
 
-  const getStatusBadge = (status: 'pending' | 'approved') => {
-    if (status === 'approved') {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          <CheckCircle className="w-3 h-3 mr-1" />
-          Approved
-        </span>
-      );
+  const handleSubmitForApproval = async (contract: SavedContract) => {
+    if (!user?.id) {
+      alert('You must be logged in to submit a contract for approval');
+      return;
     }
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-        <Clock className="w-3 h-3 mr-1" />
-        Pending
-      </span>
-    );
+
+    if (contract.status !== 'draft') {
+      alert('Only draft contracts can be submitted for approval');
+      return;
+    }
+
+    if (confirm(`Submit contract ${contract.contractId} for approval?`)) {
+      try {
+        setSubmitting(contract.id);
+        await approvalApi.submitContract(contract.id, user.id);
+
+        // Reload contracts to get updated status
+        await loadContracts();
+
+        alert('Contract submitted for approval successfully!');
+      } catch (error: any) {
+        console.error('Error submitting contract:', error);
+        alert(error.response?.data?.error || 'Failed to submit contract for approval');
+      } finally {
+        setSubmitting(null);
+      }
+    }
   };
+
 
   return (
     <div className="space-y-6">
@@ -135,10 +155,21 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(contract.status)}
+                      <StatusBadge status={contract.status} size="sm" />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
+                        {/* Submit for Approval button - only for draft contracts */}
+                        {contract.status === 'draft' && (
+                          <button
+                            onClick={() => handleSubmitForApproval(contract)}
+                            disabled={submitting === contract.id}
+                            className="text-teal-600 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 p-1 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Submit for Approval"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleViewData(contract)}
                           className="text-purple-600 dark:text-purple-600 hover:text-purple-900 dark:hover:text-purple-900 p-1 hover:bg-purple-100 dark:hover:bg-purple-100 rounded transition-colors"
@@ -281,7 +312,7 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
                     <div><span className="text-slate-600 dark:text-slate-400">Commencement:</span> <span className="font-medium text-slate-900 dark:text-white">{formatDate(selectedContract.commencementDate)}</span></div>
                     <div><span className="text-slate-600 dark:text-slate-400">Created:</span> <span className="font-medium text-slate-900 dark:text-white">{formatDate(selectedContract.createdAt)}</span></div>
                     <div><span className="text-slate-600 dark:text-slate-400">Updated:</span> <span className="font-medium text-slate-900 dark:text-white">{formatDate(selectedContract.updatedAt)}</span></div>
-                    <div><span className="text-slate-600 dark:text-slate-400">Status:</span> {getStatusBadge(selectedContract.status)}</div>
+                    <div className="flex items-center gap-2"><span className="text-slate-600 dark:text-slate-400">Status:</span> <StatusBadge status={selectedContract.status} size="sm" /></div>
                   </div>
                 </div>
               </div>

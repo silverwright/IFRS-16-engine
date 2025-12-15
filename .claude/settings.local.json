@@ -5,7 +5,18 @@
       "Bash(npm run dev:*)",
       "Bash(timeout 10 bash:*)",
       "Bash(timeout 15 bash:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(psql --version:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(psql:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

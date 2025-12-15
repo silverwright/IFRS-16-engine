@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { ContractStatus } from '../types/auth';
 
 export interface LeaseData {
   // Basic identifiers
@@ -130,7 +131,7 @@ export interface SavedContract {
   lesseeName: string;
   assetDescription: string;
   commencementDate: string;
-  status: 'pending' | 'approved';
+  status: ContractStatus;
   createdAt: string;
   updatedAt: string;
   data: Partial<LeaseData>;
@@ -146,6 +147,7 @@ type LeaseAction =
   | { type: 'UPDATE_CONTRACT'; payload: SavedContract }
   | { type: 'DELETE_CONTRACT'; payload: string }
   | { type: 'LOAD_CONTRACT'; payload: Partial<LeaseData> }
+  | { type: 'LOAD_ALL_CONTRACTS'; payload: SavedContract[] }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET' };
@@ -189,6 +191,8 @@ function leaseReducer(state: LeaseState, action: LeaseAction): LeaseState {
       };
     case 'LOAD_CONTRACT':
       return { ...state, leaseData: action.payload };
+    case 'LOAD_ALL_CONTRACTS':
+      return { ...state, savedContracts: action.payload };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_ERROR':

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { useSearchParams } from 'react-router-dom';
+import { useContracts } from '../hooks/useContracts';
+import { useAuth } from '../context/AuthContext';
 import { ModeSelector } from '../components/Contract/ModeSelector';
 import { BasicInfoForm } from '../components/Contract/BasicInfoForm';
 import { PaymentDetailsForm } from '../components/Contract/PaymentDetailsForm';
@@ -23,6 +25,8 @@ const steps = [
 
 export function ContractInitiation() {
   const { state, dispatch } = useLeaseContext();
+  const { saveContract, updateContract } = useContracts();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [modeSelected, setModeSelected] = useState(false);
@@ -92,28 +96,46 @@ export function ContractInitiation() {
     dispatch({ type: 'RESET' });
   };
 
-  const handleSaveContract = () => {
-    const contractData: SavedContract = {
-      id: editingContract?.id || Date.now().toString(),
-      contractId: state.leaseData.ContractID || '',
-      lessorName: state.leaseData.LessorName || '',
-      lesseeName: state.leaseData.LesseeEntity || '',
-      assetDescription: state.leaseData.AssetDescription || '',
-      commencementDate: state.leaseData.CommencementDate || '',
-      status: 'pending',
-      createdAt: editingContract?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      data: state.leaseData,
-      mode: state.mode
-    };
+  const handleSaveContract = async () => {
+    try {
+      const contractData = {
+        contractId: state.leaseData.ContractID || '',
+        lessorName: state.leaseData.LessorName || '',
+        lesseeName: state.leaseData.LesseeEntity || '',
+        assetDescription: state.leaseData.AssetDescription || '',
+        commencementDate: state.leaseData.CommencementDate || '',
+        status: 'draft' as const, // Default status is 'draft'
+        data: state.leaseData,
+        mode: state.mode,
+        createdBy: user?.id // Include user ID
+      };
 
-    if (editingContract) {
-      dispatch({ type: 'UPDATE_CONTRACT', payload: contractData });
-    } else {
-      dispatch({ type: 'SAVE_CONTRACT', payload: contractData });
+      // Check if this is truly an existing database contract (has UUID format ID)
+      // vs an imported contract (has timestamp-based ID like "1765410027849-0")
+      // Database UUIDs are formatted like: "550e8400-e29b-41d4-a716-446655440000"
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const isExistingDbContract = editingContract &&
+        editingContract.id &&
+        uuidPattern.test(editingContract.id);
+
+      if (isExistingDbContract) {
+        await updateContract(editingContract.id, contractData);
+        alert('Contract updated successfully!');
+      } else {
+        // Treat as new contract (either no editingContract, or imported contract)
+        await saveContract(contractData);
+        alert('Contract saved successfully!');
+      }
+
+      // Reset form after successful save
+      setEditingContract(null);
+      dispatch({ type: 'RESET' });
+      setModeSelected(false);
+      setActiveTab('list');
+    } catch (error) {
+      alert(`Failed to save contract. Please try again.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Save error:', error);
     }
-
-    alert('Contract saved successfully!');
   };
 
   const handleEditContract = (contract: SavedContract) => {
