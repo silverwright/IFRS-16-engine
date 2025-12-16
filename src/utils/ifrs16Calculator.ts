@@ -40,8 +40,12 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
   // Calculate PV of lease payments
   let pv = 0;
   const isAdvance = paymentTiming === 'Advance';
+  const prepayments = leaseData.PrepaymentsBeforeCommencement || 0;
 
-  for (let i = 1; i <= periods; i++) {
+  // If payment timing is Advance and there are prepayments, exclude first payment from PV calculation
+  const startPeriod = (isAdvance && prepayments > 0) ? 2 : 1;
+
+  for (let i = startPeriod; i <= periods; i++) {
     // Add RVG to the last payment period
     const periodPayment = (i === periods) ? paymentPerPeriod + rvgAmount : paymentPerPeriod;
     const discountFactor = isAdvance ?
@@ -52,13 +56,7 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
 
   let initialLiability = Math.round(pv * 100) / 100;
   const idc = leaseData.InitialDirectCosts || 0;
-  const prepayments = leaseData.PrepaymentsBeforeCommencement || 0;
   const incentives = leaseData.LeaseIncentives || 0;
-
-  // If payment timing is Advance and there are prepayments, subtract prepayments from liability
-  if (isAdvance && prepayments > 0) {
-    initialLiability = Math.round((initialLiability - prepayments) * 100) / 100;
-  }
 
   // Get asset valuation fields
   const fairValue = leaseData.FairValue || 0;
@@ -88,7 +86,16 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
 
   // Generate schedules
   const cashflowSchedule = generateCashflowSchedule(leaseData, periods, rvgAmount);
-  const amortizationSchedule = generateAmortizationSchedule(initialLiability, paymentPerPeriod, ratePerPeriod, periods, initialROU, rvgAmount);
+  const amortizationSchedule = generateAmortizationSchedule(
+    initialLiability,
+    paymentPerPeriod,
+    ratePerPeriod,
+    periods,
+    initialROU,
+    rvgAmount,
+    isAdvance && prepayments > 0,
+    prepayments
+  );
   const depreciationSchedule = generateDepreciationSchedule(initialROU, periods);
   const journalEntries = generateJournalEntries(leaseData, initialLiability, initialROU, amortizationSchedule, depreciationSchedule);
 
@@ -145,19 +152,45 @@ function generateCashflowSchedule(leaseData: Partial<LeaseData>, periods: number
   return schedule;
 }
 
-function generateAmortizationSchedule(initialLiability: number, payment: number, rate: number, periods: number, initialROU: number, rvgAmount: number) {
+function generateAmortizationSchedule(
+  initialLiability: number,
+  payment: number,
+  rate: number,
+  periods: number,
+  initialROU: number,
+  rvgAmount: number,
+  hasPrepayment: boolean = false,
+  prepaymentAmount: number = 0
+) {
   const schedule = [];
   let opening = initialLiability;
   let remainingAsset = initialROU;
   const depreciationPerPeriod = initialROU / periods;
 
-  for (let i = 1; i <= periods; i++) {
-    // Add RVG to the last payment period
-    const periodPayment = (i === periods) ? payment + rvgAmount : payment;
+  // For prepayment: amortization starts from cash flow 2, so Year 1 = CF 2, Year 19 = CF 20, Year 20 = no payment
+  const cashFlowStart = hasPrepayment ? 2 : 1;
 
+  for (let i = 1; i <= periods; i++) {
+    const cashFlowIndex = hasPrepayment ? i + 1 : i;
+
+    // Payment: 0 for Year 20 when prepayment, otherwise normal payment
+    // Add RVG to cash flow 20 (which is Year 19 in the table when prepayment)
+    let periodPayment: number;
+    if (hasPrepayment && i === periods) {
+      periodPayment = 0; // Year 20 has no payment
+    } else if (hasPrepayment && i === periods - 1) {
+      periodPayment = payment + rvgAmount; // Year 19 = CF 20 with RVG
+    } else if (!hasPrepayment && i === periods) {
+      periodPayment = payment + rvgAmount; // Year 20 = CF 20 with RVG (no prepayment)
+    } else {
+      periodPayment = payment;
+    }
+
+    // Normal calculation for all periods
     const interest = Math.round(opening * rate * 100) / 100;
     const principal = Math.round((periodPayment - interest) * 100) / 100;
     const closing = Math.round((opening - principal) * 100) / 100;
+
     const depreciation = Math.round(depreciationPerPeriod * 100) / 100;
     remainingAsset = Math.round((remainingAsset - depreciation) * 100) / 100;
 
