@@ -93,7 +93,7 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
   const journalEntries = generateJournalEntries(leaseData, initialLiability, initialROU, amortizationSchedule, depreciationSchedule);
 
   const totalInterest = amortizationSchedule.reduce((sum, row) => sum + (row.interest || 0), 0);
-  const totalDepreciation = depreciationSchedule.reduce((sum, row) => sum + (row.depreciation || 0), 0);
+  const totalDepreciation = Math.round(depreciationSchedule.reduce((sum, row) => sum + (row.depreciation || 0), 0) * 100) / 100;
 
   return {
     initialLiability,
@@ -247,7 +247,7 @@ function generateJournalEntries(leaseData: Partial<LeaseData>, liability: number
     const firstPeriod = amort[0];
     const secondMonth = new Date(commenceDate);
     secondMonth.setMonth(secondMonth.getMonth() + 1);
-    
+
     entries.push(
       {
         date: secondMonth.toISOString().split('T')[0],

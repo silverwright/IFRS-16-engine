@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { FormField } from '../UI/FormField';
 import { Select } from '../UI/Select';
 import { Switch } from '../UI/Switch';
+import { Modal } from '../UI/Modal';
 
 const paymentFrequencies = ['Monthly', 'Quarterly', 'Semiannual', 'Annual'];
-const paymentTimings = ['Advance', 'Arrears'];
+const paymentTimings = ['Arrears', 'Advance'];
 const escalationTypes = ['None', 'CPI', 'Fixed%'];
 const currencies = ['NGN', 'USD', 'EUR', 'GBP'];
 
 export function PaymentDetailsForm() {
   const { state, dispatch } = useLeaseContext();
   const { leaseData } = state;
+  const [showModal, setShowModal] = useState(false);
+  const [showPrepaymentError, setShowPrepaymentError] = useState(false);
 
   const updateField = (field: string, value: any) => {
     dispatch({
@@ -19,6 +22,51 @@ export function PaymentDetailsForm() {
       payload: { [field]: value }
     });
   };
+
+  // Initialize default values if not set
+  useEffect(() => {
+    const defaults: any = {};
+
+    if (!leaseData.PaymentFrequency) {
+      defaults.PaymentFrequency = 'Monthly';
+    }
+    if (!leaseData.PaymentTiming) {
+      defaults.PaymentTiming = 'Arrears';
+    }
+    if (!leaseData.Currency) {
+      defaults.Currency = 'NGN';
+    }
+
+    if (Object.keys(defaults).length > 0) {
+      dispatch({
+        type: 'SET_LEASE_DATA',
+        payload: defaults
+      });
+    }
+  }, []);
+
+  // Automatically check/uncheck "Prepaid First Payment" based on Payment Timing
+  useEffect(() => {
+    if (leaseData.PaymentTiming === 'Advance') {
+      if (!leaseData.PrepaidFirstPayment) {
+        updateField('PrepaidFirstPayment', true);
+        setShowModal(true);
+        setShowPrepaymentError(true);
+      }
+    } else if (leaseData.PaymentTiming === 'Arrears') {
+      if (leaseData.PrepaidFirstPayment) {
+        updateField('PrepaidFirstPayment', false);
+      }
+      setShowPrepaymentError(false);
+    }
+  }, [leaseData.PaymentTiming]);
+
+  // Clear prepayment error when user enters a value
+  useEffect(() => {
+    if (leaseData.PrepaymentsBeforeCommencement && leaseData.PrepaymentsBeforeCommencement > 0) {
+      setShowPrepaymentError(false);
+    }
+  }, [leaseData.PrepaymentsBeforeCommencement]);
 
   return (
     <div className="space-y-6">
@@ -52,7 +100,7 @@ export function PaymentDetailsForm() {
         
         <Select
           label="Payment Timing"
-          value={leaseData.PaymentTiming || 'Advance'}
+          value={leaseData.PaymentTiming || 'Arrears'}
           options={paymentTimings}
           onChange={(value) => updateField('PaymentTiming', value)}
           required
@@ -134,6 +182,9 @@ export function PaymentDetailsForm() {
             value={leaseData.PrepaymentsBeforeCommencement || ''}
             onChange={(value) => updateField('PrepaymentsBeforeCommencement', Number(value))}
             placeholder="2500000"
+            required={leaseData.PaymentTiming === 'Advance'}
+            error="Please enter the prepayment amount for Payment in Advance"
+            showError={showPrepaymentError && leaseData.PaymentTiming === 'Advance' && (!leaseData.PrepaymentsBeforeCommencement || leaseData.PrepaymentsBeforeCommencement <= 0)}
           />
         </div>
 
@@ -150,10 +201,15 @@ export function PaymentDetailsForm() {
             <Switch
               checked={leaseData.PrepaidFirstPayment || false}
               onChange={(checked) => updateField('PrepaidFirstPayment', checked)}
+              disabled={leaseData.PaymentTiming === 'Advance'}
             />
             <div>
               <label className="text-sm font-medium text-slate-900 dark:text-white">Prepaid First Payment</label>
-              <p className="text-xs text-slate-600 dark:text-slate-400">First payment made before commencement</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {leaseData.PaymentTiming === 'Advance'
+                  ? 'Required for Payment in Advance'
+                  : 'First payment made before commencement'}
+              </p>
             </div>
           </div>
         </div>
@@ -189,6 +245,15 @@ export function PaymentDetailsForm() {
           />
         </div>
       </div>
+
+      {/* Modal for Payment in Advance notification */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Payment in Advance"
+        message="Payment in Advance selected. Please enter the prepayment amount in the Prepayments field above."
+        type="info"
+      />
     </div>
   );
 }

@@ -5,8 +5,13 @@ import { contractsApi } from '../api/contractsApi';
 export function useContracts() {
   const { state, dispatch } = useLeaseContext();
 
-  // Load all contracts from API on mount
+  // Load all contracts from API on mount (only if not already loaded)
   useEffect(() => {
+    // Skip if already loading or if contracts have been loaded
+    if (state.loading || state.savedContracts.length > 0) {
+      return;
+    }
+
     const loadContracts = async () => {
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
@@ -21,7 +26,7 @@ export function useContracts() {
     };
 
     loadContracts();
-  }, [dispatch]);
+  }, []);
 
   // Save a new contract
   const saveContract = useCallback(async (contract: Omit<SavedContract, 'id' | 'createdAt' | 'updatedAt'>) => {

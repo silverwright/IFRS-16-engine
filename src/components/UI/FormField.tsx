@@ -11,6 +11,8 @@ interface FormFieldProps {
   min?: string | number;
   max?: string | number;
   step?: string | number;
+  error?: string;
+  showError?: boolean;
 }
 
 export function FormField({
@@ -23,13 +25,21 @@ export function FormField({
   multiline,
   min,
   max,
-  step
+  step,
+  error,
+  showError
 }: FormFieldProps) {
+  const hasError = showError && error;
+
   const baseClasses = `
-    w-full px-3 py-2 border border-slate-300 dark:border-slate-600/50 rounded-lg
+    w-full px-3 py-2 border rounded-lg
     bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white
-    focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
-    transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500
+    focus:outline-none focus:ring-2 transition-colors
+    placeholder:text-slate-400 dark:placeholder:text-slate-500
+    ${hasError
+      ? 'border-red-500 dark:border-red-500 focus:ring-red-500 focus:border-red-500'
+      : 'border-slate-300 dark:border-slate-600/50 focus:ring-emerald-500 focus:border-emerald-500'
+    }
   `;
 
   return (
@@ -59,6 +69,11 @@ export function FormField({
           step={step}
           className={baseClasses}
         />
+      )}
+      {hasError && (
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+          {error}
+        </p>
       )}
     </div>
   );

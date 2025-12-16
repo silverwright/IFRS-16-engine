@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
+import { useContracts } from '../../hooks/useContracts';
 import { Button } from '../UI/Button';
 import { Upload, FileText, FileSpreadsheet, AlertCircle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -13,6 +14,7 @@ type ImportType = 'csv' | 'excel' | null;
 
 export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps) {
   const { dispatch } = useLeaseContext();
+  const { saveContract } = useContracts();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState<ImportType>(null);
   const [selectedMode, setSelectedMode] = useState<'MINIMAL' | 'FULL'>('MINIMAL');
@@ -308,7 +310,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       throw new Error('No data found in the file');
     }
 
-    const contracts: SavedContract[] = [];
+    const contractsToImport: Array<Omit<SavedContract, 'id' | 'createdAt' | 'updatedAt'>> = [];
     jsonData.forEach((row: any, index: number) => {
       const leaseData = mapDataToLeaseData(row);
 
@@ -320,32 +322,41 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       const rowMode = row.Mode || row.mode;
       const mode = rowMode ? (rowMode.toUpperCase() === 'FULL' ? 'FULL' : 'MINIMAL') : selectedMode;
 
-      const contract: SavedContract = {
-        id: Date.now().toString() + '-' + index,
+      const contract: Omit<SavedContract, 'id' | 'createdAt' | 'updatedAt'> = {
         contractId: leaseData.ContractID,
         lessorName: leaseData.LessorName || '',
         lesseeName: leaseData.LesseeEntity || '',
         assetDescription: leaseData.AssetDescription || '',
         commencementDate: leaseData.CommencementDate || '',
         status: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         data: leaseData,
         mode: mode
       };
 
-      contracts.push(contract);
+      contractsToImport.push(contract);
     });
 
-    if (contracts.length === 0) {
+    if (contractsToImport.length === 0) {
       throw new Error('No valid contracts found in the file');
     }
 
-    contracts.forEach(contract => {
-      dispatch({ type: 'SAVE_CONTRACT', payload: contract });
-    });
+    // Save all contracts to the database
+    let savedCount = 0;
+    for (const contract of contractsToImport) {
+      try {
+        await saveContract(contract);
+        savedCount++;
+      } catch (error) {
+        console.error(`Failed to save contract ${contract.contractId}:`, error);
+        // Continue with next contract even if one fails
+      }
+    }
 
-    setUploadedCount(contracts.length);
+    if (savedCount === 0) {
+      throw new Error('Failed to save any contracts to the database');
+    }
+
+    setUploadedCount(savedCount);
     setUploadStatus('success');
     setTimeout(() => {
       onUploadComplete();

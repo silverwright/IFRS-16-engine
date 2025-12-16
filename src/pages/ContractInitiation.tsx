@@ -13,6 +13,7 @@ import { FileImport } from '../components/Contract/FileImport';
 import { ContractList } from '../components/Contract/ContractList';
 import { ProgressBar } from '../components/UI/ProgressBar';
 import { Button } from '../components/UI/Button';
+import { Modal } from '../components/UI/Modal';
 import { ArrowLeft, ArrowRight, FileText, RefreshCw, Save, Upload } from 'lucide-react';
 
 const steps = [
@@ -32,6 +33,7 @@ export function ContractInitiation() {
   const [modeSelected, setModeSelected] = useState(false);
   const [activeTab, setActiveTab] = useState<'form' | 'import' | 'list'>('list');
   const [editingContract, setEditingContract] = useState<SavedContract | null>(null);
+  const [showValidationModal, setShowValidationModal] = useState(false);
 
   useEffect(() => {
     const isEditMode = searchParams.get('edit') === 'true';
@@ -39,7 +41,7 @@ export function ContractInitiation() {
 
     if (isEditMode && contractId) {
       const contract = state.savedContracts.find(c => c.id === contractId);
-      if (contract) {
+      if (contract && editingContract?.id !== contractId) {
         setEditingContract(contract);
         dispatch({ type: 'SET_MODE', payload: contract.mode });
         dispatch({ type: 'LOAD_CONTRACT', payload: contract.data });
@@ -47,12 +49,12 @@ export function ContractInitiation() {
         setActiveTab('form');
         setCurrentStep(1);
       }
-    } else if (isEditMode && state.leaseData.ContractID) {
+    } else if (isEditMode && state.leaseData.ContractID && !editingContract) {
       setModeSelected(true);
       setActiveTab('form');
       setCurrentStep(1);
     }
-  }, [searchParams, state.savedContracts, dispatch]);
+  }, [searchParams, state.savedContracts, dispatch, editingContract, state.leaseData.ContractID]);
 
   // Filter steps based on mode
   const activeSteps = state.mode === 'FULL'
@@ -63,12 +65,10 @@ export function ContractInitiation() {
     activeSteps.find(step => step.id === currentStep)?.component || BasicInfoForm;
 
   const nextStep = () => {
-    if (currentStep < activeSteps.length) {
-      // Find next step ID in activeSteps
-      const currentIndex = activeSteps.findIndex(s => s.id === currentStep);
-      if (currentIndex < activeSteps.length - 1) {
-        setCurrentStep(activeSteps[currentIndex + 1].id);
-      }
+    // Find next step ID in activeSteps
+    const currentIndex = activeSteps.findIndex(s => s.id === currentStep);
+    if (currentIndex >= 0 && currentIndex < activeSteps.length - 1) {
+      setCurrentStep(activeSteps[currentIndex + 1].id);
     }
   };
 
@@ -98,6 +98,14 @@ export function ContractInitiation() {
 
   const handleSaveContract = async () => {
     try {
+      // Validate: If Payment in Advance is selected, prepayment amount is required
+      if (state.leaseData.PaymentTiming === 'Advance') {
+        if (!state.leaseData.PrepaymentsBeforeCommencement || state.leaseData.PrepaymentsBeforeCommencement <= 0) {
+          setShowValidationModal(true);
+          return;
+        }
+      }
+
       const contractData = {
         contractId: state.leaseData.ContractID || '',
         lessorName: state.leaseData.LessorName || '',
@@ -300,6 +308,15 @@ export function ContractInitiation() {
           )}
         </div>
       </div>
+
+      {/* Validation Modal for Payment in Advance */}
+      <Modal
+        isOpen={showValidationModal}
+        onClose={() => setShowValidationModal(false)}
+        title="Validation Error"
+        message="Payment in Advance requires a prepayment amount. Please enter the prepayment amount before saving."
+        type="error"
+      />
     </div>
   );
 }
