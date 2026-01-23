@@ -15,6 +15,7 @@ export function ResultsDisplay() {
   const { calculations, leaseData } = state;
   const [activeTab, setActiveTab] = useState('summary');
   const [recalculating, setRecalculating] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
 
   const handleEditContract = () => {
     const currentContract = state.savedContracts.find(
@@ -193,8 +194,57 @@ export function ResultsDisplay() {
     return `${leaseData.Currency || 'NGN'} ${value.toLocaleString()}`;
   };
 
-  // Get payment frequency label for first column
+  // Get payment frequency
   const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+
+  // Calculate current values based on commencement date to a specific date (or today)
+  const calculateCurrentValues = (targetDate?: string) => {
+    const commencementDate = new Date(leaseData.CommencementDate || new Date());
+    const endDate = targetDate ? new Date(targetDate) : new Date();
+
+    // Calculate time elapsed in years
+    const yearsElapsed = (endDate.getTime() - commencementDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+    // Calculate periods elapsed based on payment frequency
+    const periodsPerYear = paymentFrequency === 'Monthly' ? 12 :
+                          paymentFrequency === 'Quarterly' ? 4 :
+                          paymentFrequency === 'Semiannual' ? 2 :
+                          paymentFrequency === 'Annual' ? 1 : 12;
+
+    const periodsElapsed = Math.floor(yearsElapsed * periodsPerYear);
+
+    // Get current values from amortization schedule
+    // If periodsElapsed is 0 or negative (future commencement), use initial values
+    // If periodsElapsed exceeds the schedule, use last values
+    let currentLiability = calculations.initialLiability;
+    let currentROU = calculations.initialROU;
+    let accumulatedDepreciation = 0;
+
+    if (periodsElapsed > 0 && calculations.amortizationSchedule.length > 0) {
+      const scheduleIndex = Math.min(periodsElapsed - 1, calculations.amortizationSchedule.length - 1);
+      const currentPeriod = calculations.amortizationSchedule[scheduleIndex];
+
+      currentLiability = currentPeriod?.remainingLiability || 0;
+      currentROU = currentPeriod?.remainingAsset || 0;
+
+      // Calculate accumulated depreciation (sum of depreciation up to current period)
+      accumulatedDepreciation = calculations.amortizationSchedule
+        .slice(0, scheduleIndex + 1)
+        .reduce((sum, row) => sum + (row.depreciation || 0), 0);
+    }
+
+    return {
+      currentLiability,
+      currentROU,
+      accumulatedDepreciation,
+      periodsElapsed,
+      endDate
+    };
+  };
+
+  const currentValues = calculateCurrentValues(selectedDate);
+
+  // Get payment frequency label for first column
   const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
                      paymentFrequency === 'Quarterly' ? 'Quarter' :
                      paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
@@ -332,6 +382,74 @@ export function ResultsDisplay() {
             </div>
             <div className="bg-white/20 p-3 rounded-lg">
               <BarChart3 className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Date Selector for Current Values */}
+        <div className="col-span-full">
+          <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-white/10 p-4">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+              Calculate values as of date (leave empty for today):
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full md:w-auto px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+        </div>
+
+        {/* Current Values (as of selected date or today) */}
+        <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-rose-100 text-sm font-medium">Current Liability</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(currentValues.currentLiability)}
+              </p>
+              <p className="text-rose-100 text-xs mt-1">
+                From {new Date(leaseData.CommencementDate || new Date()).toLocaleDateString()} to {currentValues.endDate.toLocaleDateString()}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-teal-100 text-sm font-medium">Current ROU Asset</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(currentValues.currentROU)}
+              </p>
+              <p className="text-teal-100 text-xs mt-1">
+                From {new Date(leaseData.CommencementDate || new Date()).toLocaleDateString()} to {currentValues.endDate.toLocaleDateString()}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <FileText className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-amber-100 text-sm font-medium">Accumulated Depreciation</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(currentValues.accumulatedDepreciation)}
+              </p>
+              <p className="text-amber-100 text-xs mt-1">
+                From {new Date(leaseData.CommencementDate || new Date()).toLocaleDateString()} to {currentValues.endDate.toLocaleDateString()}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <TrendingDown className="w-6 h-6" />
             </div>
           </div>
         </div>

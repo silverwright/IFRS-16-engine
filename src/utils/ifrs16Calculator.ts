@@ -14,14 +14,17 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
 
   // Extract termination option point (years) from string field
   const terminationPointStr = leaseData.TerminationOptionPoint || '';
-  const terminationYears = parseFloat(terminationPointStr) || 0;
+  const terminationInputYears = parseFloat(terminationPointStr) || 0;
   const terminationLikelihood = leaseData.TerminationOptionLikelihood || 0;
+
+  // Termination years = termination input + non-cancellable years
+  const terminationYears = terminationInputYears > 0 ? terminationInputYears + nonCancellableYears : 0;
 
   let totalLeaseYears = nonCancellableYears;
 
-  // Priority 1: If termination is reasonably certain (>0.5) and termination point is valid (>0),
-  // use termination point years, ignoring both non-cancellable period and renewal options
-  if (terminationYears > 0 && terminationLikelihood > 0.5) {
+  // Priority 1: If termination is reasonably certain (>=0.5) and termination input is valid (>0),
+  // use termination years (termination input + non-cancellable), ignoring renewal options
+  if (terminationInputYears > 0 && terminationLikelihood >= 0.5) {
     totalLeaseYears = terminationYears;
   }
   // Priority 2: Otherwise, include renewal option if reasonably certain

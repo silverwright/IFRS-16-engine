@@ -19,17 +19,8 @@ export function AdvancedOptionsForm() {
   };
 
   const handleTerminationPointChange = (value: string) => {
-    const terminationYears = parseFloat(value);
-    const nonCancellableYears = leaseData.NonCancellableYears || 0;
-
-    if (!isNaN(terminationYears) && terminationYears < nonCancellableYears) {
-      setValidationMessage(
-        `Termination period (${terminationYears} years) cannot be less than the non-cancellable period (${nonCancellableYears} years). Please enter a valid termination period.`
-      );
-      setShowValidationModal(true);
-      return;
-    }
-
+    // Termination input will be added to non-cancellable years in the calculation
+    // No validation needed here - any positive number is valid
     updateField('TerminationOptionPoint', value);
   };
 
