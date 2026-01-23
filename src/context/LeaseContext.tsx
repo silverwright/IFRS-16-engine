@@ -136,6 +136,13 @@ export interface SavedContract {
   updatedAt: string;
   data: Partial<LeaseData>;
   mode: 'MINIMAL' | 'FULL';
+  // Version tracking fields
+  version?: number;
+  baseContractId?: string;
+  modificationDate?: string;
+  previousVersionId?: string;
+  isActive?: boolean;
+  modificationReason?: string;
 }
 
 type LeaseAction =
@@ -150,6 +157,7 @@ type LeaseAction =
   | { type: 'LOAD_ALL_CONTRACTS'; payload: SavedContract[] }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'CREATE_MODIFICATION'; payload: SavedContract }
   | { type: 'RESET' };
 
 const initialState: LeaseState = {
@@ -183,6 +191,20 @@ function leaseReducer(state: LeaseState, action: LeaseAction): LeaseState {
         savedContracts: state.savedContracts.map(contract =>
           contract.id === action.payload.id ? action.payload : contract
         )
+      };
+    case 'CREATE_MODIFICATION':
+      // When creating a modification, mark previous versions as inactive
+      const baseContractId = action.payload.baseContractId || action.payload.contractId;
+      return {
+        ...state,
+        savedContracts: [
+          ...state.savedContracts.map(contract =>
+            contract.baseContractId === baseContractId || contract.contractId === baseContractId
+              ? { ...contract, isActive: false }
+              : contract
+          ),
+          action.payload
+        ]
       };
     case 'DELETE_CONTRACT':
       return {

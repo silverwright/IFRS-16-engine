@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLeaseContext } from '../../context/LeaseContext';
+import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { KPICard } from '../Dashboard/KPICard';
 import { Button } from '../UI/Button';
-import { DollarSign, TrendingDown, FileText, Download, BarChart3, RefreshCw, Edit2, FileSpreadsheet, Calendar } from 'lucide-react';
+import { DollarSign, TrendingDown, FileText, Download, BarChart3, RefreshCw, Edit2, FileSpreadsheet, Calendar, GitBranch, History } from 'lucide-react';
 import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
+import { calculateLeaseModification, extractBaseContractId } from '../../utils/leaseModificationCalculator';
+import { contractsApi } from '../../api/contractsApi';
+import { ModifyContractModal } from '../Contract/ModifyContractModal';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -16,6 +19,10 @@ export function ResultsDisplay() {
   const [activeTab, setActiveTab] = useState('summary');
   const [recalculating, setRecalculating] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [versions, setVersions] = useState<SavedContract[]>([]);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const handleEditContract = () => {
     const currentContract = state.savedContracts.find(
@@ -25,6 +32,80 @@ export function ResultsDisplay() {
       navigate(`/contract?edit=true&contractId=${currentContract.id}`);
     } else {
       navigate('/contract?edit=true');
+    }
+  };
+
+  // Load version history
+  useEffect(() => {
+    const loadVersions = async () => {
+      if (!leaseData.ContractID) return;
+
+      setLoadingVersions(true);
+      try {
+        const baseContractId = extractBaseContractId(leaseData.ContractID);
+        const versionList = await contractsApi.getVersions(baseContractId);
+        setVersions(versionList);
+      } catch (error) {
+        console.error('Failed to load versions:', error);
+      } finally {
+        setLoadingVersions(false);
+      }
+    };
+
+    loadVersions();
+  }, [leaseData.ContractID]);
+
+  // Get current contract info
+  const currentContract = state.savedContracts.find(
+    contract => contract.data.ContractID === leaseData.ContractID
+  );
+  const currentVersion = currentContract?.version || 1;
+  const baseContractId = currentContract?.baseContractId || extractBaseContractId(leaseData.ContractID || '');
+
+  const handleCreateModification = async (
+    modificationDate: string,
+    newValues: Partial<any>,
+    modificationReason: string
+  ) => {
+    if (!currentContract || !calculations) return;
+
+    try {
+      setRecalculating(true);
+      dispatch({ type: 'SET_LOADING', payload: true });
+
+      // Use the lease modification calculator
+      const modificationResult = calculateLeaseModification({
+        originalLeaseData: leaseData,
+        originalCalculations: calculations,
+        modificationDate,
+        newValues,
+      });
+
+      // Create the new version via API
+      const newContract = await contractsApi.createModification(
+        currentContract.id,
+        modificationDate,
+        modificationResult.modifiedLeaseData,
+        modificationReason
+      );
+
+      // Update local state
+      dispatch({ type: 'CREATE_MODIFICATION', payload: newContract });
+      dispatch({ type: 'SET_LEASE_DATA', payload: modificationResult.modifiedLeaseData });
+      dispatch({ type: 'SET_CALCULATIONS', payload: modificationResult.modifiedCalculations });
+
+      // Reload versions
+      const versionList = await contractsApi.getVersions(baseContractId);
+      setVersions(versionList);
+
+      alert(`Version ${currentVersion + 1} created successfully!`);
+    } catch (error) {
+      console.error('Failed to create modification:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create contract modification' });
+      alert('Failed to create modification. Please try again.');
+    } finally {
+      setRecalculating(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
@@ -253,15 +334,49 @@ export function ResultsDisplay() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Calculation Results</h3>
-        <div className="flex gap-2">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Calculation Results</h3>
+            {currentVersion > 1 && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
+                <GitBranch className="w-3 h-3" />
+                Version {currentVersion}
+              </span>
+            )}
+          </div>
+          {currentContract?.modificationDate && (
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              Modified on {new Date(currentContract.modificationDate).toLocaleDateString()}
+              {currentContract.modificationReason && ` - ${currentContract.modificationReason}`}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {versions.length > 1 && (
+            <Button
+              variant="outline"
+              onClick={() => setShowVersionHistory(!showVersionHistory)}
+              className="flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              Version History ({versions.length})
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setShowModifyModal(true)}
+            className="flex items-center gap-2"
+          >
+            <GitBranch className="w-4 h-4" />
+            Modify Contract
+          </Button>
           <Button
             variant="outline"
             onClick={handleEditContract}
             className="flex items-center gap-2"
           >
             <Edit2 className="w-4 h-4" />
-            Edit Contract
+            Edit
           </Button>
           <Button
             variant="outline"
@@ -299,6 +414,57 @@ export function ResultsDisplay() {
           </button>
         </div>
       </div>
+
+      {/* Version History Panel */}
+      {showVersionHistory && versions.length > 1 && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-white/10 p-4">
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Version History</h4>
+          <div className="space-y-2">
+            {versions.map((version, index) => (
+              <div
+                key={version.id}
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  version.version === currentVersion
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                    : 'bg-slate-50 dark:bg-slate-700/50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded">
+                    v{version.version || 1}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {version.version === 1 ? 'Original Contract' : `Modification ${version.version - 1}`}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {version.modificationDate
+                        ? `Modified on ${new Date(version.modificationDate).toLocaleDateString()}`
+                        : `Created on ${new Date(version.createdAt || '').toLocaleDateString()}`}
+                    </p>
+                    {version.modificationReason && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 italic">{version.modificationReason}</p>
+                    )}
+                  </div>
+                </div>
+                {version.version === currentVersion && (
+                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">Current</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modify Contract Modal */}
+      <ModifyContractModal
+        isOpen={showModifyModal}
+        onClose={() => setShowModifyModal(false)}
+        onSubmit={handleCreateModification}
+        currentValues={leaseData}
+        commencementDate={leaseData.CommencementDate || ''}
+        currentVersion={currentVersion}
+      />
 
       {/* Enhanced KPI Summary with gradient backgrounds */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

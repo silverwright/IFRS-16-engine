@@ -570,4 +570,174 @@ router.get('/:id/history', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ===== CONTRACT MODIFICATION/VERSIONING ENDPOINTS =====
+
+// Create a modification (new version) of an existing contract
+router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const { modificationDate, modificationReason, data: newData } = req.body;
+
+    // Validate required fields
+    if (!modificationDate || !newData) {
+      return res.status(400).json({ error: 'Missing required fields: modificationDate and data' });
+    }
+
+    // Get the current contract
+    const { data: currentContract, error: fetchError } = await supabase
+      .from('contracts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentContract) {
+      return res.status(404).json({ error: 'Contract not found' });
+    }
+
+    // Check permissions
+    if (userRole !== 'admin' && currentContract.created_by !== userId) {
+      return res.status(403).json({ error: 'You do not have permission to modify this contract' });
+    }
+
+    // Determine the base contract ID and next version number
+    const baseContractId = currentContract.base_contract_id || currentContract.contract_id;
+    const currentVersion = currentContract.version || 1;
+    const nextVersion = currentVersion + 1;
+
+    // Generate new contract ID with version suffix
+    const newContractId = nextVersion === 1 ? baseContractId : `${baseContractId}-v${nextVersion}`;
+
+    // Mark the current version as inactive
+    await supabase
+      .from('contracts')
+      .update({ is_active: false })
+      .eq('base_contract_id', baseContractId)
+      .eq('is_active', true);
+
+    // Also mark the original contract as inactive if it doesn't have a base_contract_id
+    if (!currentContract.base_contract_id) {
+      await supabase
+        .from('contracts')
+        .update({ is_active: false })
+        .eq('id', id);
+    }
+
+    // Merge original data with new data
+    const mergedData = {
+      ...currentContract.data,
+      ...newData,
+      // Preserve these fields from original
+      ContractID: currentContract.contract_id,
+      CommencementDate: currentContract.commencement_date,
+      ContractDate: currentContract.data.ContractDate,
+    };
+
+    // Create the new version
+    const newId = uuidv4();
+    const { data: newContract, error: insertError } = await supabase
+      .from('contracts')
+      .insert({
+        id: newId,
+        contract_id: newContractId,
+        lessee_name: currentContract.lessee_name,
+        lessor_name: currentContract.lessor_name,
+        asset_description: currentContract.asset_description,
+        commencement_date: currentContract.commencement_date,
+        mode: currentContract.mode,
+        status: 'draft', // New modification starts as draft
+        data: mergedData,
+        created_by: userId,
+        // Version tracking fields
+        version: nextVersion,
+        base_contract_id: baseContractId,
+        modification_date: modificationDate,
+        previous_version_id: id,
+        is_active: true,
+        modification_reason: modificationReason || null
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    const contract = {
+      id: newContract.id,
+      contractId: newContract.contract_id,
+      lesseeName: newContract.lessee_name,
+      lessorName: newContract.lessor_name || '',
+      assetDescription: newContract.asset_description,
+      commencementDate: newContract.commencement_date,
+      mode: newContract.mode,
+      status: newContract.status,
+      data: newContract.data,
+      createdBy: newContract.created_by,
+      createdAt: newContract.created_at,
+      updatedAt: newContract.updated_at,
+      version: newContract.version,
+      baseContractId: newContract.base_contract_id,
+      modificationDate: newContract.modification_date,
+      previousVersionId: newContract.previous_version_id,
+      isActive: newContract.is_active,
+      modificationReason: newContract.modification_reason
+    };
+
+    res.status(201).json(contract);
+  } catch (error) {
+    console.error('Error creating contract modification:', error);
+    res.status(500).json({ error: 'Failed to create contract modification' });
+  }
+});
+
+// Get all versions of a contract by base contract ID
+router.get('/versions/:baseContractId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { baseContractId } = req.params;
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    // Get all versions
+    const { data, error } = await supabase
+      .from('contracts')
+      .select('*')
+      .or(`base_contract_id.eq.${baseContractId},contract_id.eq.${baseContractId}`)
+      .order('version', { ascending: true });
+
+    if (error) throw error;
+
+    // Apply role-based filtering
+    let filteredData = data || [];
+    if (userRole === 'user') {
+      filteredData = filteredData.filter(contract => contract.created_by === userId);
+    }
+
+    const versions = filteredData.map(row => ({
+      id: row.id,
+      contractId: row.contract_id,
+      lesseeName: row.lessee_name,
+      lessorName: row.lessor_name || '',
+      assetDescription: row.asset_description,
+      commencementDate: row.commencement_date,
+      mode: row.mode,
+      status: row.status,
+      data: row.data,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      version: row.version || 1,
+      baseContractId: row.base_contract_id,
+      modificationDate: row.modification_date,
+      previousVersionId: row.previous_version_id,
+      isActive: row.is_active !== false, // Default to true if null
+      modificationReason: row.modification_reason
+    }));
+
+    res.json(versions);
+  } catch (error) {
+    console.error('Error fetching contract versions:', error);
+    res.status(500).json({ error: 'Failed to fetch contract versions' });
+  }
+});
+
 export default router;

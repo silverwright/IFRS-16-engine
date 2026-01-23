@@ -105,4 +105,38 @@ export const contractsApi = {
     }
     return response.json();
   },
+
+  // Create a modification (new version) of an existing contract
+  async createModification(
+    id: string,
+    modificationDate: string,
+    newValues: Partial<LeaseData>,
+    modificationReason?: string
+  ): Promise<SavedContract> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/contracts/${id}/modify`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        modificationDate,
+        data: newValues,
+        modificationReason,
+      }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create contract modification');
+    }
+    return response.json();
+  },
+
+  // Get all versions of a contract
+  async getVersions(baseContractId: string): Promise<SavedContract[]> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/contracts/versions/${baseContractId}`, { headers });
+    if (!response.ok) {
+      throw new Error('Failed to fetch contract versions');
+    }
+    return response.json();
+  },
 };

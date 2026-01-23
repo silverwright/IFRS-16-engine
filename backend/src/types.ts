@@ -9,6 +9,13 @@ export interface SavedContract {
   data: LeaseData;
   createdAt?: string;
   updatedAt?: string;
+  // Version tracking fields
+  version?: number;
+  baseContractId?: string;
+  modificationDate?: string;
+  previousVersionId?: string;
+  isActive?: boolean;
+  modificationReason?: string;
 }
 
 export interface LeaseData {
