@@ -1,6 +1,159 @@
 import { LeaseData, CalculationResults } from '../context/LeaseContext';
 
+/**
+ * Calculate lease with modification (Amendment)
+ * This creates a merged schedule using originalTerms before modification date
+ * and modifiedTerms from modification date onwards
+ */
+function calculateWithModification(leaseData: Partial<LeaseData>): CalculationResults {
+  const { originalTerms, modifiedTerms, modificationDate, CommencementDate } = leaseData;
+
+  if (!originalTerms || !modifiedTerms || !modificationDate) {
+    throw new Error('Missing modification metadata');
+  }
+
+  // Calculate the modification period (when the change takes effect)
+  const commenceDate = new Date(CommencementDate || originalTerms.CommencementDate || '2025-01-01');
+  const modDate = new Date(modificationDate);
+
+  const paymentFrequency = originalTerms.PaymentFrequency || 'Monthly';
+  const periodsPerYear = getPeriodsPerYear(paymentFrequency);
+
+  // Calculate how many periods elapsed from commencement to modification
+  const yearsElapsed = (modDate.getTime() - commenceDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+  const modificationPeriod = Math.floor(yearsElapsed * periodsPerYear);
+
+  // Step 1: Calculate the original lease up to modification date
+  const originalCalc = calculateIFRS16WithTerms(originalTerms);
+
+  // Step 2: Extract preserved periods (periods 1 to modificationPeriod)
+  const preservedSchedule = originalCalc.amortizationSchedule.slice(0, modificationPeriod);
+  const preservedCashflow = originalCalc.cashflowSchedule.slice(0, modificationPeriod);
+
+  // Get the ending balances at modification date
+  const lastPreservedPeriod = preservedSchedule[preservedSchedule.length - 1] || {
+    remainingLiability: originalCalc.initialLiability,
+    remainingAsset: originalCalc.initialROU
+  };
+
+  const liabilityAtModification = lastPreservedPeriod.remainingLiability;
+  const rouAtModification = lastPreservedPeriod.remainingAsset;
+
+  // Step 3: Calculate remaining lease with modified terms
+  // Determine remaining lease term
+  const totalOriginalYears = originalCalc.leaseTermYears;
+  const remainingYears = Math.max(0, totalOriginalYears - yearsElapsed);
+  const remainingPeriods = Math.max(1, Math.round(remainingYears * periodsPerYear));
+
+  // Use modified payment and IBR
+  const modifiedPayment = modifiedTerms.FixedPaymentPerPeriod || originalTerms.FixedPaymentPerPeriod || 0;
+  const modifiedIBR = modifiedTerms.IBR_Annual || originalTerms.IBR_Annual || 0.14;
+  const modifiedRatePerPeriod = Math.pow(1 + modifiedIBR, 1 / periodsPerYear) - 1;
+  const isAdvance = (modifiedTerms.PaymentTiming || originalTerms.PaymentTiming) === 'Advance';
+
+  // IFRS 16 Remeasurement: Calculate new lease liability from modification date
+  let newLiability = 0;
+  for (let i = 1; i <= remainingPeriods; i++) {
+    const discountFactor = isAdvance ?
+      1 / Math.pow(1 + modifiedRatePerPeriod, i - 1) :
+      1 / Math.pow(1 + modifiedRatePerPeriod, i);
+    newLiability += modifiedPayment * discountFactor;
+  }
+  newLiability = Math.round(newLiability * 100) / 100;
+
+  // Adjust ROU Asset by the change in lease liability (IFRS 16.44)
+  const liabilityAdjustment = newLiability - liabilityAtModification;
+  const newROU = rouAtModification + liabilityAdjustment;
+
+  // Step 4: Generate new amortization schedule for remaining periods
+  const newSchedule = generateAmortizationSchedule(
+    newLiability,
+    modifiedPayment,
+    modifiedRatePerPeriod,
+    remainingPeriods,
+    newROU,
+    0, // RVG handled separately if needed
+    false,
+    0
+  );
+
+  // Renumber the new schedule to continue from modification period
+  const adjustedNewSchedule = newSchedule.map((row, index) => ({
+    ...row,
+    month: modificationPeriod + index + 1
+  }));
+
+  // Generate new cashflow schedule for remaining periods
+  const newCashflow = [];
+  const monthsPerPeriod = 12 / periodsPerYear;
+  for (let i = 1; i <= remainingPeriods; i++) {
+    const paymentDate = new Date(modDate);
+    paymentDate.setMonth(modDate.getMonth() + (i - 1) * monthsPerPeriod);
+
+    newCashflow.push({
+      period: modificationPeriod + i,
+      date: paymentDate.toISOString().split('T')[0],
+      rent: modifiedPayment
+    });
+  }
+
+  // Step 5: Merge preserved and new schedules
+  const mergedAmortization = [...preservedSchedule, ...adjustedNewSchedule];
+  const mergedCashflow = [...preservedCashflow, ...newCashflow];
+
+  // Calculate totals
+  const totalInterest = mergedAmortization.reduce((sum, row) => sum + (row.interest || 0), 0);
+  const totalDepreciation = mergedAmortization.reduce((sum, row) => sum + (row.depreciation || 0), 0);
+
+  return {
+    initialLiability: originalCalc.initialLiability,
+    initialROU: originalCalc.initialROU,
+    totalInterest: Math.round(totalInterest * 100) / 100,
+    totalDepreciation: Math.round(totalDepreciation * 100) / 100,
+    cashflowSchedule: mergedCashflow,
+    amortizationSchedule: mergedAmortization,
+    depreciationSchedule: mergedAmortization.map(row => ({
+      period: row.month,
+      depreciation: row.depreciation
+    })),
+    journalEntries: generateJournalEntries(
+      leaseData,
+      originalCalc.initialLiability,
+      originalCalc.initialROU,
+      mergedAmortization,
+      mergedAmortization
+    ),
+    leaseTermYears: originalCalc.leaseTermYears,
+    nonCancellableYears: originalCalc.nonCancellableYears,
+    renewalYears: originalCalc.renewalYears,
+    terminationYears: originalCalc.terminationYears
+  };
+}
+
+/**
+ * Helper function to calculate IFRS16 with specific terms
+ * Used for calculating original terms in modification scenarios
+ */
+function calculateIFRS16WithTerms(terms: Partial<LeaseData>): CalculationResults {
+  // Call the main calculation function recursively but with the specific terms
+  // Make sure to not have modification flags to avoid infinite recursion
+  const cleanTerms = { ...terms };
+  delete cleanTerms.hasModification;
+  delete cleanTerms.modificationDate;
+  delete cleanTerms.originalTerms;
+  delete cleanTerms.modifiedTerms;
+  delete cleanTerms.modificationHistory;
+
+  return calculateIFRS16(cleanTerms);
+}
+
 export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResults {
+  // Check if this contract has a modification (Amendment)
+  if (leaseData.hasModification && leaseData.originalTerms && leaseData.modifiedTerms && leaseData.modificationDate) {
+    return calculateWithModification(leaseData);
+  }
+
+  // Standard calculation (no modification)
   // Ensure we have valid data with defaults
   const paymentPerPeriod = leaseData.FixedPaymentPerPeriod || 0;
   const nonCancellableYears = leaseData.NonCancellableYears || 0;

@@ -6,6 +6,7 @@ import { generateContractHTML } from '../../utils/contractGenerator';
 import { useRef } from 'react';
 import jsPDF from 'jspdf';
 import { ContractPreviewModal } from './ContractPreviewModal';
+import AmendmentNotice from './AmendmentNotice';
 
 export function ContractPreview() {
   const { state, dispatch } = useLeaseContext();
@@ -15,33 +16,38 @@ export function ContractPreview() {
   useEffect(() => {
     // Generate contract HTML when component mounts
     if (leaseData.ContractID) {
-      let html = generateContractHTML(leaseData, mode);
+      try {
+        let html = generateContractHTML(leaseData, mode);
 
-      // Add custom CSS for signature tables
-      const customStyles = `
-        <style>
-          table[style*="border: none"] {
-            border: none !important;
-            margin: 0.5rem 0 !important;
-          }
-          table[style*="border: none"] td {
-            border: none !important;
-            padding: 4px 0 !important;
-          }
-          table[style*="border: none"] td:first-child {
-            width: auto;
-            padding-right: 20px !important;
-            white-space: nowrap;
-            font-weight: bold;
-          }
-          table[style*="border: none"] td:last-child {
-            padding-left: 0 !important;
-          }
-        </style>
-      `;
-      html = customStyles + html;
+        // Add custom CSS for signature tables
+        const customStyles = `
+          <style>
+            table[style*="border: none"] {
+              border: none !important;
+              margin: 0.5rem 0 !important;
+            }
+            table[style*="border: none"] td {
+              border: none !important;
+              padding: 4px 0 !important;
+            }
+            table[style*="border: none"] td:first-child {
+              width: auto;
+              padding-right: 20px !important;
+              white-space: nowrap;
+              font-weight: bold;
+            }
+            table[style*="border: none"] td:last-child {
+              padding-left: 0 !important;
+            }
+          </style>
+        `;
+        html = customStyles + html;
 
-      dispatch({ type: 'SET_CONTRACT_HTML', payload: html });
+        dispatch({ type: 'SET_CONTRACT_HTML', payload: html });
+      } catch (error) {
+        console.error('Error generating contract HTML:', error);
+        dispatch({ type: 'SET_CONTRACT_HTML', payload: '<div style="color: red; padding: 20px;">Error generating contract preview. Please check the contract data.</div>' });
+      }
     }
   }, [leaseData, mode, dispatch]);
 
@@ -54,6 +60,207 @@ export function ContractPreview() {
     const margin = 15;
     const maxWidth = pageWidth - 2 * margin;
     let yPosition = margin;
+
+    // Helper function to generate changes list for amendment notice
+    const generateChangesList = () => {
+      if (!leaseData.hasModification || !leaseData.originalTerms || !leaseData.modifiedTerms) {
+        return [];
+      }
+
+      const changes: string[] = [];
+      const { originalTerms, modifiedTerms } = leaseData;
+
+      // Payment changes
+      if (originalTerms.FixedPaymentPerPeriod !== modifiedTerms.FixedPaymentPerPeriod) {
+        const currency = leaseData.Currency || '₦';
+        changes.push(
+          `Fixed Payment: ${currency}${originalTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} → ${currency}${modifiedTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} per period`
+        );
+      }
+
+      // Discount rate changes
+      if (originalTerms.IBR_Annual !== modifiedTerms.IBR_Annual) {
+        const origIBR = (originalTerms.IBR_Annual || 0) * 100;
+        const modIBR = (modifiedTerms.IBR_Annual || 0) * 100;
+        changes.push(
+          `Discount Rate: ${origIBR.toFixed(2)}% → ${modIBR.toFixed(2)}% per annum`
+        );
+      }
+
+      // Lease term changes
+      if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
+        changes.push(
+          `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years → ${modifiedTerms.NonCancellableYears} years`
+        );
+      }
+
+      // Payment frequency changes
+      if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
+        changes.push(
+          `Payment Frequency: ${originalTerms.PaymentFrequency || 'N/A'} → ${modifiedTerms.PaymentFrequency || 'N/A'}`
+        );
+      }
+
+      return changes;
+    };
+
+    // Add Amendment Notice if contract has modifications
+    if (leaseData.hasModification) {
+      const changes = generateChangesList();
+      const latestModification = leaseData.modificationHistory?.[leaseData.modificationHistory.length - 1];
+
+      // Amendment Notice Header
+      pdf.setFillColor(16, 185, 129); // Emerald color
+      pdf.rect(margin, yPosition, maxWidth, 10, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('LEASE AMENDMENT NOTICE', margin + 5, yPosition + 7);
+      yPosition += 12;
+
+      // Reset text color
+      pdf.setTextColor(0, 0, 0);
+
+      // Border for amendment notice
+      pdf.setDrawColor(16, 185, 129);
+      pdf.setLineWidth(0.5);
+      const noticeStartY = yPosition;
+
+      // Amendment Date
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('AMENDMENT DATE:', margin + 5, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      const amendmentDate = new Date(leaseData.agreementDate || leaseData.modificationDate);
+      pdf.text(amendmentDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), margin + 5, yPosition + 5);
+      yPosition += 10;
+
+      // Effective Date
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('EFFECTIVE DATE:', margin + 5, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      const effectiveDate = new Date(leaseData.modificationDate);
+      pdf.text(effectiveDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), margin + 5, yPosition + 5);
+      yPosition += 10;
+
+      // Version
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('VERSION:', margin + 5, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Version ${leaseData.version || 2}`, margin + 5, yPosition + 5);
+      yPosition += 10;
+
+      // Divider line
+      pdf.setDrawColor(16, 185, 129);
+      pdf.line(margin + 5, yPosition, pageWidth - margin - 5, yPosition);
+      yPosition += 5;
+
+      // Introductory paragraph 1
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      const versionNum = leaseData.version || 2;
+      const lessorName = leaseData.LessorName || 'the Lessor';
+      const lesseeName = leaseData.LesseeName || 'the Lessee';
+      const contractId = leaseData.ContractID || 'N/A';
+
+      const introText1 = `This Amendment No. ${versionNum} (the "Amendment") modifies the Lease Agreement with Contract ID ${contractId}, entered into between ${lessorName} (the "Lessor") and ${lesseeName} (the "Lessee"). This Amendment shall form an integral part of the original Lease Agreement and shall be binding upon both parties.`;
+
+      const introLines1 = pdf.splitTextToSize(introText1, maxWidth - 15);
+      pdf.text(introLines1, margin + 10, yPosition);
+      yPosition += introLines1.length * 4.5 + 6;
+
+      // Paragraph 2 - Original Contract Reference
+      const contractDate = leaseData.ContractDate || leaseData.CommencementDate || 'N/A';
+      const formattedContractDate = contractDate !== 'N/A'
+        ? new Date(contractDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'N/A';
+
+      const introText2 = `The Lessor ("${lessorName}") and The Lessee ("${lesseeName}") had previously entered into a Lease Agreement on ${formattedContractDate} (for details of the contract, refer to the Master Agreement attached hereto), which is now being amended.`;
+
+      const introLines2 = pdf.splitTextToSize(introText2, maxWidth - 15);
+      pdf.text(introLines2, margin + 10, yPosition);
+      yPosition += introLines2.length * 4.5 + 6;
+
+      // Paragraph 3 - Amendment Reason
+      const reason = latestModification?.modificationReason || 'commercial and operational considerations';
+      const introText3 = `The contract is amended based on ${reason}.`;
+
+      const introLines3 = pdf.splitTextToSize(introText3, maxWidth - 15);
+      pdf.text(introLines3, margin + 10, yPosition);
+      yPosition += introLines3.length * 4.5 + 8;
+
+      // Divider line
+      pdf.setDrawColor(16, 185, 129);
+      pdf.line(margin + 5, yPosition, pageWidth - margin - 5, yPosition);
+      yPosition += 5;
+
+      // Changes Made
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text('CHANGES MADE:', margin + 5, yPosition);
+      yPosition += 5;
+
+      if (changes.length > 0) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        changes.forEach(change => {
+          const changeLines = pdf.splitTextToSize('• ' + change, maxWidth - 15);
+          pdf.text(changeLines, margin + 10, yPosition);
+          yPosition += changeLines.length * 4.5 + 2;
+        });
+      } else {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(9);
+        pdf.text('No changes detected', margin + 10, yPosition);
+        yPosition += 5;
+      }
+
+      yPosition += 8;
+
+      // Footer note inside box
+      pdf.setDrawColor(16, 185, 129);
+      pdf.line(margin + 5, yPosition, pageWidth - margin - 5, yPosition);
+      yPosition += 5;
+
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(8);
+      const footerText = 'All other terms remain unchanged from the original lease agreement.';
+      const footerLines = pdf.splitTextToSize(footerText, maxWidth - 15);
+      pdf.text(footerLines, margin + 10, yPosition);
+      yPosition += footerLines.length * 4 + 5;
+
+      // Draw border around entire amendment notice
+      const noticeHeight = yPosition - noticeStartY + 5;
+      pdf.rect(margin, noticeStartY - 2, maxWidth, noticeHeight, 'S');
+
+      // Amendment Footer - Outside the box at bottom of page
+      const footerYPosition = pageHeight - margin - 15; // Position near bottom of page
+
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+
+      const assetDescription = leaseData.AssetDescription || 'the Leased Asset';
+      const assetLocation = leaseData.AssetLocation || leaseData.LesseeAddress || '';
+
+      // Construct the full footer text with asset location if available
+      let amendmentFooter = `Amendment No. ${versionNum} to the contract for provision of ${assetDescription}`;
+      if (assetLocation) {
+        amendmentFooter += ` at ${assetLocation}`;
+      }
+      amendmentFooter += ` - Contract ID: ${contractId}`;
+
+      const footerTitleLines = pdf.splitTextToSize(amendmentFooter, maxWidth);
+
+      // Left-aligned footer text
+      footerTitleLines.forEach((line: string, index: number) => {
+        pdf.text(line, margin, footerYPosition + (index * 5));
+      });
+
+      // Add new page for the master agreement
+      pdf.addPage();
+      yPosition = margin; // Reset position for new page
+    }
 
     // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
@@ -260,6 +467,9 @@ export function ContractPreview() {
         onSend={handleSendContract}
         onDownload={downloadContract}
       />
+
+      {/* Amendment Notice - Shows if contract has modifications */}
+      <AmendmentNotice leaseData={leaseData} version={leaseData.version} />
 
       {/* Contract Summary */}
       <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 space-y-4">

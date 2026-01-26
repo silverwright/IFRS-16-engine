@@ -578,12 +578,14 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const userId = req.user?.id;
     const userRole = req.user?.role;
-    const { modificationDate, modificationReason, data: newData } = req.body;
+    const { modificationDate, modificationReason, data: newData, modificationType } = req.body;
 
     // Validate required fields
     if (!modificationDate || !newData) {
       return res.status(400).json({ error: 'Missing required fields: modificationDate and data' });
     }
+
+    const modType: 'amendment' | 'termination' = modificationType || 'amendment';
 
     // Get the current contract
     const { data: currentContract, error: fetchError } = await supabase
@@ -601,89 +603,199 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'You do not have permission to modify this contract' });
     }
 
-    // Determine the base contract ID and next version number
-    const baseContractId = currentContract.base_contract_id || currentContract.contract_id;
+    // Determine the next version number
     const currentVersion = currentContract.version || 1;
     const nextVersion = currentVersion + 1;
 
-    // Generate new contract ID with version suffix
-    const newContractId = nextVersion === 1 ? baseContractId : `${baseContractId}-v${nextVersion}`;
+    // Handle different modification types
 
-    // Mark the current version as inactive
-    await supabase
-      .from('contracts')
-      .update({ is_active: false })
-      .eq('base_contract_id', baseContractId)
-      .eq('is_active', true);
+    if (modType === 'termination') {
+      // TERMINATION & NEW LEASE: Create completely separate contract
+      // Variables needed for termination
+      const baseContractId = currentContract.base_contract_id || currentContract.contract_id;
+      const newContractId = `${baseContractId}-v${nextVersion}`;
+      const newCommencementDate = modificationDate;
 
-    // Also mark the original contract as inactive if it doesn't have a base_contract_id
-    if (!currentContract.base_contract_id) {
+      // Mark the current version as inactive
       await supabase
         .from('contracts')
         .update({ is_active: false })
+        .eq('base_contract_id', baseContractId)
+        .eq('is_active', true);
+
+      if (!currentContract.base_contract_id) {
+        await supabase
+          .from('contracts')
+          .update({ is_active: false })
+          .eq('id', id);
+      }
+
+      // Use the new values for the new lease data
+      const mergedData = {
+        ...currentContract.data,
+        ...newData,
+        CommencementDate: modificationDate,
+        ContractID: newContractId,
+      };
+
+      // Update the original contract to set its end date to the termination date
+      await supabase
+        .from('contracts')
+        .update({
+          data: {
+            ...currentContract.data,
+            EndDateOriginal: modificationDate,
+            TerminatedEarly: true,
+            TerminationDate: modificationDate,
+          }
+        })
         .eq('id', id);
-    }
 
-    // Merge original data with new data
-    const mergedData = {
-      ...currentContract.data,
-      ...newData,
-      // Preserve these fields from original
-      ContractID: currentContract.contract_id,
-      CommencementDate: currentContract.commencement_date,
-      ContractDate: currentContract.data.ContractDate,
-    };
+      // Create the new version as a separate contract
+      const newId = uuidv4();
+      const { data: newContract, error: insertError } = await supabase
+        .from('contracts')
+        .insert({
+          id: newId,
+          contract_id: newContractId,
+          lessee_name: currentContract.lessee_name,
+          lessor_name: currentContract.lessor_name,
+          asset_description: currentContract.asset_description,
+          commencement_date: newCommencementDate,
+          mode: currentContract.mode,
+          status: 'draft',
+          data: mergedData,
+          created_by: userId,
+          version: nextVersion,
+          base_contract_id: baseContractId,
+          modification_date: modificationDate,
+          previous_version_id: id,
+          is_active: true,
+          modification_reason: modificationReason || null
+        })
+        .select()
+        .single();
 
-    // Create the new version
-    const newId = uuidv4();
-    const { data: newContract, error: insertError } = await supabase
-      .from('contracts')
-      .insert({
-        id: newId,
-        contract_id: newContractId,
-        lessee_name: currentContract.lessee_name,
-        lessor_name: currentContract.lessor_name,
-        asset_description: currentContract.asset_description,
-        commencement_date: currentContract.commencement_date,
-        mode: currentContract.mode,
-        status: 'draft', // New modification starts as draft
-        data: mergedData,
-        created_by: userId,
-        // Version tracking fields
+      if (insertError) throw insertError;
+
+      const contract = {
+        id: newContract.id,
+        contractId: newContract.contract_id,
+        lesseeName: newContract.lessee_name,
+        lessorName: newContract.lessor_name || '',
+        assetDescription: newContract.asset_description,
+        commencementDate: newContract.commencement_date,
+        mode: newContract.mode,
+        status: newContract.status,
+        data: newContract.data,
+        createdBy: newContract.created_by,
+        createdAt: newContract.created_at,
+        updatedAt: newContract.updated_at,
+        version: newContract.version,
+        baseContractId: newContract.base_contract_id,
+        modificationDate: newContract.modification_date,
+        previousVersionId: newContract.previous_version_id,
+        isActive: newContract.is_active,
+        modificationReason: newContract.modification_reason
+      };
+
+      res.status(201).json(contract);
+
+    } else {
+      // AMENDMENT: Update the SAME contract with modification metadata
+      // Store original terms and modified terms in the data structure
+
+      // Preserve the original terms if this is the first modification
+      const originalTerms = currentContract.data.originalTerms || (() => {
+        const clean = { ...currentContract.data };
+        // Remove metadata fields from original terms
+        delete clean.hasModification;
+        delete clean.modificationDate;
+        delete clean.modificationReason;
+        delete clean.agreementDate;
+        delete clean.originalTerms;
+        delete clean.modifiedTerms;
+        delete clean.modificationHistory;
+        return clean;
+      })();
+
+      // Build modification history
+      const modificationHistory = currentContract.data.modificationHistory || [];
+      modificationHistory.push({
         version: nextVersion,
-        base_contract_id: baseContractId,
-        modification_date: modificationDate,
-        previous_version_id: id,
-        is_active: true,
-        modification_reason: modificationReason || null
-      })
-      .select()
-      .single();
+        modificationDate: modificationDate,
+        agreementDate: req.body.agreementDate || modificationDate,
+        modificationReason: modificationReason || '',
+        changes: newData
+      });
 
-    if (insertError) throw insertError;
+      // Create the updated data structure
+      // Start with original contract data, apply modifications, then add metadata
+      const updatedData = {
+        ...currentContract.data,  // All original fields
+        ...newData,                // Modified fields overwrite originals
+        // Modification metadata (must come after newData to not be overwritten)
+        hasModification: true,
+        modificationDate: modificationDate,
+        agreementDate: req.body.agreementDate || modificationDate,
+        modificationReason: modificationReason || '',
+        // Store original and modified terms
+        originalTerms: originalTerms,
+        modifiedTerms: newData,
+        // Modification history
+        modificationHistory: modificationHistory,
+        // Explicitly preserve critical fields that must never change
+        ContractID: currentContract.contract_id,
+        CommencementDate: currentContract.commencement_date,
+        ContractDate: currentContract.data.ContractDate,
+        EndDateOriginal: currentContract.data.EndDateOriginal,
+        // Preserve entity/party information
+        LessorName: currentContract.data.LessorName || currentContract.lessor_name,
+        LesseeEntity: currentContract.data.LesseeEntity,
+        LesseeName: currentContract.data.LesseeName || currentContract.lessee_name,
+        AssetDescription: currentContract.data.AssetDescription || currentContract.asset_description,
+        AssetClass: currentContract.data.AssetClass,
+        Currency: currentContract.data.Currency,
+        // Preserve mode for contract generation
+        Mode: currentContract.mode,
+      };
 
-    const contract = {
-      id: newContract.id,
-      contractId: newContract.contract_id,
-      lesseeName: newContract.lessee_name,
-      lessorName: newContract.lessor_name || '',
-      assetDescription: newContract.asset_description,
-      commencementDate: newContract.commencement_date,
-      mode: newContract.mode,
-      status: newContract.status,
-      data: newContract.data,
-      createdBy: newContract.created_by,
-      createdAt: newContract.created_at,
-      updatedAt: newContract.updated_at,
-      version: newContract.version,
-      baseContractId: newContract.base_contract_id,
-      modificationDate: newContract.modification_date,
-      previousVersionId: newContract.previous_version_id,
-      isActive: newContract.is_active,
-      modificationReason: newContract.modification_reason
-    };
+      // Update the SAME contract (not creating a new one)
+      const { data: updatedContract, error: updateError } = await supabase
+        .from('contracts')
+        .update({
+          data: updatedData,
+          version: nextVersion,
+          modification_date: modificationDate,
+          modification_reason: modificationReason || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
 
-    res.status(201).json(contract);
+      if (updateError) throw updateError;
+
+      const contract = {
+        id: updatedContract.id,
+        contractId: updatedContract.contract_id,
+        lesseeName: updatedContract.lessee_name,
+        lessorName: updatedContract.lessor_name || '',
+        assetDescription: updatedContract.asset_description,
+        commencementDate: updatedContract.commencement_date,
+        mode: updatedContract.mode,
+        status: updatedContract.status,
+        data: updatedContract.data,
+        createdBy: updatedContract.created_by,
+        createdAt: updatedContract.created_at,
+        updatedAt: updatedContract.updated_at,
+        version: updatedContract.version,
+        modificationDate: updatedContract.modification_date,
+        modificationReason: updatedContract.modification_reason
+      };
+
+      res.status(200).json(contract);
+    }
   } catch (error) {
     console.error('Error creating contract modification:', error);
     res.status(500).json({ error: 'Failed to create contract modification' });

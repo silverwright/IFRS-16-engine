@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send } from 'lucide-react';
+import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send, GitBranch, Download, Search } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { approvalApi } from '../../services/approvalApi';
 import { useContracts } from '../../hooks/useContracts';
+import { generateContractHTML } from '../../utils/contractGenerator';
+import jsPDF from 'jspdf';
 
 interface ContractListProps {
   onEditContract: (contract: SavedContract) => void;
   onNewContract: () => void;
+  onModifyContract?: (contract: SavedContract) => void;
 }
 
-export function ContractList({ onEditContract, onNewContract }: ContractListProps) {
+export function ContractList({ onEditContract, onNewContract, onModifyContract }: ContractListProps) {
   const { state, dispatch } = useLeaseContext();
   const { savedContracts } = state;
   const { user } = useAuth();
@@ -21,6 +24,9 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
   const [showDataModal, setShowDataModal] = useState(false);
   const [dataToShow, setDataToShow] = useState<any>(null);
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterMode, setFilterMode] = useState<'ALL' | 'MINIMAL' | 'FULL'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'draft' | 'pending' | 'approved'>('ALL');
 
   const handleDeleteContract = (contractId: string) => {
     if (confirm('Are you sure you want to delete this contract?')) {
@@ -70,6 +76,388 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
     }
   };
 
+  const handleDownloadPDF = (contract: SavedContract) => {
+    try {
+      // Generate the lease contract HTML
+      const contractHtml = generateContractHTML(contract.data, contract.mode);
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const maxWidth = pageWidth - 2 * margin;
+      let yPosition = margin;
+
+      // Helper to check if we need a new page
+      const checkPageBreak = (increment: number) => {
+        if (yPosition + increment > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+      };
+
+      // Helper to format dates
+      const formatDatePDF = (dateStr: string) => {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      };
+
+      // Helper to generate changes list
+      const generateChangesList = () => {
+        if (!contract.data.hasModification || !contract.data.originalTerms || !contract.data.modifiedTerms) {
+          return [];
+        }
+
+        const changes: string[] = [];
+        const { originalTerms, modifiedTerms } = contract.data;
+
+        // Payment changes
+        if (originalTerms.FixedPaymentPerPeriod !== modifiedTerms.FixedPaymentPerPeriod) {
+          changes.push(
+            `Fixed Payment: ${contract.data.Currency}${originalTerms.FixedPaymentPerPeriod?.toLocaleString()} → ${contract.data.Currency}${modifiedTerms.FixedPaymentPerPeriod?.toLocaleString()} per period`
+          );
+        }
+
+        // Payment frequency changes
+        if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
+          changes.push(`Payment Frequency: ${originalTerms.PaymentFrequency} → ${modifiedTerms.PaymentFrequency}`);
+        }
+
+        // Payment timing changes
+        if (originalTerms.PaymentTiming !== modifiedTerms.PaymentTiming) {
+          changes.push(`Payment Timing: ${originalTerms.PaymentTiming} → ${modifiedTerms.PaymentTiming}`);
+        }
+
+        // Discount rate changes
+        if (originalTerms.IBR_Annual !== modifiedTerms.IBR_Annual) {
+          const origIBR = originalTerms.IBR_Annual || 0;
+          const modIBR = modifiedTerms.IBR_Annual || 0;
+          changes.push(
+            `Discount Rate: ${(origIBR * 100).toFixed(2)}% → ${(modIBR * 100).toFixed(2)}% per annum`
+          );
+        }
+
+        // Lease term changes
+        if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
+          changes.push(
+            `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years → ${modifiedTerms.NonCancellableYears} years`
+          );
+        }
+
+        return changes;
+      };
+
+      // Add Amendment Notice if contract has modifications
+      if (contract.data.hasModification) {
+        const changes = generateChangesList();
+        const latestModification = contract.data.modificationHistory?.[contract.data.modificationHistory.length - 1];
+
+        // Amendment Notice Header
+        pdf.setFillColor(16, 185, 129); // Emerald color
+        pdf.rect(margin, yPosition, maxWidth, 10, 'F');
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('LEASE AMENDMENT NOTICE', margin + 5, yPosition + 7);
+        yPosition += 12;
+
+        // Reset text color
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
+
+        // Border around notice
+        pdf.setDrawColor(16, 185, 129);
+        pdf.setLineWidth(0.5);
+        const noticeStartY = yPosition;
+
+        // Amendment details
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Amendment Date:', margin + 5, yPosition + 5);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(formatDatePDF(contract.data.agreementDate || contract.data.modificationDate), margin + 50, yPosition + 5);
+        yPosition += 7;
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Effective Date:', margin + 5, yPosition + 5);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(formatDatePDF(contract.data.modificationDate), margin + 50, yPosition + 5);
+        yPosition += 7;
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Version:', margin + 5, yPosition + 5);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Version ${contract.version || 2}`, margin + 50, yPosition + 5);
+        yPosition += 10;
+
+        // Introductory paragraph 1
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        const versionNum = contract.version || 2;
+        const lessorName = contract.data.LessorName || contract.lessorName || 'the Lessor';
+        const lesseeName = contract.data.LesseeName || contract.lesseeName || 'the Lessee';
+        const contractId = contract.data.ContractID || contract.contractId || 'N/A';
+
+        const introText1 = `This Amendment No. ${versionNum} (the "Amendment") modifies the Lease Agreement with Contract ID ${contractId}, entered into between ${lessorName} (the "Lessor") and ${lesseeName} (the "Lessee"). This Amendment shall form an integral part of the original Lease Agreement and shall be binding upon both parties.`;
+
+        const introLines1 = pdf.splitTextToSize(introText1, maxWidth - 15);
+        pdf.text(introLines1, margin + 8, yPosition + 5);
+        yPosition += introLines1.length * 4 + 5;
+
+        // Paragraph 2 - Original Contract Reference
+        const contractDate = contract.data.ContractDate || contract.data.CommencementDate || contract.commencementDate || 'N/A';
+        const formattedContractDate = contractDate !== 'N/A'
+          ? formatDatePDF(contractDate)
+          : 'N/A';
+
+        const introText2 = `The Lessor ("${lessorName}") and The Lessee ("${lesseeName}") had previously entered into a Lease Agreement on ${formattedContractDate} (for details of the contract, refer to the Master Agreement attached hereto), which is now being amended.`;
+
+        const introLines2 = pdf.splitTextToSize(introText2, maxWidth - 15);
+        pdf.text(introLines2, margin + 8, yPosition + 5);
+        yPosition += introLines2.length * 4 + 5;
+
+        // Paragraph 3 - Amendment Reason
+        const amendmentReason = latestModification?.modificationReason || 'commercial and operational considerations';
+        const introText3 = `The contract is amended based on ${amendmentReason}.`;
+
+        const introLines3 = pdf.splitTextToSize(introText3, maxWidth - 15);
+        pdf.text(introLines3, margin + 8, yPosition + 5);
+        yPosition += introLines3.length * 4 + 8;
+
+        // Separator
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(margin + 5, yPosition, pageWidth - margin - 5, yPosition);
+        yPosition += 7;
+
+        // Changes made
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.text('CHANGES MADE:', margin + 5, yPosition + 5);
+        yPosition += 7;
+
+        pdf.setFont('helvetica', 'normal');
+        if (changes.length > 0) {
+          changes.forEach(change => {
+            checkPageBreak(7);
+            pdf.text('• ' + change, margin + 8, yPosition + 5);
+            yPosition += 6;
+          });
+        } else {
+          pdf.text('• No specific changes detected', margin + 8, yPosition + 5);
+          yPosition += 6;
+        }
+
+        yPosition += 8;
+
+        // Footer note inside box
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'italic');
+        pdf.text('All other terms remain unchanged from the original lease agreement.', margin + 5, yPosition + 5);
+        yPosition += 8;
+
+        // Draw border
+        const noticeHeight = yPosition - noticeStartY;
+        pdf.rect(margin, noticeStartY, maxWidth, noticeHeight);
+
+        // Amendment Footer - Outside the box at bottom of page
+        const footerYPosition = pageHeight - margin - 15; // Position near bottom of page
+
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(9);
+
+        const assetDescription = contract.data.AssetDescription || contract.assetDescription || 'the Leased Asset';
+        const assetLocation = contract.data.AssetLocation || contract.data.LesseeAddress || '';
+
+        // Construct the full footer text with asset location if available
+        let amendmentFooter = `Amendment No. ${versionNum} to the contract for provision of ${assetDescription}`;
+        if (assetLocation) {
+          amendmentFooter += ` at ${assetLocation}`;
+        }
+        amendmentFooter += ` - Contract ID: ${contractId}`;
+
+        const footerTitleLines = pdf.splitTextToSize(amendmentFooter, maxWidth);
+
+        // Left-aligned footer text
+        footerTitleLines.forEach((line: string, index: number) => {
+          pdf.text(line, margin, footerYPosition + (index * 5));
+        });
+
+        // Add new page for the master agreement
+        pdf.addPage();
+        yPosition = margin; // Reset position for new page
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+      }
+
+      // Create a temporary div to parse HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = contractHtml;
+
+      // Process all elements
+      const processElement = (element: Element) => {
+        const tagName = element.tagName.toLowerCase();
+        const text = element.textContent?.trim() || '';
+
+        switch (tagName) {
+          case 'h1':
+            if (!text) return;
+            checkPageBreak(15);
+            pdf.setFontSize(18);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(text, pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 12;
+            break;
+
+          case 'h2':
+            if (!text) return;
+            checkPageBreak(12);
+            pdf.setFontSize(14);
+            pdf.setFont('helvetica', 'bold');
+            const lines = pdf.splitTextToSize(text, maxWidth);
+            pdf.text(lines, margin, yPosition);
+            yPosition += lines.length * 7 + 4;
+            break;
+
+          case 'h4':
+          case 'h5':
+            if (!text) return;
+            checkPageBreak(10);
+            pdf.setFontSize(12);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(text, margin, yPosition);
+            yPosition += 6;
+            break;
+
+          case 'p':
+            if (!text) return;
+            checkPageBreak(10);
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            const pLines = pdf.splitTextToSize(text, maxWidth);
+            pdf.text(pLines, margin, yPosition);
+            yPosition += pLines.length * 5 + 3;
+            break;
+
+          case 'table':
+            checkPageBreak(20);
+            pdf.setFontSize(9);
+            const rows = Array.from(element.querySelectorAll('tr'));
+
+            // Check if this is a signature table (no borders)
+            const tableStyle = element.getAttribute('style') || '';
+            const isSignatureTable = tableStyle.includes('border: none');
+
+            rows.forEach((row) => {
+              const cells = Array.from(row.querySelectorAll('td'));
+              if (cells.length === 2) {
+                checkPageBreak(15);
+                const label = cells[0].textContent?.trim() || '';
+                const valueCell = cells[1];
+
+                if (isSignatureTable) {
+                  // Signature table
+                  const value = valueCell.textContent?.trim() || '';
+
+                  if (label) {
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(10);
+                    pdf.text(label, margin, yPosition);
+
+                    if (value) {
+                      pdf.setFont('helvetica', 'normal');
+                      const signatureIndent = 70;
+                      pdf.text(value, signatureIndent, yPosition);
+                    }
+                    yPosition += 5.5;
+                  } else if (value) {
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(10);
+                    const signatureIndent = 70;
+                    pdf.text(value, signatureIndent, yPosition);
+                    yPosition += 5.5;
+                  }
+                } else {
+                  // Regular data table
+                  const valueHTML = valueCell.innerHTML;
+                  const hasBreaks = valueHTML.includes('<br>');
+
+                  pdf.setFont('helvetica', 'bold');
+                  pdf.text(label, margin, yPosition);
+
+                  pdf.setFont('helvetica', 'normal');
+
+                  if (hasBreaks) {
+                    const lines = valueHTML.split(/<br\s*\/?>/i).map(line => {
+                      return line.replace(/<[^>]*>/g, '').trim();
+                    }).filter(line => line.length > 0);
+
+                    let lineY = yPosition;
+                    lines.forEach((line) => {
+                      const wrappedLines = pdf.splitTextToSize(line, maxWidth - 50);
+                      pdf.text(wrappedLines, margin + 50, lineY);
+                      lineY += wrappedLines.length * 4.5;
+                    });
+                    yPosition = lineY + 2;
+                  } else {
+                    const value = valueCell.textContent?.trim() || '';
+                    const valueLines = pdf.splitTextToSize(value, maxWidth - 50);
+                    pdf.text(valueLines, margin + 50, yPosition);
+                    yPosition += Math.max(valueLines.length * 4.5, 6);
+                  }
+                }
+              }
+            });
+
+            if (!isSignatureTable) {
+              yPosition += 5;
+            } else {
+              yPosition += 2;
+            }
+            break;
+
+          case 'li':
+            if (!text) return;
+            checkPageBreak(8);
+            pdf.setFontSize(10);
+            pdf.setFont('helvetica', 'normal');
+            const liLines = pdf.splitTextToSize('• ' + text, maxWidth - 5);
+            pdf.text(liLines, margin + 5, yPosition);
+            yPosition += liLines.length * 5 + 2;
+            break;
+
+          case 'div':
+            // Process child elements
+            Array.from(element.children).forEach(child => processElement(child));
+            break;
+        }
+      };
+
+      // Process all children
+      Array.from(tempDiv.children).forEach(child => processElement(child));
+
+      // Save the PDF
+      pdf.save(`LeaseContract_${contract.mode.toLowerCase()}_${contract.contractId}.pdf`);
+    } catch (error) {
+      console.error('Error generating contract PDF:', error);
+      alert('Failed to generate contract PDF. Please check the contract data.');
+    }
+  };
+
+  // Filter contracts based on search term, mode, and status
+  const filteredContracts = useMemo(() => {
+    return savedContracts.filter(contract => {
+      const matchesSearch =
+        contract.contractId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.lesseeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.lessorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.assetDescription.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesMode = filterMode === 'ALL' || contract.mode === filterMode;
+      const matchesStatus = filterStatus === 'ALL' || contract.status === filterStatus;
+
+      return matchesSearch && matchesMode && matchesStatus;
+    });
+  }, [savedContracts, searchTerm, filterMode, filterStatus]);
 
   return (
     <div className="space-y-6">
@@ -83,6 +471,50 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
           New Contract
         </Button>
       </div>
+
+      {/* Search and Filters */}
+      {savedContracts.length > 0 && (
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search by contract ID, lessor, lessee, or asset..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            />
+          </div>
+
+          <select
+            value={filterMode}
+            onChange={(e) => setFilterMode(e.target.value as any)}
+            className="px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          >
+            <option value="ALL">All Modes</option>
+            <option value="MINIMAL">Minimal</option>
+            <option value="FULL">Full</option>
+          </select>
+
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as any)}
+            className="px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          >
+            <option value="ALL">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+      )}
+
+      {/* Results Count */}
+      {savedContracts.length > 0 && (
+        <div className="text-sm text-slate-600 dark:text-slate-400">
+          Showing {filteredContracts.length} of {savedContracts.length} contracts
+        </div>
+      )}
 
       {savedContracts.length === 0 ? (
         <div className="text-center py-12 bg-slate-100 dark:bg-slate-700/40 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-600/50">
@@ -118,7 +550,16 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
                 </tr>
               </thead>
               <tbody className="bg-slate-50 dark:bg-slate-800/30 divide-y divide-slate-200 dark:divide-slate-700/50">
-                {savedContracts.map((contract, index) => (
+                {filteredContracts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <FileText className="w-12 h-12 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
+                      <p className="text-slate-600 dark:text-slate-400 font-medium">No contracts match your search</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">Try adjusting your search criteria</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredContracts.map((contract, index) => (
                   <tr key={contract.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-slate-800/20' : 'bg-slate-50 dark:bg-slate-700/30'} hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -126,7 +567,15 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
                           <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-slate-900 dark:text-white">{contract.contractId}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-medium text-slate-900 dark:text-white">{contract.contractId}</div>
+                            {contract.version && contract.version > 1 && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
+                                <GitBranch className="w-3 h-3" />
+                                v{contract.version}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">{contract.mode} mode</div>
                         </div>
                       </div>
@@ -158,50 +607,70 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
                       <StatusBadge status={contract.status} size="sm" />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        {/* Submit for Approval button - only for draft contracts */}
-                        {contract.status === 'draft' && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center space-x-2">
+                          {/* Submit for Approval button - only for draft contracts */}
+                          {contract.status === 'draft' && (
+                            <button
+                              onClick={() => handleSubmitForApproval(contract)}
+                              disabled={submitting === contract.id}
+                              className="text-teal-600 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 p-1 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Submit for Approval"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleSubmitForApproval(contract)}
-                            disabled={submitting === contract.id}
-                            className="text-teal-600 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 p-1 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Submit for Approval"
+                            onClick={() => handleViewData(contract)}
+                            className="text-purple-600 dark:text-purple-600 hover:text-purple-900 dark:hover:text-purple-900 p-1 hover:bg-purple-100 dark:hover:bg-purple-100 rounded transition-colors"
+                            title="View All Data"
                           >
-                            <Send className="w-4 h-4" />
+                            <Code className="w-4 h-4" />
                           </button>
+                          <button
+                            onClick={() => handlePreviewContract(contract)}
+                            className="text-blue-600 dark:text-blue-600 hover:text-blue-900 dark:hover:text-blue-900 p-1 hover:bg-blue-100 dark:hover:bg-blue-100 rounded transition-colors"
+                            title="Preview"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadPDF(contract)}
+                            className="text-indigo-600 dark:text-indigo-600 hover:text-indigo-900 dark:hover:text-indigo-900 p-1 hover:bg-indigo-100 dark:hover:bg-indigo-100 rounded transition-colors"
+                            title="Download PDF"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => onEditContract(contract)}
+                            className="text-emerald-600 dark:text-emerald-600 hover:text-emerald-900 dark:hover:text-emerald-900 p-1 hover:bg-emerald-100 dark:hover:bg-emerald-100 rounded transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteContract(contract.id)}
+                            className="text-red-600 dark:text-red-600 hover:text-red-900 dark:hover:text-red-900 p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {/* Modify Contract button as actual button */}
+                        {onModifyContract && (
+                          <Button
+                            onClick={() => onModifyContract(contract)}
+                            className="flex items-center gap-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-600 dark:to-teal-600 hover:from-cyan-600 hover:to-teal-600 dark:hover:from-cyan-700 dark:hover:to-teal-700 text-white text-xs px-3 py-1.5"
+                          >
+                            <GitBranch className="w-3 h-3" />
+                            Modify
+                          </Button>
                         )}
-                        <button
-                          onClick={() => handleViewData(contract)}
-                          className="text-purple-600 dark:text-purple-600 hover:text-purple-900 dark:hover:text-purple-900 p-1 hover:bg-purple-100 dark:hover:bg-purple-100 rounded transition-colors"
-                          title="View All Data"
-                        >
-                          <Code className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handlePreviewContract(contract)}
-                          className="text-blue-600 dark:text-blue-600 hover:text-blue-900 dark:hover:text-blue-900 p-1 hover:bg-blue-100 dark:hover:bg-blue-100 rounded transition-colors"
-                          title="Preview"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onEditContract(contract)}
-                          className="text-emerald-600 dark:text-emerald-600 hover:text-emerald-900 dark:hover:text-emerald-900 p-1 hover:bg-emerald-100 dark:hover:bg-emerald-100 rounded transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteContract(contract.id)}
-                          className="text-red-600 dark:text-red-600 hover:text-red-900 dark:hover:text-red-900 p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -210,8 +679,17 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
 
       {/* Raw Data Modal */}
       {showDataModal && dataToShow && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden border border-slate-300 dark:border-slate-600/50 shadow-2xl">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+          onClick={() => {
+            setShowDataModal(false);
+            setDataToShow(null);
+          }}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden border border-slate-300 dark:border-slate-600/50 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b border-slate-300 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Code className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
@@ -282,8 +760,14 @@ export function ContractList({ onEditContract, onNewContract }: ContractListProp
 
       {/* Contract Preview Modal */}
       {selectedContract && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden border border-slate-300 dark:border-slate-600/50 shadow-2xl">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+          onClick={() => setSelectedContract(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden border border-slate-300 dark:border-slate-600/50 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b border-slate-300 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                 Contract Preview - {selectedContract.contractId}

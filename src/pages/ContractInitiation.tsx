@@ -11,6 +11,7 @@ import { LegalAdminForm } from '../components/Contract/LegalAdminForm';
 import { ContractPreview } from '../components/Contract/ContractPreview';
 import { FileImport } from '../components/Contract/FileImport';
 import { ContractList } from '../components/Contract/ContractList';
+import { ModifyContractModal } from '../components/Contract/ModifyContractModal';
 import { ProgressBar } from '../components/UI/ProgressBar';
 import { Button } from '../components/UI/Button';
 import { Modal } from '../components/UI/Modal';
@@ -26,7 +27,7 @@ const steps = [
 
 export function ContractInitiation() {
   const { state, dispatch } = useLeaseContext();
-  const { saveContract, updateContract } = useContracts();
+  const { saveContract, updateContract, modifyContract } = useContracts();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -34,6 +35,8 @@ export function ContractInitiation() {
   const [activeTab, setActiveTab] = useState<'form' | 'import' | 'list'>('list');
   const [editingContract, setEditingContract] = useState<SavedContract | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [selectedContractForModification, setSelectedContractForModification] = useState<SavedContract | null>(null);
 
   useEffect(() => {
     const isEditMode = searchParams.get('edit') === 'true';
@@ -173,6 +176,42 @@ export function ContractInitiation() {
     setActiveTab('form');
   };
 
+  const handleModifyContract = (contract: SavedContract) => {
+    setSelectedContractForModification(contract);
+    setShowModifyModal(true);
+  };
+
+  const handleModifySubmit = async (
+    modificationDate: string,
+    newValues: Partial<typeof state.leaseData>,
+    reason: string,
+    modificationType: 'amendment' | 'termination',
+    agreementDate: string
+  ) => {
+    if (!selectedContractForModification) return;
+
+    try {
+      // Create a new version of the contract with the modifications
+      await modifyContract(
+        selectedContractForModification.id,
+        modificationDate,
+        newValues,
+        reason,
+        modificationType,
+        agreementDate
+      );
+
+      const typeLabel = modificationType === 'amendment' ? 'amendment' : 'termination and new lease';
+      alert(`Contract ${typeLabel} submitted successfully! A new version has been created.`);
+
+      setShowModifyModal(false);
+      setSelectedContractForModification(null);
+    } catch (error) {
+      console.error('Error modifying contract:', error);
+      alert(`Failed to modify contract. Please try again.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   if (!modeSelected && activeTab === 'form') {
     return (
       <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -215,27 +254,29 @@ export function ContractInitiation() {
       {/* Tabs */}
       <div className="bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-300 dark:border-slate-600/50 shadow-2xl overflow-hidden">
         <div className="border-b border-slate-300 dark:border-slate-600/50">
-          <nav className="flex space-x-8 px-6">
-            {[
-              { id: 'list', name: 'Contract List', icon: FileText },
-              { id: 'form', name: 'Create/Edit Contract', icon: FileText },
-              { id: 'import', name: 'Import Contracts', icon: Upload },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`
-                  py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
-                  ${activeTab === tab.id
-                    ? 'border-emerald-500 dark:border-emerald-500 text-emerald-500 dark:text-emerald-400'
-                    : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500'
-                  }
-                `}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.name}
-              </button>
-            ))}
+          <nav className="flex items-center justify-between px-6">
+            <div className="flex space-x-8">
+              {[
+                { id: 'list', name: 'Contract List', icon: FileText },
+                { id: 'form', name: 'Create/Edit Contract', icon: FileText },
+                { id: 'import', name: 'Import Contracts', icon: Upload },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`
+                    py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors
+                    ${activeTab === tab.id
+                      ? 'border-emerald-500 dark:border-emerald-500 text-emerald-500 dark:text-emerald-400'
+                      : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500'
+                    }
+                  `}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.name}
+                </button>
+              ))}
+            </div>
           </nav>
         </div>
 
@@ -244,6 +285,7 @@ export function ContractInitiation() {
             <ContractList
               onEditContract={handleEditContract}
               onNewContract={handleNewContract}
+              onModifyContract={handleModifyContract}
             />
           )}
 
@@ -317,6 +359,21 @@ export function ContractInitiation() {
         message="Payment in Advance requires a prepayment amount. Please enter the prepayment amount before saving."
         type="error"
       />
+
+      {/* Modify Contract Modal */}
+      {showModifyModal && selectedContractForModification && (
+        <ModifyContractModal
+          isOpen={showModifyModal}
+          onClose={() => {
+            setShowModifyModal(false);
+            setSelectedContractForModification(null);
+          }}
+          onSubmit={handleModifySubmit}
+          currentValues={selectedContractForModification.data}
+          commencementDate={selectedContractForModification.commencementDate}
+          currentVersion={selectedContractForModification.version}
+        />
+      )}
     </div>
   );
 }

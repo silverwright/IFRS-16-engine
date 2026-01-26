@@ -111,9 +111,21 @@ export const contractsApi = {
     id: string,
     modificationDate: string,
     newValues: Partial<LeaseData>,
-    modificationReason?: string
+    modificationReason?: string,
+    modificationType?: 'amendment' | 'termination',
+    agreementDate?: string
   ): Promise<SavedContract> {
     const headers = await getAuthHeaders();
+    console.log('Creating modification:', {
+      id,
+      modificationDate,
+      newValues,
+      modificationReason,
+      modificationType,
+      agreementDate,
+      url: `${API_BASE_URL}/contracts/${id}/modify`
+    });
+
     const response = await fetch(`${API_BASE_URL}/contracts/${id}/modify`, {
       method: 'POST',
       headers,
@@ -121,11 +133,22 @@ export const contractsApi = {
         modificationDate,
         data: newValues,
         modificationReason,
+        modificationType: modificationType || 'amendment',
+        agreementDate: agreementDate || modificationDate,
       }),
     });
+
+    console.log('Response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create contract modification');
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.error || 'Failed to create contract modification');
+      } catch (e) {
+        throw new Error(`Failed to create contract modification: ${response.status} ${response.statusText}`);
+      }
     }
     return response.json();
   },

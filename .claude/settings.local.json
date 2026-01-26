@@ -16,7 +16,12 @@
       "Bash(findstr:*)",
       "Bash(npx ts-node:*)",
       "Bash(psql:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd comprehensive IFRS 16 Lease Accounting System with backend\n\nFeatures:\n- Full-stack React + TypeScript frontend with Vite\n- Node.js/Express backend with TypeScript\n- Supabase authentication and PostgreSQL database\n- Role-based access control (User, Approver, Admin)\n- Multi-step approval workflow for lease contracts\n- Interactive IFRS 16 e-learning module with quizzes\n- Lease calculation engine with amortization schedules\n- Disclosure and journal entry generation\n- Dashboard with analytics and visualizations\n- Dark mode support\n- Comprehensive documentation\n\nBackend includes:\n- RESTful API with JWT authentication\n- Database migrations for Supabase\n- Row Level Security (RLS) policies\n- Role-based middleware\n- Contract management endpoints\n- Approval workflow API\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(timeout 3 bash:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run dev:backend:*)"
     ],
     "deny": [],
     "ask": []

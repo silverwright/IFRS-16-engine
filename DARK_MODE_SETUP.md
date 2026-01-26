@@ -1,4 +1,4 @@
-# Dark Mode Implementation Guide
+\# Dark Mode Implementation Guide
 
 ## Overview
 

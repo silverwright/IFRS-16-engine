@@ -8,6 +8,7 @@ import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
 import { calculateLeaseModification, extractBaseContractId } from '../../utils/leaseModificationCalculator';
 import { contractsApi } from '../../api/contractsApi';
 import { ModifyContractModal } from '../Contract/ModifyContractModal';
+import AmendmentNotice from '../Contract/AmendmentNotice';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -333,6 +334,9 @@ export function ResultsDisplay() {
 
   return (
     <div className="space-y-6">
+      {/* Amendment Notice - Shows if contract has modifications */}
+      <AmendmentNotice leaseData={leaseData} version={currentVersion} />
+
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">

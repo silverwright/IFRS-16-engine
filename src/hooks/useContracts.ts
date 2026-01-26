@@ -89,6 +89,37 @@ export function useContracts() {
     }
   }, [dispatch]);
 
+  // Create a modification (new version) of a contract
+  const modifyContract = useCallback(async (
+    id: string,
+    effectiveDate: string,
+    newValues: Partial<any>,
+    modificationReason?: string,
+    modificationType?: 'amendment' | 'termination',
+    agreementDate?: string
+  ) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const modifiedContract = await contractsApi.createModification(
+        id,
+        effectiveDate,
+        newValues,
+        modificationReason,
+        modificationType,
+        agreementDate
+      );
+      // Reload all contracts to get updated list with new version
+      await loadContracts();
+      return modifiedContract;
+    } catch (error) {
+      console.error('Failed to modify contract:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to modify contract' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [dispatch, loadContracts]);
+
   return {
     contracts: state.savedContracts,
     loading: state.loading,
@@ -97,5 +128,6 @@ export function useContracts() {
     updateContract,
     deleteContract,
     loadContracts,
+    modifyContract,
   };
 }
