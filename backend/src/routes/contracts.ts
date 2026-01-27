@@ -45,7 +45,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       data: row.data,
       createdBy: row.created_by,
       createdAt: row.created_at,
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
+      version: row.version || 1,
+      baseContractId: row.base_contract_id,
+      modificationDate: row.modification_date,
+      previousVersionId: row.previous_version_id,
+      isActive: row.is_active ?? true,
+      modificationReason: row.modification_reason
     }));
 
     res.json(contracts);
@@ -91,7 +97,13 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
       data: data.data,
       createdBy: data.created_by,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
+      version: data.version || 1,
+      baseContractId: data.base_contract_id,
+      modificationDate: data.modification_date,
+      previousVersionId: data.previous_version_id,
+      isActive: data.is_active ?? true,
+      modificationReason: data.modification_reason
     };
 
     res.json(contract);
@@ -154,7 +166,13 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       data: inserted.data,
       createdBy: inserted.created_by,
       createdAt: inserted.created_at,
-      updatedAt: inserted.updated_at
+      updatedAt: inserted.updated_at,
+      version: inserted.version || 1,
+      baseContractId: inserted.base_contract_id,
+      modificationDate: inserted.modification_date,
+      previousVersionId: inserted.previous_version_id,
+      isActive: inserted.is_active ?? true,
+      modificationReason: inserted.modification_reason
     };
 
     res.status(201).json(contract);
@@ -636,17 +654,29 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
         ...newData,
         CommencementDate: modificationDate,
         ContractID: newContractId,
+        // Remove termination flags from the new contract - this is a fresh lease
+        TerminatedEarly: false,
+        TerminationDate: undefined,
+        EndDateOriginal: undefined,
       };
 
-      // Update the original contract to set its end date to the termination date
+      // Update the original contract to mark it as terminated
+      // IMPORTANT: We keep the original NonCancellableYears so the full calculation is preserved
+      // The frontend will filter the display tables to only show periods up to termination
+      const originalEndDate = currentContract.data.EndDate || currentContract.data.EndDateOriginal;
+
       await supabase
         .from('contracts')
         .update({
           data: {
             ...currentContract.data,
-            EndDateOriginal: modificationDate,
+            // Mark as terminated - frontend will use this to filter table display
             TerminatedEarly: true,
             TerminationDate: modificationDate,
+            EndDate: modificationDate, // Set end date to termination date
+            EndDateOriginal: originalEndDate, // Preserve original planned end date
+            // IMPORTANT: Keep NonCancellableYears unchanged - calculations stay the same
+            // Only the table display is filtered in the frontend
           }
         })
         .eq('id', id);
@@ -719,6 +749,15 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
         return clean;
       })();
 
+      // Clean newData to only include fields that actually changed (have non-empty values)
+      const cleanedModifiedTerms: any = {};
+      for (const [key, value] of Object.entries(newData)) {
+        // Only include if the value is not undefined, not null, not empty string, and different from original
+        if (value !== undefined && value !== null && value !== '' && value !== originalTerms[key]) {
+          cleanedModifiedTerms[key] = value;
+        }
+      }
+
       // Build modification history
       const modificationHistory = currentContract.data.modificationHistory || [];
       modificationHistory.push({
@@ -726,7 +765,7 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
         modificationDate: modificationDate,
         agreementDate: req.body.agreementDate || modificationDate,
         modificationReason: modificationReason || '',
-        changes: newData
+        changes: cleanedModifiedTerms
       });
 
       // Create the updated data structure
@@ -741,7 +780,7 @@ router.post('/:id/modify', async (req: AuthRequest, res: Response) => {
         modificationReason: modificationReason || '',
         // Store original and modified terms
         originalTerms: originalTerms,
-        modifiedTerms: newData,
+        modifiedTerms: cleanedModifiedTerms,  // Only store actual changes
         // Modification history
         modificationHistory: modificationHistory,
         // Explicitly preserve critical fields that must never change

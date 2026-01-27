@@ -24,11 +24,18 @@ export function ResultsDisplay() {
   const [versions, setVersions] = useState<SavedContract[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
+
+  // Get current contract info first (needed by other hooks and handlers)
+  const currentContract = state.savedContracts.find(
+    contract => contract.data.ContractID === leaseData.ContractID
+  );
+
+  // Determine the current version - use viewingVersion if manually set, otherwise use contract's version
+  const currentVersion = viewingVersion ?? currentContract?.version ?? 1;
+  const baseContractId = currentContract?.baseContractId || extractBaseContractId(leaseData.ContractID || '');
 
   const handleEditContract = () => {
-    const currentContract = state.savedContracts.find(
-      contract => contract.data.ContractID === leaseData.ContractID
-    );
     if (currentContract) {
       navigate(`/contract?edit=true&contractId=${currentContract.id}`);
     } else {
@@ -56,12 +63,46 @@ export function ResultsDisplay() {
     loadVersions();
   }, [leaseData.ContractID]);
 
-  // Get current contract info
-  const currentContract = state.savedContracts.find(
-    contract => contract.data.ContractID === leaseData.ContractID
-  );
-  const currentVersion = currentContract?.version || 1;
-  const baseContractId = currentContract?.baseContractId || extractBaseContractId(leaseData.ContractID || '');
+  // Reset viewing version when contract changes (so it shows the contract's actual version)
+  useEffect(() => {
+    // Reset to null when contract ID changes, so currentVersion falls back to contract's version
+    setViewingVersion(null);
+  }, [leaseData.ContractID]);
+
+  // Handle switching to a different version
+  const handleVersionSelect = async (version: SavedContract) => {
+    try {
+      setRecalculating(true);
+
+      // Load the selected version's data
+      const versionData = { ...version.data };
+
+      // Clean up termination flags if they're not explicitly true
+      // This prevents undefined/false values from being treated as terminated
+      if (versionData.TerminatedEarly !== true) {
+        versionData.TerminatedEarly = false;
+        versionData.TerminationDate = undefined;
+      }
+
+      // Recalculate with the selected version's data
+      const versionCalculations = calculateIFRS16(versionData);
+
+      // Update the context with the selected version
+      dispatch({ type: 'SET_LEASE_DATA', payload: versionData });
+      dispatch({ type: 'SET_CALCULATIONS', payload: versionCalculations });
+
+      // Update the viewing version to highlight the correct one
+      setViewingVersion(version.version || 1);
+
+      // Optional: scroll to top to show the new data
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (error) {
+      console.error('Failed to load version:', error);
+      alert('Failed to load the selected version. Please try again.');
+    } finally {
+      setRecalculating(false);
+    }
+  };
 
   const handleCreateModification = async (
     modificationDate: string,
@@ -332,8 +373,51 @@ export function ResultsDisplay() {
                      paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
                      paymentFrequency === 'Annual' ? 'Year' : 'Period';
 
+  // Filter schedules for terminated contracts - only show periods up to termination
+  const getFilteredSchedules = () => {
+    if (leaseData.TerminatedEarly !== true || !leaseData.TerminationDate || !leaseData.CommencementDate) {
+      // Not terminated, return full schedules
+      return {
+        cashflow: calculations.cashflowSchedule,
+        amortization: calculations.amortizationSchedule
+      };
+    }
+
+    // Calculate how many periods from commencement to termination
+    const commencementDate = new Date(leaseData.CommencementDate);
+    const terminationDate = new Date(leaseData.TerminationDate);
+    const yearsUntilTermination = (terminationDate.getTime() - commencementDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+    const periodsPerYear = paymentFrequency === 'Monthly' ? 12 :
+                          paymentFrequency === 'Quarterly' ? 4 :
+                          paymentFrequency === 'Semiannual' ? 2 :
+                          paymentFrequency === 'Annual' ? 1 : 12;
+
+    const periodsUntilTermination = Math.round(yearsUntilTermination * periodsPerYear);
+
+    // Filter to only show periods up to termination
+    return {
+      cashflow: calculations.cashflowSchedule.slice(0, periodsUntilTermination),
+      amortization: calculations.amortizationSchedule.slice(0, periodsUntilTermination)
+    };
+  };
+
+  const filteredSchedules = getFilteredSchedules();
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Loading Overlay */}
+      {recalculating && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 shadow-xl">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />
+              <span className="text-slate-900 dark:text-white font-medium">Loading version...</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Amendment Notice - Shows if contract has modifications */}
       <AmendmentNotice leaseData={leaseData} version={currentVersion} />
 
@@ -422,22 +506,29 @@ export function ResultsDisplay() {
       {/* Version History Panel */}
       {showVersionHistory && versions.length > 1 && (
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-300 dark:border-white/10 p-4">
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Version History</h4>
+          <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">
+            Version History
+            <span className="ml-2 text-xs font-normal text-slate-600 dark:text-slate-400">
+              Click to view different versions
+            </span>
+          </h4>
           <div className="space-y-2">
             {versions.map((version, index) => (
-              <div
+              <button
                 key={version.id}
-                className={`flex items-center justify-between p-3 rounded-lg ${
+                onClick={() => handleVersionSelect(version)}
+                disabled={recalculating}
+                className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                   version.version === currentVersion
                     ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                    : 'bg-slate-50 dark:bg-slate-700/50'
-                }`}
+                    : 'bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer'
+                } ${recalculating ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1 px-2 py-1 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded">
                     v{version.version || 1}
                   </span>
-                  <div>
+                  <div className="text-left">
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {version.version === 1 ? 'Original Contract' : `Modification ${version.version - 1}`}
                     </p>
@@ -449,12 +540,17 @@ export function ResultsDisplay() {
                     {version.modificationReason && (
                       <p className="text-xs text-slate-500 dark:text-slate-400 italic">{version.modificationReason}</p>
                     )}
+                    {version.data?.TerminatedEarly && (
+                      <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-1">
+                        ⚠️ Terminated Early
+                      </p>
+                    )}
                   </div>
                 </div>
                 {version.version === currentVersion && (
                   <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">Current</span>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -544,14 +640,39 @@ export function ResultsDisplay() {
 
         <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-indigo-100 text-sm font-medium">Lease Term</p>
               <p className="text-2xl font-bold mt-1">
                 {calculations.leaseTermYears} Years
               </p>
+              {leaseData.TerminatedEarly === true && leaseData.TerminationDate && (
+                <p className="text-indigo-100 text-xs mt-2 flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>
+                    Terminated in year {Math.ceil((new Date(leaseData.TerminationDate).getTime() - new Date(leaseData.CommencementDate || '').getTime()) / (1000 * 60 * 60 * 24 * 365.25))}
+                  </span>
+                </p>
+              )}
             </div>
             <div className="bg-white/20 p-3 rounded-lg">
               <BarChart3 className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-pink-100 text-sm font-medium">Discount Rate (IBR)</p>
+              <p className="text-2xl font-bold mt-1">
+                {((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%
+              </p>
+              <p className="text-pink-100 text-xs mt-1">
+                Per annum
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <TrendingDown className="w-6 h-6" />
             </div>
           </div>
         </div>
@@ -721,7 +842,7 @@ export function ResultsDisplay() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
-                  {calculations.cashflowSchedule.map((row, index) => (
+                  {filteredSchedules.cashflow.map((row, index) => (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'}>
                       <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{row.period}</td>
                       <td className="px-6 py-4 text-sm text-slate-600 dark:text-white/80">{row.date}</td>
@@ -734,7 +855,11 @@ export function ResultsDisplay() {
               </table>
             </div>
             <div className="text-sm text-slate-600 dark:text-white/80 text-center">
-              Showing all {calculations.cashflowSchedule.length} periods (scroll to view more)
+              {leaseData.TerminatedEarly ? (
+                <>Showing {filteredSchedules.cashflow.length} of {calculations.cashflowSchedule.length} periods (terminated early at period {filteredSchedules.cashflow.length})</>
+              ) : (
+                <>Showing all {calculations.cashflowSchedule.length} periods (scroll to view more)</>
+              )}
             </div>
           </div>
         )}
@@ -758,7 +883,7 @@ export function ResultsDisplay() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
-                  {calculations.amortizationSchedule.map((row, index) => (
+                  {filteredSchedules.amortization.map((row, index) => (
                     <tr key={index} className={`${index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'} hover:bg-blue-50 dark:hover:bg-blue-500/20 transition-colors`}>
                       <td className="px-4 py-3 text-sm font-bold text-slate-900 dark:text-white">{row.month}</td>
                       <td className="px-4 py-3 text-sm font-semibold text-right text-blue-600 dark:text-blue-400">
@@ -791,7 +916,11 @@ export function ResultsDisplay() {
               </table>
             </div>
             <div className="text-sm text-slate-600 dark:text-white/80 text-center">
-              Showing all {calculations.amortizationSchedule.length} {periodLabel.toLowerCase()}s (scroll to view more)
+              {leaseData.TerminatedEarly ? (
+                <>Showing {filteredSchedules.amortization.length} of {calculations.amortizationSchedule.length} {periodLabel.toLowerCase()}s (terminated early at {periodLabel.toLowerCase()} {filteredSchedules.amortization.length})</>
+              ) : (
+                <>Showing all {calculations.amortizationSchedule.length} {periodLabel.toLowerCase()}s (scroll to view more)</>
+              )}
             </div>
           </div>
         )}

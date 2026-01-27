@@ -14,29 +14,52 @@ const AmendmentNotice: React.FC<AmendmentNoticeProps> = ({ leaseData, version })
   try {
     const { originalTerms, modifiedTerms, modificationDate, agreementDate, modificationHistory } = leaseData;
 
-  // Auto-generate list of changes by comparing originalTerms and modifiedTerms
+  // Auto-generate grouped list of changes by comparing originalTerms and modifiedTerms
   const generateChangesList = () => {
-    const changes: string[] = [];
+    const paymentChanges: string[] = [];
+    const financialChanges: string[] = [];
+    const leaseTermChanges: string[] = [];
+    const otherChanges: string[] = [];
 
     // Payment changes
     if (originalTerms.FixedPaymentPerPeriod !== modifiedTerms.FixedPaymentPerPeriod) {
       const currency = leaseData.Currency || '₦';
-      changes.push(
+      paymentChanges.push(
         `Fixed Payment: ${currency}${originalTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} → ${currency}${modifiedTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} per ${getFrequencyLabel(modifiedTerms.PaymentFrequency)}`
       );
     }
 
-    // Payment frequency changes
-    if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
-      changes.push(
-        `Payment Frequency: ${getFrequencyLabel(originalTerms.PaymentFrequency)} → ${getFrequencyLabel(modifiedTerms.PaymentFrequency)}`
+    // Payment frequency
+    if (modifiedTerms.PaymentFrequency === undefined) {
+      if (originalTerms.PaymentFrequency) {
+        paymentChanges.push(
+          `Frequency: ${getFrequencyLabel(originalTerms.PaymentFrequency)} (No Change)`
+        );
+      }
+    } else if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
+      paymentChanges.push(
+        `Frequency: ${getFrequencyLabel(originalTerms.PaymentFrequency)} → ${getFrequencyLabel(modifiedTerms.PaymentFrequency)}`
+      );
+    } else if (originalTerms.PaymentFrequency) {
+      paymentChanges.push(
+        `Frequency: ${getFrequencyLabel(originalTerms.PaymentFrequency)} (no change)`
       );
     }
 
-    // Payment timing changes
-    if (originalTerms.PaymentTiming !== modifiedTerms.PaymentTiming) {
-      changes.push(
-        `Payment Timing: ${originalTerms.PaymentTiming} → ${modifiedTerms.PaymentTiming}`
+    // Payment timing
+    if (modifiedTerms.PaymentTiming === undefined) {
+      if (originalTerms.PaymentTiming) {
+        paymentChanges.push(
+          `Timing: ${originalTerms.PaymentTiming} (No Change)`
+        );
+      }
+    } else if (originalTerms.PaymentTiming !== modifiedTerms.PaymentTiming) {
+      paymentChanges.push(
+        `Timing: ${originalTerms.PaymentTiming} → ${modifiedTerms.PaymentTiming}`
+      );
+    } else if (originalTerms.PaymentTiming) {
+      paymentChanges.push(
+        `Timing: ${originalTerms.PaymentTiming} (no change)`
       );
     }
 
@@ -44,55 +67,15 @@ const AmendmentNotice: React.FC<AmendmentNoticeProps> = ({ leaseData, version })
     if (originalTerms.IBR_Annual !== modifiedTerms.IBR_Annual) {
       const origIBR = (originalTerms.IBR_Annual || 0) * 100;
       const modIBR = (modifiedTerms.IBR_Annual || 0) * 100;
-      changes.push(
+      financialChanges.push(
         `Discount Rate: ${origIBR.toFixed(2)}% → ${modIBR.toFixed(2)}% per annum`
-      );
-    }
-
-    // Lease term changes
-    if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
-      changes.push(
-        `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years → ${modifiedTerms.NonCancellableYears} years`
-      );
-    }
-
-    // End date changes
-    if (originalTerms.EndDate !== modifiedTerms.EndDate) {
-      changes.push(
-        `End Date: ${formatDate(originalTerms.EndDate)} → ${formatDate(modifiedTerms.EndDate)}`
-      );
-    }
-
-    // Renewal option changes
-    if (originalTerms.RenewalOptionYears !== modifiedTerms.RenewalOptionYears) {
-      changes.push(
-        `Renewal Option: ${originalTerms.RenewalOptionYears || 0} years → ${modifiedTerms.RenewalOptionYears || 0} years`
-      );
-    }
-
-    if (originalTerms.RenewalLikelihood !== modifiedTerms.RenewalLikelihood) {
-      changes.push(
-        `Renewal Likelihood: ${((originalTerms.RenewalLikelihood || 0) * 100).toFixed(0)}% → ${((modifiedTerms.RenewalLikelihood || 0) * 100).toFixed(0)}%`
-      );
-    }
-
-    // Termination option changes
-    if (originalTerms.TerminationPoint !== modifiedTerms.TerminationPoint) {
-      changes.push(
-        `Termination Point: Year ${originalTerms.TerminationPoint || 0} → Year ${modifiedTerms.TerminationPoint || 0}`
-      );
-    }
-
-    if (originalTerms.TerminationLikelihood !== modifiedTerms.TerminationLikelihood) {
-      changes.push(
-        `Termination Likelihood: ${((originalTerms.TerminationLikelihood || 0) * 100).toFixed(0)}% → ${((modifiedTerms.TerminationLikelihood || 0) * 100).toFixed(0)}%`
       );
     }
 
     // Initial direct costs changes
     if (originalTerms.InitialDirectCosts !== modifiedTerms.InitialDirectCosts) {
       const currency = leaseData.Currency || '₦';
-      changes.push(
+      financialChanges.push(
         `Initial Direct Costs: ${currency}${(originalTerms.InitialDirectCosts || 0).toLocaleString()} → ${currency}${(modifiedTerms.InitialDirectCosts || 0).toLocaleString()}`
       );
     }
@@ -100,7 +83,7 @@ const AmendmentNotice: React.FC<AmendmentNoticeProps> = ({ leaseData, version })
     // Prepayments changes
     if (originalTerms.Prepayments !== modifiedTerms.Prepayments) {
       const currency = leaseData.Currency || '₦';
-      changes.push(
+      financialChanges.push(
         `Prepayments: ${currency}${(originalTerms.Prepayments || 0).toLocaleString()} → ${currency}${(modifiedTerms.Prepayments || 0).toLocaleString()}`
       );
     }
@@ -108,25 +91,77 @@ const AmendmentNotice: React.FC<AmendmentNoticeProps> = ({ leaseData, version })
     // Lease incentives changes
     if (originalTerms.LeaseIncentives !== modifiedTerms.LeaseIncentives) {
       const currency = leaseData.Currency || '₦';
-      changes.push(
+      financialChanges.push(
         `Lease Incentives: ${currency}${(originalTerms.LeaseIncentives || 0).toLocaleString()} → ${currency}${(modifiedTerms.LeaseIncentives || 0).toLocaleString()}`
+      );
+    }
+
+    // Lease term changes
+    if (modifiedTerms.NonCancellableYears === undefined) {
+      if (originalTerms.NonCancellableYears) {
+        leaseTermChanges.push(
+          `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years (No Change)`
+        );
+      }
+    } else if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
+      leaseTermChanges.push(
+        `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years → ${modifiedTerms.NonCancellableYears} years`
+      );
+    }
+
+    // End date changes
+    if (modifiedTerms.EndDate === undefined) {
+      if (originalTerms.EndDate) {
+        leaseTermChanges.push(
+          `End Date: ${formatDate(originalTerms.EndDate)} (No Change)`
+        );
+      }
+    } else if (originalTerms.EndDate !== modifiedTerms.EndDate) {
+      leaseTermChanges.push(
+        `End Date: ${formatDate(originalTerms.EndDate)} → ${formatDate(modifiedTerms.EndDate)}`
+      );
+    }
+
+    // Renewal option changes
+    if (originalTerms.RenewalOptionYears !== modifiedTerms.RenewalOptionYears) {
+      leaseTermChanges.push(
+        `Renewal Option: ${originalTerms.RenewalOptionYears || 0} years → ${modifiedTerms.RenewalOptionYears || 0} years`
+      );
+    }
+
+    if (originalTerms.RenewalLikelihood !== modifiedTerms.RenewalLikelihood) {
+      leaseTermChanges.push(
+        `Renewal Likelihood: ${((originalTerms.RenewalLikelihood || 0) * 100).toFixed(0)}% → ${((modifiedTerms.RenewalLikelihood || 0) * 100).toFixed(0)}%`
+      );
+    }
+
+    // Termination option changes
+    if (originalTerms.TerminationPoint !== modifiedTerms.TerminationPoint) {
+      leaseTermChanges.push(
+        `Termination Point: Year ${originalTerms.TerminationPoint || 0} → Year ${modifiedTerms.TerminationPoint || 0}`
+      );
+    }
+
+    if (originalTerms.TerminationLikelihood !== modifiedTerms.TerminationLikelihood) {
+      leaseTermChanges.push(
+        `Termination Likelihood: ${((originalTerms.TerminationLikelihood || 0) * 100).toFixed(0)}% → ${((modifiedTerms.TerminationLikelihood || 0) * 100).toFixed(0)}%`
       );
     }
 
     // Escalation changes
     if (originalTerms.EscalationType !== modifiedTerms.EscalationType) {
-      changes.push(
+      otherChanges.push(
         `Escalation Type: ${originalTerms.EscalationType || 'None'} → ${modifiedTerms.EscalationType || 'None'}`
       );
     }
 
     if (originalTerms.FixedEscalationPercent !== modifiedTerms.FixedEscalationPercent) {
-      changes.push(
+      otherChanges.push(
         `Fixed Escalation Rate: ${originalTerms.FixedEscalationPercent || 0}% → ${modifiedTerms.FixedEscalationPercent || 0}%`
       );
     }
 
-    return changes;
+    return { paymentChanges, financialChanges, leaseTermChanges, otherChanges };
   };
 
   const getFrequencyLabel = (freq: string | undefined) => {
@@ -192,18 +227,87 @@ const AmendmentNotice: React.FC<AmendmentNoticeProps> = ({ leaseData, version })
             <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-3">
               Changes Made:
             </h4>
-            {changes.length > 0 ? (
-              <ul className="space-y-2">
-                {changes.map((change, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
-                    <span className="text-emerald-600 font-bold mt-0.5">•</span>
-                    <span>{change}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-600 italic">No changes detected</p>
-            )}
+            {(() => {
+              const { paymentChanges, financialChanges, leaseTermChanges, otherChanges } = changes;
+              const hasAnyChanges = paymentChanges.length > 0 || financialChanges.length > 0 ||
+                                    leaseTermChanges.length > 0 || otherChanges.length > 0;
+
+              if (!hasAnyChanges) {
+                return <p className="text-sm text-slate-600 italic">No changes detected</p>;
+              }
+
+              return (
+                <div className="space-y-4">
+                  {/* Payment Terms Section */}
+                  {paymentChanges.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">
+                        Payment Terms:
+                      </h5>
+                      <ul className="space-y-2 ml-4">
+                        {paymentChanges.map((change, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                            <span className="text-emerald-600 font-bold mt-0.5 flex-shrink-0">•</span>
+                            <span className="leading-relaxed">{change}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Financial Terms Section */}
+                  {financialChanges.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">
+                        Financial Terms:
+                      </h5>
+                      <ul className="space-y-1.5 ml-4">
+                        {financialChanges.map((change, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                            <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                            <span>{change}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Lease Term & Options Section */}
+                  {leaseTermChanges.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">
+                        Lease Term & Options:
+                      </h5>
+                      <ul className="space-y-1.5 ml-4">
+                        {leaseTermChanges.map((change, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                            <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                            <span>{change}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Other Changes Section */}
+                  {otherChanges.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-2">
+                        Other Changes:
+                      </h5>
+                      <ul className="space-y-1.5 ml-4">
+                        {otherChanges.map((change, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                            <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                            <span>{change}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Reason */}

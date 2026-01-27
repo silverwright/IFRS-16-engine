@@ -8,9 +8,10 @@ interface ModalProps {
   title: string;
   message: string;
   type?: 'info' | 'warning' | 'error';
+  confirmText?: string;
 }
 
-export function Modal({ isOpen, onClose, title, message, type = 'info' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, message, type = 'info', confirmText = 'OK' }: ModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -59,7 +60,7 @@ export function Modal({ isOpen, onClose, title, message, type = 'info' }: ModalP
             onClick={onClose}
             variant="primary"
           >
-            OK
+            {confirmText}
           </Button>
         </div>
       </div>

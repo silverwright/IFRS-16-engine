@@ -106,46 +106,138 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
       // Helper to generate changes list
       const generateChangesList = () => {
         if (!contract.data.hasModification || !contract.data.originalTerms || !contract.data.modifiedTerms) {
-          return [];
+          return { paymentChanges: [], financialChanges: [], leaseTermChanges: [], otherChanges: [] };
         }
 
-        const changes: string[] = [];
+        const paymentChanges: string[] = [];
+        const financialChanges: string[] = [];
+        const leaseTermChanges: string[] = [];
+        const otherChanges: string[] = [];
         const { originalTerms, modifiedTerms } = contract.data;
 
         // Payment changes
         if (originalTerms.FixedPaymentPerPeriod !== modifiedTerms.FixedPaymentPerPeriod) {
-          changes.push(
+          paymentChanges.push(
             `Fixed Payment: ${contract.data.Currency}${originalTerms.FixedPaymentPerPeriod?.toLocaleString()} → ${contract.data.Currency}${modifiedTerms.FixedPaymentPerPeriod?.toLocaleString()} per period`
           );
         }
 
-        // Payment frequency changes
-        if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
-          changes.push(`Payment Frequency: ${originalTerms.PaymentFrequency} → ${modifiedTerms.PaymentFrequency}`);
+        // Payment frequency
+        if (modifiedTerms.PaymentFrequency === undefined) {
+          if (originalTerms.PaymentFrequency) {
+            paymentChanges.push(`Frequency: ${originalTerms.PaymentFrequency} (No Change)`);
+          }
+        } else if (originalTerms.PaymentFrequency !== modifiedTerms.PaymentFrequency) {
+          paymentChanges.push(`Frequency: ${originalTerms.PaymentFrequency} → ${modifiedTerms.PaymentFrequency}`);
+        } else if (originalTerms.PaymentFrequency) {
+          paymentChanges.push(`Frequency: ${originalTerms.PaymentFrequency} (no change)`);
         }
 
-        // Payment timing changes
-        if (originalTerms.PaymentTiming !== modifiedTerms.PaymentTiming) {
-          changes.push(`Payment Timing: ${originalTerms.PaymentTiming} → ${modifiedTerms.PaymentTiming}`);
+        // Payment timing
+        if (modifiedTerms.PaymentTiming === undefined) {
+          if (originalTerms.PaymentTiming) {
+            paymentChanges.push(`Timing: ${originalTerms.PaymentTiming} (No Change)`);
+          }
+        } else if (originalTerms.PaymentTiming !== modifiedTerms.PaymentTiming) {
+          paymentChanges.push(`Timing: ${originalTerms.PaymentTiming} → ${modifiedTerms.PaymentTiming}`);
+        } else if (originalTerms.PaymentTiming) {
+          paymentChanges.push(`Timing: ${originalTerms.PaymentTiming} (no change)`);
         }
 
         // Discount rate changes
         if (originalTerms.IBR_Annual !== modifiedTerms.IBR_Annual) {
           const origIBR = originalTerms.IBR_Annual || 0;
           const modIBR = modifiedTerms.IBR_Annual || 0;
-          changes.push(
+          financialChanges.push(
             `Discount Rate: ${(origIBR * 100).toFixed(2)}% → ${(modIBR * 100).toFixed(2)}% per annum`
           );
         }
 
+        // Initial direct costs changes
+        if (originalTerms.InitialDirectCosts !== modifiedTerms.InitialDirectCosts) {
+          financialChanges.push(
+            `Initial Direct Costs: ${contract.data.Currency}${(originalTerms.InitialDirectCosts || 0).toLocaleString()} → ${contract.data.Currency}${(modifiedTerms.InitialDirectCosts || 0).toLocaleString()}`
+          );
+        }
+
+        // Prepayments changes
+        if (originalTerms.Prepayments !== modifiedTerms.Prepayments) {
+          financialChanges.push(
+            `Prepayments: ${contract.data.Currency}${(originalTerms.Prepayments || 0).toLocaleString()} → ${contract.data.Currency}${(modifiedTerms.Prepayments || 0).toLocaleString()}`
+          );
+        }
+
+        // Lease incentives changes
+        if (originalTerms.LeaseIncentives !== modifiedTerms.LeaseIncentives) {
+          financialChanges.push(
+            `Lease Incentives: ${contract.data.Currency}${(originalTerms.LeaseIncentives || 0).toLocaleString()} → ${contract.data.Currency}${(modifiedTerms.LeaseIncentives || 0).toLocaleString()}`
+          );
+        }
+
         // Lease term changes
-        if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
-          changes.push(
+        if (modifiedTerms.NonCancellableYears === undefined) {
+          if (originalTerms.NonCancellableYears) {
+            leaseTermChanges.push(
+              `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years (No Change)`
+            );
+          }
+        } else if (originalTerms.NonCancellableYears !== modifiedTerms.NonCancellableYears) {
+          leaseTermChanges.push(
             `Non-Cancellable Term: ${originalTerms.NonCancellableYears} years → ${modifiedTerms.NonCancellableYears} years`
           );
         }
 
-        return changes;
+        // End date changes
+        if (modifiedTerms.EndDate === undefined) {
+          if (originalTerms.EndDate) {
+            const formatDate = (dateStr: string) => {
+              if (!dateStr) return 'N/A';
+              const date = new Date(dateStr);
+              return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            };
+            leaseTermChanges.push(
+              `End Date: ${formatDate(originalTerms.EndDate)} (No Change)`
+            );
+          }
+        } else if (originalTerms.EndDate !== modifiedTerms.EndDate) {
+          const formatDate = (dateStr: string) => {
+            if (!dateStr) return 'N/A';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+          };
+          leaseTermChanges.push(
+            `End Date: ${formatDate(originalTerms.EndDate)} → ${formatDate(modifiedTerms.EndDate)}`
+          );
+        }
+
+        // Renewal option changes
+        if (originalTerms.RenewalOptionYears !== modifiedTerms.RenewalOptionYears) {
+          leaseTermChanges.push(
+            `Renewal Option: ${originalTerms.RenewalOptionYears || 0} years → ${modifiedTerms.RenewalOptionYears || 0} years`
+          );
+        }
+
+        // Termination option changes
+        if (originalTerms.TerminationPoint !== modifiedTerms.TerminationPoint) {
+          leaseTermChanges.push(
+            `Termination Point: Year ${originalTerms.TerminationPoint || 0} → Year ${modifiedTerms.TerminationPoint || 0}`
+          );
+        }
+
+        // Escalation changes
+        if (originalTerms.EscalationType !== modifiedTerms.EscalationType) {
+          otherChanges.push(
+            `Escalation Type: ${originalTerms.EscalationType || 'None'} → ${modifiedTerms.EscalationType || 'None'}`
+          );
+        }
+
+        if (originalTerms.FixedEscalationPercent !== modifiedTerms.FixedEscalationPercent) {
+          otherChanges.push(
+            `Fixed Escalation Rate: ${originalTerms.FixedEscalationPercent || 0}% → ${modifiedTerms.FixedEscalationPercent || 0}%`
+          );
+        }
+
+        return { paymentChanges, financialChanges, leaseTermChanges, otherChanges };
       };
 
       // Add Amendment Notice if contract has modifications
@@ -165,11 +257,6 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
         // Reset text color
         pdf.setTextColor(0, 0, 0);
         pdf.setFontSize(10);
-
-        // Border around notice
-        pdf.setDrawColor(16, 185, 129);
-        pdf.setLineWidth(0.5);
-        const noticeStartY = yPosition;
 
         // Amendment details
         pdf.setFont('helvetica', 'bold');
@@ -233,31 +320,47 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(10);
         pdf.text('CHANGES MADE:', margin + 5, yPosition + 5);
-        yPosition += 7;
+        yPosition += 8;
 
-        pdf.setFont('helvetica', 'normal');
-        if (changes.length > 0) {
-          changes.forEach(change => {
-            checkPageBreak(7);
-            pdf.text('• ' + change, margin + 8, yPosition + 5);
+        const { paymentChanges, financialChanges, leaseTermChanges, otherChanges } = changes;
+        const hasAnyChanges = paymentChanges.length > 0 || financialChanges.length > 0 ||
+                              leaseTermChanges.length > 0 || otherChanges.length > 0;
+
+        if (hasAnyChanges) {
+          // Helper function to render a section
+          const renderSection = (title: string, items: string[]) => {
+            if (items.length === 0) return;
+
+            checkPageBreak(10);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(9);
+            pdf.text(title, margin + 8, yPosition + 5);
             yPosition += 6;
-          });
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            items.forEach(item => {
+              checkPageBreak(7);
+              pdf.text('  • ' + item, margin + 10, yPosition + 5);
+              yPosition += 5;
+            });
+
+            yPosition += 2; // Extra spacing between sections
+          };
+
+          // Render each section
+          renderSection('Payment Terms:', paymentChanges);
+          renderSection('Financial Terms:', financialChanges);
+          renderSection('Lease Term & Options:', leaseTermChanges);
+          renderSection('Other Changes:', otherChanges);
         } else {
+          pdf.setFont('helvetica', 'italic');
+          pdf.setFontSize(9);
           pdf.text('• No specific changes detected', margin + 8, yPosition + 5);
           yPosition += 6;
         }
 
         yPosition += 8;
-
-        // Footer note inside box
-        pdf.setFontSize(8);
-        pdf.setFont('helvetica', 'italic');
-        pdf.text('All other terms remain unchanged from the original lease agreement.', margin + 5, yPosition + 5);
-        yPosition += 8;
-
-        // Draw border
-        const noticeHeight = yPosition - noticeStartY;
-        pdf.rect(margin, noticeStartY, maxWidth, noticeHeight);
 
         // Amendment Footer - Outside the box at bottom of page
         const footerYPosition = pageHeight - margin - 15; // Position near bottom of page
@@ -278,9 +381,15 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
         const footerTitleLines = pdf.splitTextToSize(amendmentFooter, maxWidth);
 
         // Left-aligned footer text
+        let currentFooterY = footerYPosition;
         footerTitleLines.forEach((line: string, index: number) => {
-          pdf.text(line, margin, footerYPosition + (index * 5));
+          pdf.text(line, margin, currentFooterY + (index * 5));
         });
+        currentFooterY += footerTitleLines.length * 5;
+
+        // Add "All other terms remain unchanged" disclaimer
+        pdf.setFontSize(8);
+        pdf.text('All other terms remain unchanged from the original lease agreement.', margin, currentFooterY);
 
         // Add new page for the master agreement
         pdf.addPage();

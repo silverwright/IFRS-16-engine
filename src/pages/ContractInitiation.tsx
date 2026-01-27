@@ -37,6 +37,14 @@ export function ContractInitiation() {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [selectedContractForModification, setSelectedContractForModification] = useState<SavedContract | null>(null);
+  const [showMinimalBlockedModal, setShowMinimalBlockedModal] = useState(false);
+
+  // Set FULL mode as default when component mounts
+  useEffect(() => {
+    if (!modeSelected && state.mode !== 'FULL') {
+      dispatch({ type: 'SET_MODE', payload: 'FULL' });
+    }
+  }, []);
 
   useEffect(() => {
     const isEditMode = searchParams.get('edit') === 'true';
@@ -84,7 +92,23 @@ export function ContractInitiation() {
   };
 
   const handleModeChange = (mode: 'MINIMAL' | 'FULL') => {
+    // Block MINIMAL mode - show warning and navigate to FULL
+    if (mode === 'MINIMAL') {
+      setShowMinimalBlockedModal(true);
+      return;
+    }
+
     dispatch({ type: 'SET_MODE', payload: mode });
+    setModeSelected(true);
+    if (activeTab !== 'import') {
+      setActiveTab('form');
+    }
+  };
+
+  const handleMinimalBlockedClose = () => {
+    setShowMinimalBlockedModal(false);
+    // Navigate back to FULL mode
+    dispatch({ type: 'SET_MODE', payload: 'FULL' });
     setModeSelected(true);
     if (activeTab !== 'import') {
       setActiveTab('form');
@@ -230,6 +254,16 @@ export function ContractInitiation() {
         </div>
 
         <ModeSelector currentMode={state.mode} onModeChange={handleModeChange} />
+
+        {/* Minimal Mode Blocked Modal */}
+        <Modal
+          isOpen={showMinimalBlockedModal}
+          onClose={handleMinimalBlockedClose}
+          title="Minimal Mode Not Available"
+          message="The Minimal mode is currently not activated. Please kindly create a contract from the Full mode."
+          type="warning"
+          confirmText="Navigate to Full Mode"
+        />
       </div>
     );
   }
@@ -374,6 +408,16 @@ export function ContractInitiation() {
           currentVersion={selectedContractForModification.version}
         />
       )}
+
+      {/* Minimal Mode Blocked Modal */}
+      <Modal
+        isOpen={showMinimalBlockedModal}
+        onClose={handleMinimalBlockedClose}
+        title="Minimal Mode Not Available"
+        message="The Minimal mode is currently not activated. Please kindly create a contract from the Full mode."
+        type="warning"
+        confirmText="Navigate to Full Mode"
+      />
     </div>
   );
 }
