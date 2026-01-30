@@ -3,7 +3,7 @@ import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { useSearchParams } from 'react-router-dom';
 import { useContracts } from '../hooks/useContracts';
 import { useAuth } from '../context/AuthContext';
-import { ModeSelector } from '../components/Contract/ModeSelector';
+// import { ModeSelector } from '../components/Contract/ModeSelector'; // Commented out - using FULL mode only
 import { BasicInfoForm } from '../components/Contract/BasicInfoForm';
 import { PaymentDetailsForm } from '../components/Contract/PaymentDetailsForm';
 import { AdvancedOptionsForm } from '../components/Contract/AdvancedOptionsForm';
@@ -31,17 +31,17 @@ export function ContractInitiation() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
-  const [modeSelected, setModeSelected] = useState(false);
+  const [modeSelected, setModeSelected] = useState(true); // Always true - FULL mode only
   const [activeTab, setActiveTab] = useState<'form' | 'import' | 'list'>('list');
   const [editingContract, setEditingContract] = useState<SavedContract | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [selectedContractForModification, setSelectedContractForModification] = useState<SavedContract | null>(null);
-  const [showMinimalBlockedModal, setShowMinimalBlockedModal] = useState(false);
+  // const [showMinimalBlockedModal, setShowMinimalBlockedModal] = useState(false); // Commented out - not needed
 
   // Set FULL mode as default when component mounts
   useEffect(() => {
-    if (!modeSelected && state.mode !== 'FULL') {
+    if (state.mode !== 'FULL') {
       dispatch({ type: 'SET_MODE', payload: 'FULL' });
     }
   }, []);
@@ -236,37 +236,26 @@ export function ContractInitiation() {
     }
   };
 
-  if (!modeSelected && activeTab === 'form') {
-    return (
-      <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-white/10 p-6 flex items-start gap-3 shadow-2xl">
-          <div className="w-12 h-12 bg-emerald-500/20 dark:bg-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg">
-            <FileText className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Contract Initiation & Approval
-            </h1>
-            <p className="text-slate-700 dark:text-white/80">
-              Select a mode to start creating your lease contract
-            </p>
-          </div>
-        </div>
-
-        <ModeSelector currentMode={state.mode} onModeChange={handleModeChange} />
-
-        {/* Minimal Mode Blocked Modal */}
-        <Modal
-          isOpen={showMinimalBlockedModal}
-          onClose={handleMinimalBlockedClose}
-          title="Minimal Mode Not Available"
-          message="The Minimal mode is currently not activated. Please kindly create a contract from the Full mode."
-          type="warning"
-          confirmText="Navigate to Full Mode"
-        />
-      </div>
-    );
-  }
+  // Mode selector screen - commented out since we're using FULL mode only
+  // if (!modeSelected && activeTab === 'form') {
+  //   return (
+  //     <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+  //       <div className="bg-white/80 dark:bg-white/5 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-white/10 p-6 flex items-start gap-3 shadow-2xl">
+  //         <div className="w-12 h-12 bg-emerald-500/20 dark:bg-emerald-500/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg">
+  //           <FileText className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+  //         </div>
+  //         <div>
+  //           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+  //             Contract Initiation & Approval
+  //           </h1>
+  //           <p className="text-slate-700 dark:text-white/80">
+  //             Select a mode to start creating your lease contract
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -409,15 +398,15 @@ export function ContractInitiation() {
         />
       )}
 
-      {/* Minimal Mode Blocked Modal */}
-      <Modal
+      {/* Minimal Mode Blocked Modal - commented out */}
+      {/* <Modal
         isOpen={showMinimalBlockedModal}
         onClose={handleMinimalBlockedClose}
         title="Minimal Mode Not Available"
         message="The Minimal mode is currently not activated. Please kindly create a contract from the Full mode."
         type="warning"
         confirmText="Navigate to Full Mode"
-      />
+      /> */}
     </div>
   );
 }

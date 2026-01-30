@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send, GitBranch, Download, Search } from 'lucide-react';
+import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send, GitBranch, Download, Search, ChevronDown } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { approvalApi } from '../../services/approvalApi';
@@ -27,6 +27,20 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMode, setFilterMode] = useState<'ALL' | 'MINIMAL' | 'FULL'>('ALL');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'draft' | 'pending' | 'approved'>('ALL');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleDeleteContract = (contractId: string) => {
     if (confirm('Are you sure you want to delete this contract?')) {
@@ -92,7 +106,7 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
       const checkPageBreak = (increment: number) => {
         if (yPosition + increment > pageHeight - margin) {
           pdf.addPage();
-          yPosition = margin;
+          yPosition = margin + 10; // Add 10mm extra spacing at top of new pages
         }
       };
 
@@ -419,12 +433,17 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
 
           case 'h2':
             if (!text) return;
-            checkPageBreak(12);
+            // Check if we need a page break for the heading plus some content space (30mm minimum)
+            // This ensures the heading and at least 2-3 lines of content stay together
+            if (yPosition + 30 > pageHeight - margin) {
+              pdf.addPage();
+              yPosition = margin + 10; // Add 10mm extra spacing at top of new pages
+            }
             pdf.setFontSize(14);
             pdf.setFont('helvetica', 'bold');
             const lines = pdf.splitTextToSize(text, maxWidth);
             pdf.text(lines, margin, yPosition);
-            yPosition += lines.length * 7 + 4;
+            yPosition += lines.length * 7 + 1; // Reduced spacing after header
             break;
 
           case 'h4':
@@ -438,6 +457,17 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
             break;
 
           case 'p':
+            // Check for margin-bottom style
+            const style = element.getAttribute('style') || '';
+            const marginMatch = style.match(/margin-bottom:\s*(\d+(?:\.\d+)?)rem/);
+
+            if (!text && marginMatch) {
+              // Empty paragraph with margin-bottom - add spacing
+              const remValue = parseFloat(marginMatch[1]);
+              yPosition += remValue * 5; // Convert rem to approximate mm (1rem ≈ 5mm)
+              return;
+            }
+
             if (!text) return;
             checkPageBreak(10);
             pdf.setFontSize(10);
@@ -445,6 +475,12 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
             const pLines = pdf.splitTextToSize(text, maxWidth);
             pdf.text(pLines, margin, yPosition);
             yPosition += pLines.length * 5 + 3;
+
+            // Add extra spacing if paragraph has margin-bottom
+            if (marginMatch) {
+              const remValue = parseFloat(marginMatch[1]);
+              yPosition += remValue * 5; // Convert rem to approximate mm (1rem ≈ 5mm)
+            }
             break;
 
           case 'table':
@@ -653,15 +689,18 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">
                     Actions
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider">
+                    Modify
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-slate-50 dark:bg-slate-800/30 divide-y divide-slate-200 dark:divide-slate-700/50">
                 {filteredContracts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center">
+                    <td colSpan={7} className="px-6 py-12 text-center">
                       <FileText className="w-12 h-12 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
                       <p className="text-slate-600 dark:text-slate-400 font-medium">No contracts match your search</p>
                       <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">Try adjusting your search criteria</p>
@@ -715,67 +754,108 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={contract.status} size="sm" />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center space-x-2">
-                          {/* Submit for Approval button - only for draft contracts */}
-                          {contract.status === 'draft' && (
-                            <button
-                              onClick={() => handleSubmitForApproval(contract)}
-                              disabled={submitting === contract.id}
-                              className="text-teal-600 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 p-1 hover:bg-teal-100 dark:hover:bg-teal-900/30 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Submit for Approval"
-                            >
-                              <Send className="w-4 h-4" />
-                            </button>
+                    {/* Actions Column */}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center">
+                        <div className="relative" ref={openDropdownId === contract.id ? dropdownRef : null}>
+                          <button
+                            onClick={() => setOpenDropdownId(openDropdownId === contract.id ? null : contract.id)}
+                            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+                            title="View actions"
+                          >
+                            <span>Actions</span>
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+
+                          {/* Dropdown Menu */}
+                          {openDropdownId === contract.id && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    handlePreviewContract(contract);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                >
+                                  <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                  <span>Preview Contract</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    onEditContract(contract);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                >
+                                  <Edit className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                  <span>Edit Contract</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDownloadPDF(contract);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                >
+                                  <Download className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                  <span>Download PDF</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleViewData(contract);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                >
+                                  <Code className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                  <span>View Raw Data</span>
+                                </button>
+                                {contract.status === 'draft' && (
+                                  <>
+                                    <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                                    <button
+                                      onClick={() => {
+                                        handleSubmitForApproval(contract);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      disabled={submitting === contract.id}
+                                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      <Send className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                                      <span>Submit for Approval</span>
+                                    </button>
+                                  </>
+                                )}
+                                <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                                <button
+                                  onClick={() => {
+                                    handleDeleteContract(contract.id);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Delete Contract</span>
+                                </button>
+                              </div>
+                            </div>
                           )}
-                          <button
-                            onClick={() => handleViewData(contract)}
-                            className="text-purple-600 dark:text-purple-600 hover:text-purple-900 dark:hover:text-purple-900 p-1 hover:bg-purple-100 dark:hover:bg-purple-100 rounded transition-colors"
-                            title="View All Data"
-                          >
-                            <Code className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handlePreviewContract(contract)}
-                            className="text-blue-600 dark:text-blue-600 hover:text-blue-900 dark:hover:text-blue-900 p-1 hover:bg-blue-100 dark:hover:bg-blue-100 rounded transition-colors"
-                            title="Preview"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDownloadPDF(contract)}
-                            className="text-indigo-600 dark:text-indigo-600 hover:text-indigo-900 dark:hover:text-indigo-900 p-1 hover:bg-indigo-100 dark:hover:bg-indigo-100 rounded transition-colors"
-                            title="Download PDF"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => onEditContract(contract)}
-                            className="text-emerald-600 dark:text-emerald-600 hover:text-emerald-900 dark:hover:text-emerald-900 p-1 hover:bg-emerald-100 dark:hover:bg-emerald-100 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteContract(contract.id)}
-                            className="text-red-600 dark:text-red-600 hover:text-red-900 dark:hover:text-red-900 p-1 hover:bg-red-100 dark:hover:bg-red-100 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
-                        {/* Modify Contract button as actual button */}
-                        {onModifyContract && (
-                          <Button
-                            onClick={() => onModifyContract(contract)}
-                            className="flex items-center gap-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-600 dark:to-teal-600 hover:from-cyan-600 hover:to-teal-600 dark:hover:from-cyan-700 dark:hover:to-teal-700 text-white text-xs px-3 py-1.5"
-                          >
-                            <GitBranch className="w-3 h-3" />
-                            Modify
-                          </Button>
-                        )}
                       </div>
+                    </td>
+
+                    {/* Modify Column */}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {onModifyContract && (
+                        <Button
+                          onClick={() => onModifyContract(contract)}
+                          className="flex items-center gap-1.5 bg-gradient-to-r from-cyan-500 to-teal-500 dark:from-cyan-600 dark:to-teal-600 hover:from-cyan-600 hover:to-teal-600 dark:hover:from-cyan-700 dark:hover:to-teal-700 text-white text-xs px-3 py-2 mx-auto"
+                        >
+                          <GitBranch className="w-3.5 h-3.5" />
+                          Modify
+                        </Button>
+                      )}
                     </td>
                   </tr>
                   ))
