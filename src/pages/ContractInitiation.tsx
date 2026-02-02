@@ -269,7 +269,7 @@ export function ContractInitiation() {
             Contract Initiation & Approval
           </h1>
           <p className="text-slate-700 dark:text-slate-300">
-            {modeSelected ? `Running in ${state.mode} mode` : 'Manage your lease contracts'}
+            Manage your lease contracts
           </p>
         </div>
       </div>

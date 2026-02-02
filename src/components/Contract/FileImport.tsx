@@ -17,7 +17,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
   const { saveContract } = useContracts();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState<ImportType>(null);
-  const [selectedMode, setSelectedMode] = useState<'MINIMAL' | 'FULL'>('MINIMAL');
+  const [selectedMode] = useState<'MINIMAL' | 'FULL'>('FULL'); // Always FULL mode
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -458,7 +458,8 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       </div>
 
       <div className="space-y-4">
-        <div className="bg-blue-50 dark:bg-blue-500/10 rounded-lg border border-blue-300 dark:border-blue-500/30 p-4">
+        {/* Mode selector commented out - using FULL mode only */}
+        {/* <div className="bg-blue-50 dark:bg-blue-500/10 rounded-lg border border-blue-300 dark:border-blue-500/30 p-4">
           <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-3">Select Default Mode</h4>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
             Choose the default mode for imported contracts. This will be used unless a "Mode" column specifies otherwise.
@@ -487,7 +488,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
               <div className="text-xs mt-1">All fields including legal</div>
             </button>
           </div>
-        </div>
+        </div> */}
         <div className="border-2 border-dashed border-slate-300 dark:border-slate-600/50 rounded-lg p-8 text-center hover:border-blue-400 dark:hover:border-blue-500/50 transition-colors">
           <div className="flex flex-col items-center space-y-4">
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
@@ -567,7 +568,6 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
             <>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
                 Your Excel file should have column headers in the first row. Each subsequent row represents one contract.
-                All contracts will use the selected default mode above, unless a "Mode" column is included with "MINIMAL" or "FULL" values.
               </p>
               <div className="bg-slate-200 dark:bg-slate-900/50 rounded border border-slate-300 dark:border-slate-600/50 overflow-x-auto">
                 <table className="min-w-full text-xs">
@@ -603,8 +603,6 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
                 Asset Description, Contract Date, Commencement Date, Original End Date,
                 Non-cancellable Period, Useful Life, Fixed Payment Per Period, Currency,
                 Payment Frequency, Payment Timing, IBR Annual
-                <br />
-                <strong>Optional:</strong> Mode (MINIMAL or FULL, overrides the default mode selected above)
               </p>
             </>
           )}

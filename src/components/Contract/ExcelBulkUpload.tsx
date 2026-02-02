@@ -11,7 +11,7 @@ interface ExcelBulkUploadProps {
 export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
   const { dispatch } = useLeaseContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedMode, setSelectedMode] = useState<'MINIMAL' | 'FULL'>('MINIMAL');
+  const [selectedMode] = useState<'MINIMAL' | 'FULL'>('FULL'); // Always FULL mode
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -354,7 +354,8 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
       <h3 className="text-lg font-semibold text-slate-900 mb-4">Bulk Import from Excel</h3>
 
       <div className="space-y-4">
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
+        {/* Mode selector commented out - using FULL mode only */}
+        {/* <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
           <h4 className="font-medium text-slate-900 mb-3">Select Default Mode</h4>
           <p className="text-sm text-slate-600 mb-3">
             Choose the default mode for imported contracts. This will be used unless a "Mode" column specifies otherwise.
@@ -383,7 +384,7 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
               <div className="text-xs mt-1">All fields including legal</div>
             </button>
           </div>
-        </div>
+        </div> */}
         <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
