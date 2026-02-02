@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { FormField } from '../UI/FormField';
 import { Select } from '../UI/Select';
@@ -22,6 +22,26 @@ export function BasicInfoForm() {
       payload: { [field]: value }
     });
   };
+
+  // Auto-calculate non-cancellable period based on commencement and end date
+  useEffect(() => {
+    if (leaseData.CommencementDate && leaseData.EndDateOriginal) {
+      const startDate = new Date(leaseData.CommencementDate);
+      const endDate = new Date(leaseData.EndDateOriginal);
+
+      // Calculate difference in years
+      const diffTime = endDate.getTime() - startDate.getTime();
+      const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25); // Account for leap years
+
+      // Round to 2 decimal places
+      const calculatedYears = Math.round(diffYears * 100) / 100;
+
+      // Only update if the calculated value is different and valid
+      if (calculatedYears > 0 && calculatedYears !== leaseData.NonCancellableYears) {
+        updateField('NonCancellableYears', calculatedYears);
+      }
+    }
+  }, [leaseData.CommencementDate, leaseData.EndDateOriginal]);
 
   return (
     <div className="space-y-6">
@@ -101,8 +121,10 @@ export function BasicInfoForm() {
           type="number"
           value={leaseData.NonCancellableYears || ''}
           onChange={(value) => updateField('NonCancellableYears', Number(value))}
-          placeholder="5"
+          placeholder="Auto-calculated"
           required
+          disabled
+          helperText="Automatically calculated from Commencement and End Date"
         />
         
         <FormField
