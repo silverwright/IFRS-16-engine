@@ -73,9 +73,10 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       'Original End Date': 'EndDateOriginal',
 
       // Term & Options
-      'Non-cancellable Years': 'NonCancellableYears',
+      'Compulsory Extension Period': 'NonCancellableYears',
+      'Non-cancellable Years': 'NonCancellableYears', // Legacy support
       'NonCancellableYears': 'NonCancellableYears',
-      'Non-cancellable Period': 'NonCancellableYears',
+      'Non-cancellable Period': 'NonCancellableYears', // Legacy support
       'Renewal Option Years': 'RenewalOptionYears',
       'RenewalOptionYears': 'RenewalOptionYears',
       'Renewal Option Likelihood': 'RenewalOptionLikelihood',
@@ -559,7 +560,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
               </p>
               <div className="text-xs text-slate-700 dark:text-slate-300 font-mono bg-slate-200 dark:bg-slate-900/50 p-2 rounded border border-slate-300 dark:border-slate-600/50">
                 Contract ID, Lessee Entity, Lessor Name, Asset Class, Asset Description,
-                Contract Date, Commencement Date, Original End Date, Non-cancellable Period,
+                Contract Date, Commencement Date, Original End Date, Compulsory Extension Period,
                 Useful Life, Fixed Payment Per Period, Currency, Payment Frequency,
                 Payment Timing, IBR Annual
               </div>
@@ -601,7 +602,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
               <p className="text-xs text-slate-600 dark:text-slate-500 mt-3">
                 <strong>Required columns:</strong> Contract ID, Lessee Entity, Lessor Name, Asset Class,
                 Asset Description, Contract Date, Commencement Date, Original End Date,
-                Non-cancellable Period, Useful Life, Fixed Payment Per Period, Currency,
+                Compulsory Extension Period, Useful Life, Fixed Payment Per Period, Currency,
                 Payment Frequency, Payment Timing, IBR Annual
               </p>
             </>

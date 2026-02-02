@@ -45,9 +45,10 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
       'Original End Date': 'EndDateOriginal',
 
       // Term & Options
-      'Non-cancellable Years': 'NonCancellableYears',
+      'Compulsory Extension Period': 'NonCancellableYears',
+      'Non-cancellable Years': 'NonCancellableYears', // Legacy support
       'NonCancellableYears': 'NonCancellableYears',
-      'Non-cancellable Period': 'NonCancellableYears',
+      'Non-cancellable Period': 'NonCancellableYears', // Legacy support
       'Renewal Option Years': 'RenewalOptionYears',
       'RenewalOptionYears': 'RenewalOptionYears',
       'Renewal Likelihood': 'RenewalOptionLikelihood',
@@ -479,7 +480,7 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
               <p className="font-semibold text-slate-900 mb-2">✅ Required Columns (Must be present):</p>
               <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
                 <code className="text-xs">
-                  Contract ID | Lessee Entity | Lessor Name | Asset Class | Asset Description | Contract Date | Commencement Date | Original End Date | Non-cancellable Years | Useful Life Years | Fixed Payment Per Period | Currency | Payment Frequency | Payment Timing | IBR Annual
+                  Contract ID | Lessee Entity | Lessor Name | Asset Class | Asset Description | Contract Date | Commencement Date | Original End Date | Compulsory Extension Period | Useful Life Years | Fixed Payment Per Period | Currency | Payment Frequency | Payment Timing | IBR Annual
                 </code>
               </div>
             </div>
