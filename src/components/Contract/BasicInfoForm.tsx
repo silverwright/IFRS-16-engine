@@ -107,7 +107,7 @@ export function BasicInfoForm() {
         />
         
         <FormField
-          label="Original End Date"
+          label="End Date"
           type="date"
           value={leaseData.EndDateOriginal || ''}
           onChange={(value) => updateField('EndDateOriginal', value)}

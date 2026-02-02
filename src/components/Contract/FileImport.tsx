@@ -70,7 +70,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
       'CommencementDate': 'CommencementDate',
       'End Date': 'EndDateOriginal',
       'EndDateOriginal': 'EndDateOriginal',
-      'Original End Date': 'EndDateOriginal',
+      'Original End Date': 'EndDateOriginal', // Legacy support
 
       // Term & Options
       'Compulsory Extension Period': 'NonCancellableYears',
@@ -560,7 +560,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
               </p>
               <div className="text-xs text-slate-700 dark:text-slate-300 font-mono bg-slate-200 dark:bg-slate-900/50 p-2 rounded border border-slate-300 dark:border-slate-600/50">
                 Contract ID, Lessee Entity, Lessor Name, Asset Class, Asset Description,
-                Contract Date, Commencement Date, Original End Date, Compulsory Extension Period,
+                Contract Date, Commencement Date, End Date, Compulsory Extension Period,
                 Useful Life, Fixed Payment Per Period, Currency, Payment Frequency,
                 Payment Timing, IBR Annual
               </div>
@@ -601,7 +601,7 @@ export function FileImport({ onUploadComplete, onModeRequired }: FileImportProps
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-500 mt-3">
                 <strong>Required columns:</strong> Contract ID, Lessee Entity, Lessor Name, Asset Class,
-                Asset Description, Contract Date, Commencement Date, Original End Date,
+                Asset Description, Contract Date, Commencement Date, End Date,
                 Compulsory Extension Period, Useful Life, Fixed Payment Per Period, Currency,
                 Payment Frequency, Payment Timing, IBR Annual
               </p>

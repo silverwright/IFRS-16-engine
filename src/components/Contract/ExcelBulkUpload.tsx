@@ -42,7 +42,7 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
       'CommencementDate': 'CommencementDate',
       'End Date': 'EndDateOriginal',
       'EndDateOriginal': 'EndDateOriginal',
-      'Original End Date': 'EndDateOriginal',
+      'Original End Date': 'EndDateOriginal', // Legacy support
 
       // Term & Options
       'Compulsory Extension Period': 'NonCancellableYears',
@@ -480,7 +480,7 @@ export function ExcelBulkUpload({ onUploadComplete }: ExcelBulkUploadProps) {
               <p className="font-semibold text-slate-900 mb-2">✅ Required Columns (Must be present):</p>
               <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
                 <code className="text-xs">
-                  Contract ID | Lessee Entity | Lessor Name | Asset Class | Asset Description | Contract Date | Commencement Date | Original End Date | Compulsory Extension Period | Useful Life Years | Fixed Payment Per Period | Currency | Payment Frequency | Payment Timing | IBR Annual
+                  Contract ID | Lessee Entity | Lessor Name | Asset Class | Asset Description | Contract Date | Commencement Date | End Date | Compulsory Extension Period | Useful Life Years | Fixed Payment Per Period | Currency | Payment Frequency | Payment Timing | IBR Annual
                 </code>
               </div>
             </div>
