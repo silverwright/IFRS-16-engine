@@ -117,7 +117,7 @@ export function BasicInfoForm() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
-          label="Compulsory Extension Period (years)"
+          label="Non-Cancellation Period (years)"
           type="number"
           value={leaseData.NonCancellableYears || ''}
           onChange={(value) => updateField('NonCancellableYears', Number(value))}

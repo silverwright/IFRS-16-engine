@@ -27,7 +27,7 @@ export function generateContractHTML(leaseData: Partial<LeaseData>, mode: 'MINIM
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Lessee</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.LesseeEntity || 'N/A'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Asset</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.AssetDescription || 'N/A'} (${leaseData.AssetClass || 'N/A'})</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Commencement</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.CommencementDate ? formatDate(leaseData.CommencementDate) : 'N/A'}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Compulsory Extension Period</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.NonCancellableYears || 0} years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Non-Cancellation Period</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.NonCancellableYears || 0} years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Rent</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} / ${leaseData.PaymentFrequency || 'N/A'}, payable in ${leaseData.PaymentTiming || 'advance'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Currency / IBR</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency || 'N/A'} / IBR (annual): ${((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%</td></tr>
         </table>
@@ -151,7 +151,7 @@ return `
     </td>
   </tr>
   <tr>
-    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Compulsory Extension Period</td>
+    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Non-Cancellation Period</td>
     <td style="padding: 8px; border: 1px solid #ddd;">
       ${leaseData.NonCancellableYears || 0}.0 years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}
     </td>
