@@ -185,8 +185,10 @@ export function ContractInitiation() {
   const handleNewContract = () => {
     setEditingContract(null);
     dispatch({ type: 'RESET' });
-    setModeSelected(false);
+    dispatch({ type: 'SET_MODE', payload: 'FULL' }); // Ensure FULL mode is set
+    setModeSelected(true); // Keep modeSelected true since we always use FULL mode
     setActiveTab('form');
+    setCurrentStep(1);
   };
 
   const handleCSVUploadComplete = () => {

@@ -182,7 +182,7 @@ export function ResultsDisplay() {
       ['Total Interest', calculations.totalInterest],
       ['Total Depreciation', calculations.totalDepreciation],
       ['Payment Frequency', leaseData.PaymentFrequency || 'N/A'],
-      ['Lease Term (Years)', calculations.leaseTermYears],
+      ['Lease Term', formatLeaseTerm(calculations.leaseTermYears)],
       [''],
       ['Generated', `${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString('en-GB')}`]
     ];
@@ -253,7 +253,7 @@ export function ResultsDisplay() {
         ['Total Interest', formatCurrency(calculations.totalInterest)],
         ['Total Depreciation', formatCurrency(calculations.totalDepreciation)],
         ['Payment Frequency', leaseData.PaymentFrequency || 'N/A'],
-        ['Lease Term (Years)', calculations.leaseTermYears.toString()]
+        ['Lease Term', formatLeaseTerm(calculations.leaseTermYears)]
       ],
       styles: { fontSize: 9 },
       headStyles: { fillColor: [22, 163, 74], textColor: 255 }
@@ -315,6 +315,27 @@ export function ResultsDisplay() {
 
   const formatCurrency = (value: number) => {
     return `${leaseData.Currency || 'NGN'} ${value.toLocaleString()}`;
+  };
+
+  // Format lease term as years, months, and days
+  const formatLeaseTerm = (years: number): string => {
+    const wholeYears = Math.floor(years);
+    const remainingMonths = (years - wholeYears) * 12;
+    const wholeMonths = Math.floor(remainingMonths);
+    const remainingDays = Math.round((remainingMonths - wholeMonths) * 30.44); // Average days per month
+
+    const parts: string[] = [];
+    if (wholeYears > 0) {
+      parts.push(`${wholeYears} ${wholeYears === 1 ? 'Year' : 'Years'}`);
+    }
+    if (wholeMonths > 0) {
+      parts.push(`${wholeMonths} ${wholeMonths === 1 ? 'Month' : 'Months'}`);
+    }
+    if (remainingDays > 0) {
+      parts.push(`${remainingDays} ${remainingDays === 1 ? 'Day' : 'Days'}`);
+    }
+
+    return parts.length > 0 ? parts.join(', ') : '0 Days';
   };
 
   // Get payment frequency
@@ -642,8 +663,8 @@ export function ResultsDisplay() {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-indigo-100 text-sm font-medium">Lease Term</p>
-              <p className="text-2xl font-bold mt-1">
-                {calculations.leaseTermYears} Years
+              <p className="text-xl font-bold mt-1">
+                {formatLeaseTerm(calculations.leaseTermYears)}
               </p>
               {leaseData.TerminatedEarly === true && leaseData.TerminationDate && (
                 <p className="text-indigo-100 text-xs mt-2 flex items-center gap-1">
@@ -803,7 +824,7 @@ export function ResultsDisplay() {
                   )}
                   <div className="flex justify-between items-center py-2">
                     <span className="text-slate-800 dark:text-white/90 font-semibold">Lease Term (used):</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{calculations.leaseTermYears} years</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{formatLeaseTerm(calculations.leaseTermYears)}</span>
                   </div>
                 </div>
               </div>
