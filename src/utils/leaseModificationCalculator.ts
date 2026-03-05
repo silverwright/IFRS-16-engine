@@ -1,33 +1,122 @@
+/**
+ * IFRS 16 Lease Modification Calculator
+ *
+ * This module handles lease modifications (amendments) in accordance with IFRS 16.44-46.
+ * A lease modification is a change in the scope or consideration of a lease that was not
+ * part of the original terms.
+ *
+ * Key IFRS 16 Modification Principles:
+ *
+ * 1. **Modification Date**: The date when both parties agree to the lease modification
+ *
+ * 2. **Remeasurement**: The lessee remeasures the lease liability by discounting the
+ *    revised lease payments using a revised discount rate (if changed)
+ *
+ * 3. **ROU Asset Adjustment**: The lessee adjusts the ROU asset by the difference between
+ *    the remeasured lease liability and the previous carrying amount
+ *
+ * 4. **Historical Preservation**: Calculations up to the modification date remain unchanged.
+ *    Only forward periods are recalculated.
+ *
+ * 5. **Version Tracking**: Each modification creates a new version while preserving the
+ *    original contract data for audit and compliance purposes
+ *
+ * @see IFRS 16.44-46 for detailed modification accounting requirements
+ */
+
 import { LeaseData, CalculationResults } from '../context/LeaseContext';
 import { calculateIFRS16 } from './ifrs16Calculator';
 
-/**
- * Calculate lease modification following IFRS 16 requirements
- * This function creates a new version of the contract that preserves historical calculations
- * and applies new values only from the modification date forward
- */
+/* ============================================================================
+ * TYPE DEFINITIONS
+ * ============================================================================ */
 
+/**
+ * Parameters required for calculating a lease modification
+ */
 interface ModificationParams {
+  /** Original lease data before modification */
   originalLeaseData: Partial<LeaseData>;
+
+  /** Original calculation results before modification */
   originalCalculations: CalculationResults;
+
+  /** Date when the modification takes effect (YYYY-MM-DD format) */
   modificationDate: string;
+
+  /** New or changed lease values (partial update) */
   newValues: Partial<LeaseData>;
 }
 
+/**
+ * Result of lease modification calculation
+ */
 interface ModificationResult {
+  /** Modified lease data (merged original + new values) */
   modifiedLeaseData: Partial<LeaseData>;
+
+  /** Calculation results including preserved + new periods */
   modifiedCalculations: CalculationResults;
+
+  /** Number of periods preserved from original lease */
   preservedPeriods: number;
+
+  /** Period number when modification takes effect */
   modificationPeriod: number;
 }
 
+/* ============================================================================
+ * MAIN MODIFICATION CALCULATOR
+ * ============================================================================ */
+
+/**
+ * Calculate lease modification following IFRS 16.44-46 requirements
+ *
+ * This function implements lease modification accounting by:
+ * 1. Determining which period the modification occurs in
+ * 2. Preserving all historical calculations up to modification date
+ * 3. Recalculating forward periods with new terms
+ * 4. Merging preserved and new schedules into final results
+ *
+ * The calculation ensures that:
+ * - Historical periods remain unchanged (audit trail preservation)
+ * - The lease liability is remeasured at modification date
+ * - The ROU asset is adjusted for the difference
+ * - All schedules maintain continuous period numbering
+ *
+ * @param params - Modification parameters including original data, new values, and modification date
+ * @returns Modified lease data and calculation results with preserved history
+ *
+ * @example
+ * ```typescript
+ * const modificationResult = calculateLeaseModification({
+ *   originalLeaseData: existingLease,
+ *   originalCalculations: existingCalculations,
+ *   modificationDate: '2024-06-01',
+ *   newValues: {
+ *     FixedPaymentPerPeriod: 12000, // Increased from 10000
+ *     NonCancellableYears: 7,        // Extended from 5
+ *     IBR_Annual: 0.15               // Revised discount rate
+ *   }
+ * });
+ * ```
+ */
 export function calculateLeaseModification(params: ModificationParams): ModificationResult {
   const { originalLeaseData, originalCalculations, modificationDate, newValues } = params;
 
-  // 1. Calculate which period the modification occurs in
+  /* ============================================================================
+   * STEP 1: Determine Modification Period
+   *
+   * Calculate which period the modification occurs in based on:
+   * - Original commencement date
+   * - Modification date
+   * - Payment frequency (Monthly, Quarterly, etc.)
+   * ============================================================================ */
+
   const commencementDate = new Date(originalLeaseData.CommencementDate || new Date());
   const modDate = new Date(modificationDate);
 
+  // Determine periods per year based on payment frequency
   const paymentFrequency = originalLeaseData.PaymentFrequency || 'Monthly';
   const periodsPerYear = paymentFrequency === 'Monthly' ? 12 :
                         paymentFrequency === 'Quarterly' ? 4 :
@@ -42,20 +131,15 @@ export function calculateLeaseModification(params: ModificationParams): Modifica
   const modificationPeriod = periodsElapsed + 1;
   const preservedPeriods = periodsElapsed;
 
-  // 2. Get the ending balances from the last preserved period
-  let startingLiability = originalCalculations.initialLiability;
-  let startingROUAsset = originalCalculations.initialROU;
+  /* ============================================================================
+   * STEP 2: Create Modified Lease Data
+   *
+   * Merge original lease data with new values while preserving immutable fields:
+   * - ContractID (never changes)
+   * - Original CommencementDate (historical fact)
+   * - Original ContractDate (historical fact)
+   * ============================================================================ */
 
-  if (preservedPeriods > 0 && originalCalculations.amortizationSchedule.length > 0) {
-    const lastPreservedPeriodIndex = Math.min(preservedPeriods - 1, originalCalculations.amortizationSchedule.length - 1);
-    const lastPeriod = originalCalculations.amortizationSchedule[lastPreservedPeriodIndex];
-
-    startingLiability = lastPeriod?.remainingLiability || 0;
-    startingROUAsset = lastPeriod?.remainingAsset || 0;
-  }
-
-  // 3. Create modified lease data
-  // Merge original data with new values
   const modifiedLeaseData: Partial<LeaseData> = {
     ...originalLeaseData,
     ...newValues,
@@ -65,11 +149,29 @@ export function calculateLeaseModification(params: ModificationParams): Modifica
     ContractDate: originalLeaseData.ContractDate,
   };
 
-  // 4. Calculate the remaining lease term from modification date
+  /* ============================================================================
+   * STEP 3: Calculate Remaining Lease Term
+   *
+   * Determine the remaining lease term from modification date:
+   * - Total original lease years
+   * - Minus years already elapsed
+   * - Plus any extension years from the modification (if applicable)
+   * ============================================================================ */
+
   const totalLeaseYears = originalCalculations.leaseTermYears;
   const remainingYears = totalLeaseYears - yearsElapsed;
 
-  // Create a temporary lease data object for calculating the forward portion
+  /* ============================================================================
+   * STEP 4: Prepare Forward Calculation Data
+   *
+   * Create a temporary lease data object for calculating forward periods.
+   * This uses:
+   * - New payment amounts
+   * - New discount rate (if changed)
+   * - Remaining lease term
+   * - Reset initial costs (not applicable to modifications)
+   * ============================================================================ */
+
   const forwardCalculationData: Partial<LeaseData> = {
     ...modifiedLeaseData,
     NonCancellableYears: remainingYears > 0 ? remainingYears : 0,
@@ -88,23 +190,34 @@ export function calculateLeaseModification(params: ModificationParams): Modifica
     CommencementDate: modificationDate,
   };
 
-  // 5. Calculate the forward portion using the new values
+  /* ============================================================================
+   * STEP 5: Calculate Forward Periods
+   *
+   * Run the standard IFRS 16 calculator on the modified terms
+   * This produces new schedules starting from the modification date
+   * ============================================================================ */
+
   const forwardCalculations = calculateIFRS16(forwardCalculationData);
 
-  // 6. Merge preserved periods with new calculations
+  /* ============================================================================
+   * STEP 6: Merge Preserved and New Schedules
+   *
+   * Combine:
+   * - Preserved periods (original calculations up to modification date)
+   * - New periods (recalculated with modified terms)
+   *
+   * This creates a complete schedule showing the full lease lifecycle
+   * ============================================================================ */
+
+  // Merge Amortization Schedule
   const preservedSchedule = originalCalculations.amortizationSchedule.slice(0, preservedPeriods);
   const newSchedule = forwardCalculations.amortizationSchedule.map((row, index) => ({
     ...row,
     month: preservedPeriods + index + 1, // Continue period numbering
   }));
-
   const mergedAmortizationSchedule = [...preservedSchedule, ...newSchedule];
 
-  // 7. Recalculate totals
-  const totalInterest = mergedAmortizationSchedule.reduce((sum, row) => sum + (row.interest || 0), 0);
-  const totalDepreciation = mergedAmortizationSchedule.reduce((sum, row) => sum + (row.depreciation || 0), 0);
-
-  // 8. Create merged cashflow schedule
+  // Merge Cashflow Schedule
   const preservedCashflow = originalCalculations.cashflowSchedule.slice(0, preservedPeriods);
   const newCashflow = forwardCalculations.cashflowSchedule.map((row, index) => ({
     ...row,
@@ -112,7 +225,27 @@ export function calculateLeaseModification(params: ModificationParams): Modifica
   }));
   const mergedCashflowSchedule = [...preservedCashflow, ...newCashflow];
 
-  // 9. Create final calculation results
+  /* ============================================================================
+   * STEP 7: Recalculate Totals
+   *
+   * Aggregate totals from the merged schedules:
+   * - Total interest expense over full lease term
+   * - Total depreciation expense over full lease term
+   * ============================================================================ */
+
+  const totalInterest = mergedAmortizationSchedule.reduce((sum, row) => sum + (row.interest || 0), 0);
+  const totalDepreciation = mergedAmortizationSchedule.reduce((sum, row) => sum + (row.depreciation || 0), 0);
+
+  /* ============================================================================
+   * STEP 8: Create Final Calculation Results
+   *
+   * Package all results with:
+   * - Original initial values (for reference)
+   * - Merged schedules (preserved + new)
+   * - Recalculated totals
+   * - Forward-looking depreciation and journals
+   * ============================================================================ */
+
   const modifiedCalculations: CalculationResults = {
     initialLiability: originalCalculations.initialLiability,
     initialROU: originalCalculations.initialROU,
@@ -136,9 +269,34 @@ export function calculateLeaseModification(params: ModificationParams): Modifica
   };
 }
 
+/* ============================================================================
+ * VERSION MANAGEMENT UTILITIES
+ *
+ * These helper functions manage contract version IDs for tracking modifications:
+ * - Original contract: "contract-123"
+ * - First modification: "contract-123-v2"
+ * - Second modification: "contract-123-v3"
+ * - And so on...
+ *
+ * This ensures each modification is tracked and can be audited.
+ * ============================================================================ */
+
 /**
  * Generate version ID from base contract ID and version number
- * Example: contract-123 + version 2 = contract-123-v2
+ *
+ * Version 1 returns the base ID unchanged (original contract).
+ * Subsequent versions append "-vN" suffix.
+ *
+ * @param baseContractId - The base contract identifier (e.g., "contract-123")
+ * @param version - Version number (1 = original, 2+ = modifications)
+ * @returns Versioned contract ID
+ *
+ * @example
+ * ```typescript
+ * generateVersionId('contract-123', 1)  // Returns: "contract-123"
+ * generateVersionId('contract-123', 2)  // Returns: "contract-123-v2"
+ * generateVersionId('contract-123', 5)  // Returns: "contract-123-v5"
+ * ```
  */
 export function generateVersionId(baseContractId: string, version: number): string {
   if (version === 1) {
@@ -149,7 +307,19 @@ export function generateVersionId(baseContractId: string, version: number): stri
 
 /**
  * Extract base contract ID from a versioned contract ID
- * Example: contract-123-v2 => contract-123
+ *
+ * Removes the version suffix to get the original contract identifier.
+ * Useful for finding all versions of a contract.
+ *
+ * @param contractId - Versioned or unversioned contract ID
+ * @returns Base contract ID without version suffix
+ *
+ * @example
+ * ```typescript
+ * extractBaseContractId('contract-123')     // Returns: "contract-123"
+ * extractBaseContractId('contract-123-v2')  // Returns: "contract-123"
+ * extractBaseContractId('contract-123-v10') // Returns: "contract-123"
+ * ```
  */
 export function extractBaseContractId(contractId: string): string {
   const versionPattern = /-v\d+$/;
@@ -158,7 +328,19 @@ export function extractBaseContractId(contractId: string): string {
 
 /**
  * Extract version number from a versioned contract ID
- * Example: contract-123-v2 => 2
+ *
+ * Parses the version number from the contract ID.
+ * Returns 1 for unversioned IDs (original contract).
+ *
+ * @param contractId - Versioned or unversioned contract ID
+ * @returns Version number (1 if no version suffix found)
+ *
+ * @example
+ * ```typescript
+ * extractVersion('contract-123')     // Returns: 1
+ * extractVersion('contract-123-v2')  // Returns: 2
+ * extractVersion('contract-123-v10') // Returns: 10
+ * ```
  */
 export function extractVersion(contractId: string): number {
   const match = contractId.match(/-v(\d+)$/);
