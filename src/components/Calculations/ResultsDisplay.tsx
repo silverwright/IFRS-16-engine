@@ -94,8 +94,8 @@ import { DollarSign, TrendingDown, FileText, Download, BarChart3, RefreshCw, Edi
 import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
 import { calculateLeaseModification, extractBaseContractId } from '../../utils/leaseModificationCalculator';
 import { contractsApi } from '../../api/contractsApi';
-import { ModifyContractModal } from '../Contract/ModifyContractModal';
-import AmendmentNotice from '../Contract/AmendmentNotice';
+import { ModifyContractModal } from '../Contract/Modals/ModifyContractModal';
+import AmendmentNotice from '../Contract/Display/AmendmentNotice';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';

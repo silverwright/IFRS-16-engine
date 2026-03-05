@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
-import { Button } from '../UI/Button';
+import { useLeaseContext, SavedContract } from '../../../context/LeaseContext';
+import { Button } from '../../UI/Button';
 import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send, GitBranch, Download, Search, ChevronDown } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
-import { useAuth } from '../../context/AuthContext';
-import { approvalApi } from '../../services/approvalApi';
-import { useContracts } from '../../hooks/useContracts';
-import { generateContractHTML } from '../../utils/contractGenerator';
+import { useAuth } from '../../../context/AuthContext';
+import { approvalApi } from '../../../api/approvalApi';
+import { useContracts } from '../../../hooks/useContracts';
+import { generateContractHTML } from '../../../utils/contractGenerator';
 import jsPDF from 'jspdf';
 
 interface ContractListProps {

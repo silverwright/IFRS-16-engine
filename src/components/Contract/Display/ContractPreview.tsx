@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useLeaseContext } from '../../context/LeaseContext';
-import { Button } from '../UI/Button';
+import { useLeaseContext } from '../../../context/LeaseContext';
+import { Button } from '../../UI/Button';
 import { Download, FileText, Eye, ArrowLeft } from 'lucide-react';
-import { generateContractHTML } from '../../utils/contractGenerator';
+import { generateContractHTML } from '../../../utils/contractGenerator';
 import { useRef } from 'react';
 import jsPDF from 'jspdf';
-import { ContractPreviewModal } from './ContractPreviewModal';
+import { ContractPreviewModal } from '../Modals/ContractPreviewModal';
 import AmendmentNotice from './AmendmentNotice';
 
 export function ContractPreview() {

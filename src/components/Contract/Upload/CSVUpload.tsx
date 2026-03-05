@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { useLeaseContext } from '../../context/LeaseContext';
-import { Button } from '../UI/Button';
+import { useLeaseContext } from '../../../context/LeaseContext';
+import { Button } from '../../UI/Button';
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface CSVUploadProps {

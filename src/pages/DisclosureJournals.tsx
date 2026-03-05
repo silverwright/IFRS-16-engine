@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { FileText, Download, Calendar, DollarSign, BarChart3, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/UI/Button';
-import { ContractSelector } from '../components/Contract/ContractSelector';
+import { ContractSelector } from '../components/Contract/Selectors/ContractSelector';
 
 export function DisclosureJournals() {
   const { state, dispatch } = useLeaseContext();

@@ -31,9 +31,9 @@
  */
 
 import { useEffect } from 'react';
-import { useLeaseContext } from '../../context/LeaseContext';
-import { FormField } from '../UI/FormField';
-import { Select } from '../UI/Select';
+import { useLeaseContext } from '../../../context/LeaseContext';
+import { FormField } from '../../UI/FormField';
+import { Select } from '../../UI/Select';
 
 /* ============================================================================
  * CONSTANTS

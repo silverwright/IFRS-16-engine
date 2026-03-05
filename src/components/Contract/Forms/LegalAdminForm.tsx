@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLeaseContext } from '../../context/LeaseContext';
-import { FormField } from '../UI/FormField';
+import { useLeaseContext } from '../../../context/LeaseContext';
+import { FormField } from '../../UI/FormField';
 
 export function LegalAdminForm() {
   const { state, dispatch } = useLeaseContext();

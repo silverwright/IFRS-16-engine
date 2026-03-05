@@ -46,11 +46,11 @@
  */
 
 import { useState } from 'react';
-import { useLeaseContext } from '../../context/LeaseContext';
-import { FormField } from '../UI/FormField';
-import { Switch } from '../UI/Switch';
+import { useLeaseContext } from '../../../context/LeaseContext';
+import { FormField } from '../../UI/FormField';
+import { Switch } from '../../UI/Switch';
 import { AlertTriangle, X } from 'lucide-react';
-import { Button } from '../UI/Button';
+import { Button } from '../../UI/Button';
 
 /* ============================================================================
  * COMPONENT

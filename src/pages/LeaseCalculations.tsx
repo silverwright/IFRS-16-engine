@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { ResultsDisplay } from '../components/Calculations/ResultsDisplay';
-import { ContractSelector } from '../components/Contract/ContractSelector';
+import { ContractSelector } from '../components/Contract/Selectors/ContractSelector';
 import { Calculator, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 import { calculateIFRS16 } from '../utils/ifrs16Calculator';

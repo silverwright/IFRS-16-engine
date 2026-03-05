@@ -3,15 +3,15 @@ import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { useSearchParams } from 'react-router-dom';
 import { useContracts } from '../hooks/useContracts';
 import { useAuth } from '../context/AuthContext';
-// import { ModeSelector } from '../components/Contract/ModeSelector'; // Commented out - using FULL mode only
-import { BasicInfoForm } from '../components/Contract/BasicInfoForm';
-import { PaymentDetailsForm } from '../components/Contract/PaymentDetailsForm';
-import { AdvancedOptionsForm } from '../components/Contract/AdvancedOptionsForm';
-import { LegalAdminForm } from '../components/Contract/LegalAdminForm';
-import { ContractPreview } from '../components/Contract/ContractPreview';
-import { FileImport } from '../components/Contract/FileImport';
-import { ContractList } from '../components/Contract/ContractList';
-import { ModifyContractModal } from '../components/Contract/ModifyContractModal';
+// import { ModeSelector } from '../components/Contract/Selectors/ModeSelector'; // Commented out - using FULL mode only
+import { BasicInfoForm } from '../components/Contract/Forms/BasicInfoForm';
+import { PaymentDetailsForm } from '../components/Contract/Forms/PaymentDetailsForm';
+import { AdvancedOptionsForm } from '../components/Contract/Forms/AdvancedOptionsForm';
+import { LegalAdminForm } from '../components/Contract/Forms/LegalAdminForm';
+import { ContractPreview } from '../components/Contract/Display/ContractPreview';
+import { FileImport } from '../components/Contract/Upload/FileImport';
+import { ContractList } from '../components/Contract/Display/ContractList';
+import { ModifyContractModal } from '../components/Contract/Modals/ModifyContractModal';
 import { ProgressBar } from '../components/UI/ProgressBar';
 import { Button } from '../components/UI/Button';
 import { Modal } from '../components/UI/Modal';

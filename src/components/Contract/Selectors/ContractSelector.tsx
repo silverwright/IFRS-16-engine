@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
+import { useLeaseContext, SavedContract } from '../../../context/LeaseContext';
 import { FileText, Search, ChevronRight, Download, FileSpreadsheet } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { calculateIFRS16 } from '../../utils/ifrs16Calculator';
+import { calculateIFRS16 } from '../../../utils/ifrs16Calculator';
 
 interface ContractSelectorProps {
   onSelect: (contract: SavedContract) => void;

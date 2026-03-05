@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Send, Download } from 'lucide-react';
-import { Button } from '../UI/Button';
+import { Button } from '../../UI/Button';
 
 interface ContractPreviewModalProps {
   isOpen: boolean;

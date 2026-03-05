@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../hooks/useContracts';
 import { SavedContract } from '../context/LeaseContext';
-import { StatusBadge } from '../components/Contract/StatusBadge';
-import { approvalApi } from '../services/approvalApi';
+import { StatusBadge } from '../components/Contract/Display/StatusBadge';
+import { approvalApi } from '../api/approvalApi';
 import { CheckCircle, XCircle, Clock, Eye, Calendar, Building, User, FileText } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 

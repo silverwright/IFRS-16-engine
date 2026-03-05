@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
-import { useContracts } from '../../hooks/useContracts';
-import { Button } from '../UI/Button';
+import { useLeaseContext, SavedContract } from '../../../context/LeaseContext';
+import { useContracts } from '../../../hooks/useContracts';
+import { Button } from '../../UI/Button';
 import { Upload, FileText, FileSpreadsheet, AlertCircle, CheckCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 

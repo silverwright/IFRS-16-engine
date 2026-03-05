@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContractStatus } from '../../types/auth';
+import { ContractStatus } from '../../../types/auth';
 import { CheckCircle, XCircle, Clock, FileText, AlertCircle } from 'lucide-react';
 
 interface StatusBadgeProps {

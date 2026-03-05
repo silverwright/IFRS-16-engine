@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '../UI/Button';
-import { LeaseData } from '../../context/LeaseContext';
+import { Button } from '../../UI/Button';
+import { LeaseData } from '../../../context/LeaseContext';
 
 interface ModifyContractModalProps {
   isOpen: boolean;
