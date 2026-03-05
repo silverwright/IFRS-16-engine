@@ -1,21 +1,114 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * PaymentDetailsForm Component
+ *
+ * Form component for capturing lease payment details and financial information.
+ * This is a key step in the contract creation workflow as it captures the
+ * payment structure that drives the IFRS 16 calculations.
+ *
+ * ## Fields Captured
+ *
+ * **Payment Structure**:
+ * - Fixed Payment per Period: Regular lease payment amount
+ * - Currency: Contract currency (NGN, USD, EUR, GBP)
+ * - Payment Frequency: Monthly, Quarterly, Semiannual, or Annual
+ * - Payment Timing: Arrears (end of period) or Advance (beginning of period)
+ *
+ * **Escalation (Rent Increases)**:
+ * - Escalation Type: None, CPI-linked, or Fixed %
+ * - Base CPI: Starting CPI value (for CPI-linked)
+ * - CPI Reset Month: When CPI adjustments occur
+ * - Fixed Escalation %: Annual increase percentage (for fixed escalation)
+ *
+ * **Financial Details**:
+ * - IBR (Incremental Borrowing Rate): Discount rate for present value
+ * - Initial Direct Costs: Costs incurred to set up the lease
+ * - Prepayments: Payments made before commencement
+ * - Lease Incentives: Incentives received from lessor
+ * - Prepaid First Payment: Whether first payment was made early
+ *
+ * **Bank Details**:
+ * - Bank Name, Account Name, Account Number
+ *
+ * ## Business Logic
+ *
+ * ### Payment in Advance Validation
+ * When "Payment in Advance" is selected:
+ * - Automatically checks "Prepaid First Payment" (cannot be unchecked)
+ * - Shows modal notification to enter prepayment amount
+ * - Validates that prepayment amount is entered
+ * - Shows error if prepayment is missing
+ *
+ * ### Default Values
+ * On first load, sets sensible defaults:
+ * - Payment Frequency: Monthly
+ * - Payment Timing: Arrears
+ * - Currency: NGN (Nigerian Naira)
+ *
+ * @module PaymentDetailsForm
+ */
+
+import { useEffect, useState } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { FormField } from '../UI/FormField';
 import { Select } from '../UI/Select';
 import { Switch } from '../UI/Switch';
 import { Modal } from '../UI/Modal';
 
+/* ============================================================================
+ * CONSTANTS
+ * ============================================================================ */
+
+/** Payment frequency options */
 const paymentFrequencies = ['Monthly', 'Quarterly', 'Semiannual', 'Annual'];
+
+/** Payment timing options (when payment occurs relative to period) */
 const paymentTimings = ['Arrears', 'Advance'];
+
+/** Escalation types for rent increases */
 const escalationTypes = ['None', 'CPI', 'Fixed%'];
+
+/** Supported currencies */
 const currencies = ['NGN', 'USD', 'EUR', 'GBP'];
 
+/* ============================================================================
+ * COMPONENT
+ * ============================================================================ */
+
+/**
+ * PaymentDetailsForm - Form for capturing payment and financial details
+ *
+ * Renders a comprehensive form for all payment-related fields. Includes
+ * automatic validation and business logic for payment timing scenarios.
+ *
+ * The component handles three main sections:
+ * 1. Payment Structure (amount, frequency, timing)
+ * 2. Escalation (rent increase mechanism)
+ * 3. Financial Details (IBR, prepayments, incentives)
+ * 4. Bank Payment Details (for contract generation)
+ *
+ * @returns React component rendering the payment details form
+ *
+ * @example
+ * ```tsx
+ * <PaymentDetailsForm />
+ * ```
+ */
 export function PaymentDetailsForm() {
   const { state, dispatch } = useLeaseContext();
   const { leaseData } = state;
+
+  // Modal visibility state
   const [showModal, setShowModal] = useState(false);
+
+  // Prepayment error tracking
   const [showPrepaymentError, setShowPrepaymentError] = useState(false);
 
+  /**
+   * Update a single field in the lease data
+   *
+   * @param field - Field name to update
+   * @param value - New value for the field
+   */
   const updateField = (field: string, value: any) => {
     dispatch({
       type: 'SET_LEASE_DATA',
@@ -23,7 +116,17 @@ export function PaymentDetailsForm() {
     });
   };
 
-  // Initialize default values if not set
+  /* ============================================================================
+   * EFFECT: Initialize Default Values
+   *
+   * On component mount, set sensible default values for key fields if not
+   * already set. This improves UX by pre-populating common selections.
+   *
+   * Defaults:
+   * - Payment Frequency: Monthly (most common)
+   * - Payment Timing: Arrears (standard accounting practice)
+   * - Currency: NGN (Nigerian Naira - local default)
+   * ============================================================================ */
   useEffect(() => {
     const defaults: any = {};
 
@@ -37,6 +140,7 @@ export function PaymentDetailsForm() {
       defaults.Currency = 'NGN';
     }
 
+    // Only dispatch if there are defaults to set
     if (Object.keys(defaults).length > 0) {
       dispatch({
         type: 'SET_LEASE_DATA',
@@ -45,7 +149,18 @@ export function PaymentDetailsForm() {
     }
   }, []);
 
-  // Automatically check/uncheck "Prepaid First Payment" based on Payment Timing
+  /* ============================================================================
+   * EFFECT: Auto-Check Prepaid First Payment for Advance Timing
+   *
+   * Business rule: When payment is "in Advance", the first payment is always
+   * prepaid (occurs at commencement, not at end of first period).
+   *
+   * Actions:
+   * - Advance selected → Auto-check PrepaidFirstPayment + show modal
+   * - Arrears selected → Auto-uncheck PrepaidFirstPayment
+   *
+   * This ensures the IFRS 16 calculator receives correct payment timing data.
+   * ============================================================================ */
   useEffect(() => {
     if (leaseData.PaymentTiming === 'Advance') {
       if (!leaseData.PrepaidFirstPayment) {
@@ -61,17 +176,30 @@ export function PaymentDetailsForm() {
     }
   }, [leaseData.PaymentTiming]);
 
-  // Clear prepayment error when user enters a value
+  /* ============================================================================
+   * EFFECT: Clear Prepayment Error When Amount Entered
+   *
+   * Once user enters a prepayment amount (for Payment in Advance), clear the
+   * error indicator. This provides immediate positive feedback.
+   * ============================================================================ */
   useEffect(() => {
     if (leaseData.PrepaymentsBeforeCommencement && leaseData.PrepaymentsBeforeCommencement > 0) {
       setShowPrepaymentError(false);
     }
   }, [leaseData.PrepaymentsBeforeCommencement]);
 
+  /* ============================================================================
+   * RENDER
+   * ============================================================================ */
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Payment Details</h3>
-      
+      {/* Section Header */}
+      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+        Payment Details
+      </h3>
+
+      {/* Payment Structure */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           label="Fixed Payment per Period"
@@ -81,7 +209,7 @@ export function PaymentDetailsForm() {
           placeholder="25000000"
           required
         />
-        
+
         <Select
           label="Currency"
           value={leaseData.Currency || 'NGN'}
@@ -89,7 +217,7 @@ export function PaymentDetailsForm() {
           onChange={(value) => updateField('Currency', value)}
           required
         />
-        
+
         <Select
           label="Payment Frequency"
           value={leaseData.PaymentFrequency || 'Monthly'}
@@ -97,7 +225,7 @@ export function PaymentDetailsForm() {
           onChange={(value) => updateField('PaymentFrequency', value)}
           required
         />
-        
+
         <Select
           label="Payment Timing"
           value={leaseData.PaymentTiming || 'Arrears'}
@@ -109,8 +237,10 @@ export function PaymentDetailsForm() {
 
       {/* Escalation Section */}
       <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Escalation</h4>
-        
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">
+          Escalation
+        </h4>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             label="Escalation Type"
@@ -118,7 +248,8 @@ export function PaymentDetailsForm() {
             options={escalationTypes}
             onChange={(value) => updateField('EscalationType', value)}
           />
-          
+
+          {/* CPI-Linked Escalation Fields */}
           {leaseData.EscalationType === 'CPI' && (
             <>
               <FormField
@@ -139,7 +270,8 @@ export function PaymentDetailsForm() {
               />
             </>
           )}
-          
+
+          {/* Fixed Percentage Escalation Field */}
           {leaseData.EscalationType === 'Fixed%' && (
             <FormField
               label="Fixed Escalation % (decimal)"
@@ -155,9 +287,12 @@ export function PaymentDetailsForm() {
 
       {/* Rate & Financial Details */}
       <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Financial Details</h4>
-        
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">
+          Financial Details
+        </h4>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* IBR Input: Display as percentage, store as decimal */}
           <FormField
             label="IBR (Annual %)"
             type="number"
@@ -167,7 +302,7 @@ export function PaymentDetailsForm() {
             placeholder="14"
             required
           />
-          
+
           <FormField
             label="Initial Direct Costs"
             type="number"
@@ -175,7 +310,8 @@ export function PaymentDetailsForm() {
             onChange={(value) => updateField('InitialDirectCosts', Number(value))}
             placeholder="5000000"
           />
-          
+
+          {/* Prepayments: Required for Payment in Advance */}
           <FormField
             label="Prepayments"
             type="number"
@@ -196,7 +332,8 @@ export function PaymentDetailsForm() {
             onChange={(value) => updateField('LeaseIncentives', Number(value))}
             placeholder="100000"
           />
-          
+
+          {/* Prepaid First Payment Toggle */}
           <div className="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
             <Switch
               checked={leaseData.PrepaidFirstPayment || false}
@@ -204,7 +341,9 @@ export function PaymentDetailsForm() {
               disabled={leaseData.PaymentTiming === 'Advance'}
             />
             <div>
-              <label className="text-sm font-medium text-slate-900 dark:text-white">Prepaid First Payment</label>
+              <label className="text-sm font-medium text-slate-900 dark:text-white">
+                Prepaid First Payment
+              </label>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 {leaseData.PaymentTiming === 'Advance'
                   ? 'Required for Payment in Advance'
@@ -217,7 +356,9 @@ export function PaymentDetailsForm() {
 
       {/* Bank Payment Details */}
       <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">Bank Payment Details</h4>
+        <h4 className="text-md font-semibold text-slate-900 dark:text-white mb-4">
+          Bank Payment Details
+        </h4>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
