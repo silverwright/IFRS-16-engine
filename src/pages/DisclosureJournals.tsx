@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { FileText, Download, Calendar, DollarSign, BarChart3, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 import { ContractSelector } from '../components/Contract/Selectors/ContractSelector';
+import { calculateIFRS16 } from '../utils/ifrs16Calculator';
 
 export function DisclosureJournals() {
   const { state, dispatch } = useLeaseContext();
@@ -19,7 +20,6 @@ export function DisclosureJournals() {
 
     // Trigger calculations if not already present
     if (contract.data.ContractID && contract.data.CommencementDate && contract.data.NonCancellableYears && contract.data.FixedPaymentPerPeriod && contract.data.IBR_Annual) {
-      const { calculateIFRS16 } = require('../utils/ifrs16Calculator');
       const results = calculateIFRS16(contract.data);
       dispatch({ type: 'SET_CALCULATIONS', payload: results });
     }
