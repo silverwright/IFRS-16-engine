@@ -1,4 +1,91 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * ResultsDisplay Component
+ *
+ * Comprehensive IFRS 16 calculation results viewer with version control and export capabilities.
+ *
+ * ## Overview
+ *
+ * This is the core component for displaying and managing IFRS 16 lease accounting results.
+ * It provides a rich interface for viewing calculations, managing contract versions,
+ * creating lease modifications, and exporting data.
+ *
+ * ## Key Features
+ *
+ * ### 1. Multi-Tab Results View
+ * - **Summary**: Key metrics (initial liability, ROU asset, totals)
+ * - **Cashflow**: Payment schedule over lease term
+ * - **Amortization**: Detailed liability and ROU asset amortization
+ * - **Journals**: Accounting journal entries for each period
+ *
+ * ### 2. Version Control System
+ * - View version history of contract modifications
+ * - Switch between different versions
+ * - Compare original vs. modified terms
+ * - Track modification reasons and dates
+ *
+ * ### 3. Lease Modifications (IFRS 16.44-46)
+ * - Create new contract versions via amendment modal
+ * - Preserve historical calculations
+ * - Recalculate forward periods with new terms
+ * - Maintain audit trail of all changes
+ *
+ * ### 4. Export Capabilities
+ * - **Excel**: Multi-sheet workbook with all schedules
+ * - **PDF**: Professional report with tables
+ * - Formatted currency and date values
+ * - Dynamic column headers based on payment frequency
+ *
+ * ### 5. Data Management
+ * - Recalculate with updated lease data
+ * - Edit contract details
+ * - Navigate to contract entry form
+ * - Real-time calculation updates
+ *
+ * ## Component Structure
+ *
+ * ```
+ * ResultsDisplay
+ * ├── Header (Title, Actions, Version Info)
+ * ├── Amendment Notice (for modified contracts)
+ * ├── KPI Cards (Key Metrics)
+ * ├── Tab Navigation (Summary, Cashflow, Amortization, Journals)
+ * ├── Tab Content
+ * │   ├── Summary Tab
+ * │   ├── Cashflow Schedule Table
+ * │   ├── Amortization Schedule Table
+ * │   └── Journal Entries Table
+ * ├── Version History Panel
+ * └── Modify Contract Modal
+ * ```
+ *
+ * ## State Management
+ *
+ * ### Local State
+ * - activeTab: Current view ('summary', 'cashflow', 'amortization', 'journals')
+ * - recalculating: Loading indicator for recalculations
+ * - showModifyModal: Modal visibility for creating modifications
+ * - versions: List of all contract versions
+ * - viewingVersion: Currently displayed version number
+ * - showVersionHistory: Version panel visibility
+ *
+ * ### Global State (from LeaseContext)
+ * - calculations: IFRS 16 calculation results
+ * - leaseData: Current lease contract data
+ * - savedContracts: All saved contracts
+ *
+ * ## Key Functions
+ *
+ * - handleVersionSelect: Load and display a specific version
+ * - handleCreateModification: Create new contract version
+ * - handleEditContract: Navigate to edit mode
+ * - exportToExcel: Generate Excel workbook
+ * - exportToPDF: Generate PDF report
+ * - formatCurrency/formatDate/formatLeaseTerm: Data formatting utilities
+ *
+ * @module ResultsDisplay
+ */
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { KPICard } from '../Dashboard/KPICard';
@@ -13,18 +100,39 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
+/* ============================================================================
+ * COMPONENT
+ * ============================================================================ */
+
+/**
+ * ResultsDisplay - Main component for viewing IFRS 16 calculation results
+ *
+ * @returns React component rendering the complete results interface
+ */
 export function ResultsDisplay() {
+  /* ============================================================================
+   * HOOKS AND STATE
+   * ============================================================================ */
+
   const navigate = useNavigate();
   const { state, dispatch } = useLeaseContext();
   const { calculations, leaseData } = state;
+
+  // UI State
   const [activeTab, setActiveTab] = useState('summary');
   const [recalculating, setRecalculating] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [showModifyModal, setShowModifyModal] = useState(false);
+
+  // Version Control State
   const [versions, setVersions] = useState<SavedContract[]>([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [viewingVersion, setViewingVersion] = useState<number | null>(null);
+
+  /* ============================================================================
+   * CONTRACT AND VERSION INFO
+   * ============================================================================ */
 
   // Get current contract info first (needed by other hooks and handlers)
   const currentContract = state.savedContracts.find(
@@ -35,6 +143,14 @@ export function ResultsDisplay() {
   const currentVersion = viewingVersion ?? currentContract?.version ?? 1;
   const baseContractId = currentContract?.baseContractId || extractBaseContractId(leaseData.ContractID || '');
 
+  /* ============================================================================
+   * NAVIGATION HANDLERS
+   * ============================================================================ */
+
+  /**
+   * Navigate to contract edit mode
+   * Opens the contract form with current contract data pre-loaded
+   */
   const handleEditContract = () => {
     if (currentContract) {
       navigate(`/contract?edit=true&contractId=${currentContract.id}`);
@@ -43,7 +159,16 @@ export function ResultsDisplay() {
     }
   };
 
-  // Load version history
+  /* ============================================================================
+   * VERSION MANAGEMENT EFFECTS
+   * ============================================================================ */
+
+  /**
+   * Effect: Load version history when contract changes
+   *
+   * Fetches all versions of the current contract from the API.
+   * Versions share the same base contract ID but have different version numbers.
+   */
   useEffect(() => {
     const loadVersions = async () => {
       if (!leaseData.ContractID) return;
@@ -63,13 +188,28 @@ export function ResultsDisplay() {
     loadVersions();
   }, [leaseData.ContractID]);
 
-  // Reset viewing version when contract changes (so it shows the contract's actual version)
+  /**
+   * Effect: Reset viewing version when contract changes
+   *
+   * When user navigates to a different contract, reset the viewing version
+   * so it shows the contract's actual version, not a previously selected one.
+   */
   useEffect(() => {
-    // Reset to null when contract ID changes, so currentVersion falls back to contract's version
     setViewingVersion(null);
   }, [leaseData.ContractID]);
 
-  // Handle switching to a different version
+  /* ============================================================================
+   * VERSION MANAGEMENT HANDLERS
+   * ============================================================================ */
+
+  /**
+   * Switch to a different contract version
+   *
+   * Loads the selected version's data and recalculates with those terms.
+   * Updates the UI to highlight the selected version.
+   *
+   * @param version - The version contract to load
+   */
   const handleVersionSelect = async (version: SavedContract) => {
     try {
       setRecalculating(true);
@@ -104,6 +244,20 @@ export function ResultsDisplay() {
     }
   };
 
+  /**
+   * Create a new contract version (lease modification)
+   *
+   * Implements IFRS 16.44-46 lease modification accounting:
+   * 1. Preserves historical calculations up to modification date
+   * 2. Recalculates forward periods with new terms
+   * 3. Creates new version in database
+   * 4. Marks previous versions as inactive
+   * 5. Updates UI to show new version
+   *
+   * @param modificationDate - Date when modification takes effect
+   * @param newValues - Modified lease terms (partial update)
+   * @param modificationReason - Business reason for modification
+   */
   const handleCreateModification = async (
     modificationDate: string,
     newValues: Partial<any>,
@@ -151,14 +305,37 @@ export function ResultsDisplay() {
     }
   };
 
+  /* ============================================================================
+   * EARLY RETURN
+   * ============================================================================ */
+
   if (!calculations) return null;
+
+  /* ============================================================================
+   * TAB CONFIGURATION
+   * ============================================================================ */
 
   const tabs = [
     { id: 'summary', name: 'Summary', icon: DollarSign },
     { id: 'cashflow', name: 'Cashflow', icon: TrendingDown },
     { id: 'amortization', name: 'Amortization', icon: BarChart3 },
+    { id: 'journals', name: 'Journal Entries', icon: FileText },
   ];
 
+  /* ============================================================================
+   * EXPORT FUNCTIONS
+   * ============================================================================ */
+
+  /**
+   * Export calculation results to Excel
+   *
+   * Creates a multi-sheet workbook with:
+   * - Summary sheet: Key metrics and contract info
+   * - Cashflow Schedule: Payment timeline
+   * - Amortization Schedule: Detailed liability/asset breakdown
+   *
+   * Uses dynamic column headers based on payment frequency.
+   */
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
 
@@ -216,6 +393,17 @@ export function ResultsDisplay() {
     XLSX.writeFile(workbook, `IFRS16_${leaseData.ContractID || 'Contract'}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
+  /**
+   * Export calculation results to PDF
+   *
+   * Generates a professional PDF report with:
+   * - Header with contract info and timestamp
+   * - Key metrics table
+   * - Amortization schedule table
+   * - Formatted currency values
+   *
+   * Uses jsPDF and autoTable for table generation.
+   */
   const exportToPDF = () => {
     const doc = new jsPDF({
       orientation: 'landscape',
@@ -942,6 +1130,43 @@ export function ResultsDisplay() {
               ) : (
                 <>Showing all {calculations.amortizationSchedule.length} {periodLabel.toLowerCase()}s (scroll to view more)</>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'journals' && (
+          <div className="space-y-4">
+            <h4 className="text-xl font-bold text-slate-900 dark:text-white">Journal Entries</h4>
+            <div className="overflow-x-auto border border-slate-300 dark:border-white/10 rounded-lg shadow-xl max-h-[600px] overflow-y-auto">
+              <table className="min-w-full divide-y divide-slate-300 dark:divide-white/10">
+                <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-600 dark:to-purple-600 text-white sticky top-0 z-20">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Account</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Debit</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Credit</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Memo</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
+                  {calculations.journalEntries.map((entry, index) => (
+                    <tr key={index} className={`${index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'} hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-colors`}>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{entry.date}</td>
+                      <td className="px-6 py-4 text-sm text-slate-800 dark:text-white/90 font-medium">{entry.account}</td>
+                      <td className="px-6 py-4 text-sm text-right font-semibold text-green-600 dark:text-green-400">
+                        {entry.dr > 0 ? formatCurrency(entry.dr) : ''}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right font-semibold text-red-600 dark:text-red-400">
+                        {entry.cr > 0 ? formatCurrency(entry.cr) : ''}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600 dark:text-white/80">{entry.memo}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="text-sm text-slate-600 dark:text-white/80 text-center">
+              Showing all {calculations.journalEntries.length} journal entries
             </div>
           </div>
         )}
