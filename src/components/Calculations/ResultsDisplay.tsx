@@ -775,6 +775,15 @@ export function ResultsDisplay() {
         currentVersion={currentVersion}
       />
 
+      {/* Contract ID Banner */}
+      {leaseData.ContractID && (
+        <div className="flex items-center gap-3 px-5 py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl">
+          <FileText className="w-4 h-4 text-slate-500 dark:text-white/50 flex-shrink-0" />
+          <span className="text-sm text-slate-500 dark:text-white/50 font-medium">Contract ID</span>
+          <span className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{leaseData.ContractID}</span>
+        </div>
+      )}
+
       {/* Enhanced KPI Summary with gradient backgrounds */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">

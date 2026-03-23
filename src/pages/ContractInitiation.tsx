@@ -125,6 +125,21 @@ export function ContractInitiation() {
 
   const handleSaveContract = async () => {
     try {
+      // Validate required fields before saving
+      const missingFields = [];
+      if (!state.leaseData.ContractID) missingFields.push('Contract ID');
+      if (!state.leaseData.CommencementDate) missingFields.push('Commencement Date');
+      if (!state.leaseData.NonCancellableYears) missingFields.push('Non-Cancellable Lease Term');
+      if (!state.leaseData.FixedPaymentPerPeriod) missingFields.push('Fixed Payment Per Period');
+      if (!state.leaseData.IBR_Annual) missingFields.push('Incremental Borrowing Rate (IBR)');
+      if (!state.leaseData.AssetClass) missingFields.push('Asset Class');
+      if (!state.leaseData.PaymentFrequency) missingFields.push('Payment Frequency');
+
+      if (missingFields.length > 0) {
+        alert(`Please fill in the following required fields before saving:\n\n• ${missingFields.join('\n• ')}`);
+        return;
+      }
+
       // Validate: If Payment in Advance is selected, prepayment amount is required
       if (state.leaseData.PaymentTiming === 'Advance') {
         if (!state.leaseData.PrepaymentsBeforeCommencement || state.leaseData.PrepaymentsBeforeCommencement <= 0) {

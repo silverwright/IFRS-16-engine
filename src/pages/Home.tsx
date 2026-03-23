@@ -35,7 +35,7 @@ export function Home() {
       title: "Contract Initiation & Approval",
       description:
         "Streamline lease contract creation and approval processes with comprehensive data capture and validation.",
-      image: "https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-contract.jpeg",
       icon: FileText,
       color: "from-blue-600 to-blue-700"
     },
@@ -44,7 +44,7 @@ export function Home() {
       title: "Lease Calculation Engine",
       description:
         "Advanced calculations for lease liability and right-of-use assets with automated amortization schedules.",
-      image: "https://images.pexels.com/photos/6801648/pexels-photo-6801648.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-calculations.jpeg",
       icon: Calculator,
       color: "from-emerald-600 to-emerald-700"
     },
@@ -53,7 +53,7 @@ export function Home() {
       title: "Disclosure & Journal Entries",
       description:
         "Generate compliant disclosures and accounting journal entries automatically with maturity analysis.",
-      image: "https://images.pexels.com/photos/7681089/pexels-photo-7681089.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-disclosure.jpeg",
       icon: ScrollText,
       color: "from-violet-600 to-violet-700"
     },
@@ -62,7 +62,7 @@ export function Home() {
       title: "Reports & Analytics",
       description:
         "Comprehensive reporting and analytics for lease portfolio management.",
-      image: "https://images.pexels.com/photos/7947662/pexels-photo-7947662.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-reports.jpeg",
       icon: BarChart3,
       color: "from-amber-600 to-amber-700"
     },
@@ -71,7 +71,7 @@ export function Home() {
       title: "IFRS 16 Methodology",
       description:
         "Comprehensive methodology guide covering assumptions, processes, and best practices.",
-      image: "https://images.pexels.com/photos/159519/back-to-school-paper-colored-paper-stationery-159519.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-methodology.jpeg",
       icon: BookOpen,
       color: "from-cyan-600 to-cyan-700"
     },
@@ -80,7 +80,7 @@ export function Home() {
       title: "Dashboard",
       description:
         "Comprehensive analytics and insights into your lease portfolio with interactive visualizations.",
-      image: "https://images.pexels.com/photos/669615/pexels-photo-669615.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-dashboard.jpeg",
       icon: LayoutDashboard,
       color: "from-pink-600 to-pink-700"
     },
@@ -89,7 +89,7 @@ export function Home() {
       title: "Learn IFRS 16",
       description:
         "Self-paced e-learning platform to master IFRS 16 lease accounting fundamentals.",
-      image: "https://images.pexels.com/photos/4226256/pexels-photo-4226256.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-education.jpeg",
       icon: GraduationCap,
       color: "from-indigo-600 to-indigo-700"
     },
@@ -98,7 +98,7 @@ export function Home() {
       title: "IBMR Calculator",
       description:
         "Calculate Incremental Borrowing Rate (IBR) with precision using advanced financial models and market data.",
-      image: "https://images.pexels.com/photos/8919544/pexels-photo-8919544.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/module-ibmr.jpeg",
       icon: TrendingUp,
       color: "from-teal-600 to-teal-700"
     },
@@ -111,7 +111,7 @@ export function Home() {
         {/* Full-width Background Image */}
         <div className="absolute inset-0 w-full h-full">
           <img
-            src="https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=1920"
+            src="/hero-bg.jpeg"
             alt="Professional working"
             className="w-full h-full object-cover"
           />

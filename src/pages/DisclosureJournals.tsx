@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
-import { FileText, Download, Calendar, DollarSign, BarChart3, AlertCircle, ArrowLeft } from 'lucide-react';
+import { FileText, Download, Calendar, DollarSign, BarChart3, AlertCircle, ArrowLeft, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 import { ContractSelector } from '../components/Contract/Selectors/ContractSelector';
 import { calculateIFRS16 } from '../utils/ifrs16Calculator';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export function DisclosureJournals() {
   const { state, dispatch } = useLeaseContext();
   const { calculations, leaseData } = state;
   const [activeTab, setActiveTab] = useState('journals');
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedAccount, setSelectedAccount] = useState<string>('Lease liability');
 
   const hasCalculations = !!calculations;
 
@@ -32,6 +37,7 @@ export function DisclosureJournals() {
 
   const tabs = [
     { id: 'journals', name: 'Journal Entries', icon: FileText },
+    { id: 'account-statement', name: 'Account Statement', icon: DollarSign },
     { id: 'disclosures', name: 'Key Disclosures', icon: BarChart3 },
     { id: 'maturity', name: 'Maturity Analysis', icon: Calendar },
   ];
@@ -66,8 +72,153 @@ export function DisclosureJournals() {
     ];
   };
 
-  const exportData = () => {
-    console.log('Exporting disclosure data...');
+  const currency = leaseData.Currency || 'NGN';
+  const contractId = leaseData.ContractID || 'Contract';
+  const today = new Date().toLocaleDateString('en-GB');
+  const filename = (label: string, ext: string) =>
+    `${contractId}_${label}_${new Date().toISOString().split('T')[0]}.${ext}`;
+
+  const getJournalEntries = () => {
+    if (!calculations) return [];
+    const all = calculations.journalEntries;
+    return selectedYear === 'all' ? all : all.filter(e => new Date(e.date).getFullYear() === parseInt(selectedYear));
+  };
+
+  const getAccountRows = () => {
+    if (!calculations) return { rows: [], totalDr: 0, totalCr: 0, closing: 0 };
+    const entries = calculations.journalEntries.filter(e => e.account === selectedAccount);
+    let balance = 0;
+    const rows = entries.map(e => {
+      balance = Math.round((balance + e.dr - e.cr) * 100) / 100;
+      return { ...e, balance };
+    });
+    return {
+      rows,
+      totalDr: entries.reduce((s, e) => s + e.dr, 0),
+      totalCr: entries.reduce((s, e) => s + e.cr, 0),
+      closing: balance,
+    };
+  };
+
+  const addPdfHeader = (doc: jsPDF, title: string) => {
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, pageW, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('IFRS 16 Lease Engine', 14, 9);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${today}`, pageW - 14, 9, { align: 'right' });
+    doc.text(title, 14, 16);
+    doc.text(`Contract: ${contractId}`, pageW - 14, 16, { align: 'right' });
+    doc.setTextColor(30, 41, 59);
+  };
+
+  const exportJournalPDF = () => {
+    const entries = getJournalEntries();
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    addPdfHeader(doc, `Journal Entries${selectedYear !== 'all' ? ` — ${selectedYear}` : ' — All Years'}`);
+
+    autoTable(doc, {
+      startY: 26,
+      head: [['Date', 'Account', `Debit (${currency})`, `Credit (${currency})`, 'Memo']],
+      body: entries.map(e => [
+        e.date,
+        e.account,
+        e.dr > 0 ? e.dr.toLocaleString() : '',
+        e.cr > 0 ? e.cr.toLocaleString() : '',
+        e.memo,
+      ]),
+      styles: { fontSize: 7.5 },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' } },
+    });
+
+    doc.save(filename(`Journal_${selectedYear !== 'all' ? selectedYear : 'All'}`, 'pdf'));
+  };
+
+  const exportJournalExcel = () => {
+    const entries = getJournalEntries();
+    const ws = XLSX.utils.json_to_sheet(entries.map(e => ({
+      'Date': e.date,
+      'Account': e.account,
+      [`Debit (${currency})`]: e.dr > 0 ? e.dr : '',
+      [`Credit (${currency})`]: e.cr > 0 ? e.cr : '',
+      'Memo': e.memo,
+    })));
+    ws['!cols'] = [{ wch: 14 }, { wch: 36 }, { wch: 20 }, { wch: 20 }, { wch: 45 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Journal Entries');
+    XLSX.writeFile(wb, filename(`Journal_${selectedYear !== 'all' ? selectedYear : 'All'}`, 'xlsx'));
+  };
+
+  const exportAccountPDF = () => {
+    const { rows, totalDr, totalCr, closing } = getAccountRows();
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    addPdfHeader(doc, `Account Statement — ${selectedAccount}`);
+
+    // Summary row
+    doc.setFontSize(9);
+    doc.text(`Total Debits: ${currency} ${totalDr.toLocaleString()}`, 14, 28);
+    doc.text(`Total Credits: ${currency} ${totalCr.toLocaleString()}`, 80, 28);
+    doc.text(`Closing Balance: ${currency} ${Math.abs(closing).toLocaleString()}`, 146, 28);
+
+    autoTable(doc, {
+      startY: 34,
+      head: [['Date', 'Description', `Debit (${currency})`, `Credit (${currency})`, 'Balance']],
+      body: [
+        ...rows.map(r => [
+          r.date,
+          r.memo,
+          r.dr > 0 ? r.dr.toLocaleString() : '',
+          r.cr > 0 ? r.cr.toLocaleString() : '',
+          Math.abs(r.balance).toLocaleString(),
+        ]),
+        ['', 'TOTAL', totalDr.toLocaleString(), totalCr.toLocaleString(), Math.abs(closing).toLocaleString()],
+      ],
+      styles: { fontSize: 7.5 },
+      headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+      didDrawRow: (data) => {
+        if (data.row.index === rows.length) {
+          data.doc.setFont('helvetica', 'bold');
+        }
+      },
+    });
+
+    doc.save(filename(`AccountStatement_${selectedAccount.replace(/\s+/g, '_')}`, 'pdf'));
+  };
+
+  const exportAccountExcel = () => {
+    const { rows, totalDr, totalCr, closing } = getAccountRows();
+    const data = [
+      { 'Date': 'Contract', 'Description': contractId, [`Debit (${currency})`]: '', [`Credit (${currency})`]: '', 'Balance': '' },
+      { 'Date': 'Account', 'Description': selectedAccount, [`Debit (${currency})`]: '', [`Credit (${currency})`]: '', 'Balance': '' },
+      { 'Date': 'Generated', 'Description': today, [`Debit (${currency})`]: '', [`Credit (${currency})`]: '', 'Balance': '' },
+      {},
+      ...rows.map(r => ({
+        'Date': r.date,
+        'Description': r.memo,
+        [`Debit (${currency})`]: r.dr > 0 ? r.dr : '',
+        [`Credit (${currency})`]: r.cr > 0 ? r.cr : '',
+        'Balance': Math.abs(r.balance),
+      })),
+      {},
+      {
+        'Date': '',
+        'Description': 'TOTAL',
+        [`Debit (${currency})`]: totalDr,
+        [`Credit (${currency})`]: totalCr,
+        'Balance': Math.abs(closing),
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{ wch: 14 }, { wch: 40 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Account Statement');
+    XLSX.writeFile(wb, filename(`AccountStatement_${selectedAccount.replace(/\s+/g, '_')}`, 'xlsx'));
   };
 
   return (
@@ -117,17 +268,15 @@ export function DisclosureJournals() {
 
       {selectedContract && hasCalculations && (
         <>
-          {/* Export Button */}
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={exportData}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export All Data
-            </Button>
-          </div>
+          {/* Contract ID Banner */}
+          {leaseData.ContractID && (
+            <div className="flex items-center gap-3 px-5 py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl">
+              <FileText className="w-4 h-4 text-slate-500 dark:text-white/50 flex-shrink-0" />
+              <span className="text-sm text-slate-500 dark:text-white/50 font-medium">Contract ID</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{leaseData.ContractID}</span>
+            </div>
+          )}
+
 
           {/* Tabs */}
           <div className="border-b border-slate-300 dark:border-white/10 bg-slate-50 dark:bg-white/5 backdrop-blur-sm rounded-t-lg px-6">
@@ -153,40 +302,199 @@ export function DisclosureJournals() {
 
           {/* Tab Content */}
           <div className="bg-slate-50 dark:bg-white/5 backdrop-blur-sm rounded-b-lg border border-slate-300 dark:border-white/10 p-6 shadow-xl">
-            {activeTab === 'journals' && (
-              <div className="space-y-6">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Journal Entries</h3>
+            {activeTab === 'journals' && (() => {
+              const allEntries = calculations.journalEntries;
+              const availableYears = [...new Set(allEntries.map(e => new Date(e.date).getFullYear()))].sort();
+              const filteredEntries = selectedYear === 'all'
+                ? allEntries
+                : allEntries.filter(e => new Date(e.date).getFullYear() === parseInt(selectedYear));
 
-                <div className="overflow-x-auto border border-slate-300 dark:border-white/10 rounded-lg shadow-xl">
-                  <table className="min-w-full divide-y divide-slate-300 dark:divide-white/10">
-                    <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-600/30 dark:to-purple-600/30 text-white">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Account</th>
-                        <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Debit</th>
-                        <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Credit</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Memo</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
-                      {calculations.journalEntries.map((entry, index) => (
-                        <tr key={index} className={`${index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'} hover:bg-blue-50 dark:hover:bg-blue-500/20 transition-colors`}>
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{entry.date}</td>
-                          <td className="px-6 py-4 text-sm text-slate-800 dark:text-white/90 font-medium">{entry.account}</td>
-                          <td className="px-6 py-4 text-sm text-right font-semibold text-green-600 dark:text-green-400">
-                            {entry.dr > 0 ? formatCurrency(entry.dr) : ''}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-right font-semibold text-red-600 dark:text-red-400">
-                            {entry.cr > 0 ? formatCurrency(entry.cr) : ''}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-white/80">{entry.memo}</td>
+              return (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Journal Entries</h3>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <label className="text-sm font-medium text-slate-700 dark:text-white/80">Filter by Year:</label>
+                      <select
+                        value={selectedYear}
+                        onChange={e => setSelectedYear(e.target.value)}
+                        className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="all">All Years ({allEntries.length} entries)</option>
+                        {availableYears.map(year => (
+                          <option key={year} value={year}>
+                            {year} ({allEntries.filter(e => new Date(e.date).getFullYear() === year).length} entries)
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={exportJournalExcel}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Excel
+                      </button>
+                      <button
+                        onClick={exportJournalPDF}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-300 dark:border-white/10 rounded-lg shadow-xl">
+                    <table className="min-w-full divide-y divide-slate-300 dark:divide-white/10">
+                      <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-600/30 dark:to-purple-600/30 text-white">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Account</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Debit</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Credit</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Memo</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
+                        {filteredEntries.map((entry, index) => (
+                          <tr key={index} className={`${index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'} hover:bg-blue-50 dark:hover:bg-blue-500/20 transition-colors`}>
+                            <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{entry.date}</td>
+                            <td className="px-6 py-4 text-sm text-slate-800 dark:text-white/90 font-medium">{entry.account}</td>
+                            <td className="px-6 py-4 text-sm text-right font-semibold text-green-600 dark:text-green-400">
+                              {entry.dr > 0 ? formatCurrency(entry.dr) : ''}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-right font-semibold text-red-600 dark:text-red-400">
+                              {entry.cr > 0 ? formatCurrency(entry.cr) : ''}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-white/80">{entry.memo}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-white/50">
+                    Showing {filteredEntries.length} of {allEntries.length} total entries
+                  </p>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
+            {activeTab === 'account-statement' && (() => {
+              const accounts = [
+                { key: 'Lease liability', label: 'Lease Liability', type: 'liability' },
+                { key: 'Right-of-use asset', label: 'ROU Asset', type: 'asset' },
+                { key: 'Accumulated depreciation - ROU asset', label: 'Accumulated Depreciation', type: 'contra' },
+                { key: 'Interest expense (lease)', label: 'Interest Expense', type: 'expense' },
+                { key: 'Depreciation expense', label: 'Depreciation Expense', type: 'expense' },
+              ];
+
+              const allEntries = calculations.journalEntries;
+
+              const accountEntries = allEntries.filter((e: any) => e.account === selectedAccount);
+
+              let runningBalance = 0;
+              const rows = accountEntries.map(entry => {
+                const net = entry.dr - entry.cr;
+                runningBalance = Math.round((runningBalance + net) * 100) / 100;
+                return { ...entry, balance: runningBalance };
+              });
+
+              const totalDr = accountEntries.reduce((s, e) => s + e.dr, 0);
+              const totalCr = accountEntries.reduce((s, e) => s + e.cr, 0);
+
+              return (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Account Statement</h3>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <label className="text-sm font-medium text-slate-700 dark:text-white/80">Account:</label>
+                      <select
+                        value={selectedAccount}
+                        onChange={e => setSelectedAccount(e.target.value)}
+                        className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        {accounts.map(a => (
+                          <option key={a.key} value={a.key}>{a.label}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={exportAccountExcel}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Excel
+                      </button>
+                      <button
+                        onClick={exportAccountPDF}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        PDF
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-400/20 rounded-lg p-4 text-center">
+                      <p className="text-xs text-green-600 dark:text-green-300 font-medium uppercase tracking-wide">Total Debits</p>
+                      <p className="text-lg font-bold text-green-700 dark:text-green-200 mt-1">{formatCurrency(totalDr)}</p>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-400/20 rounded-lg p-4 text-center">
+                      <p className="text-xs text-red-600 dark:text-red-300 font-medium uppercase tracking-wide">Total Credits</p>
+                      <p className="text-lg font-bold text-red-700 dark:text-red-200 mt-1">{formatCurrency(totalCr)}</p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center">
+                      <p className="text-xs text-slate-600 dark:text-white/60 font-medium uppercase tracking-wide">Closing Balance</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(Math.abs(runningBalance))}</p>
+                    </div>
+                  </div>
+
+                  {/* Statement Table */}
+                  <div className="overflow-x-auto border border-slate-300 dark:border-white/10 rounded-lg shadow-xl">
+                    <table className="min-w-full divide-y divide-slate-300 dark:divide-white/10">
+                      <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-600/30 dark:to-purple-600/30 text-white">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">Description</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Debit</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Credit</th>
+                          <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider">Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-white/5 divide-y divide-slate-200 dark:divide-white/10">
+                        {rows.map((row, index) => (
+                          <tr key={index} className={`${index % 2 === 0 ? 'bg-white dark:bg-white/5' : 'bg-slate-50 dark:bg-white/10'} hover:bg-blue-50 dark:hover:bg-blue-500/20 transition-colors`}>
+                            <td className="px-6 py-3 text-sm text-slate-900 dark:text-white font-medium">{row.date}</td>
+                            <td className="px-6 py-3 text-sm text-slate-700 dark:text-white/80">{row.memo}</td>
+                            <td className="px-6 py-3 text-sm text-right font-semibold text-green-600 dark:text-green-400">
+                              {row.dr > 0 ? formatCurrency(row.dr) : ''}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-right font-semibold text-red-600 dark:text-red-400">
+                              {row.cr > 0 ? formatCurrency(row.cr) : ''}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-right font-bold text-slate-900 dark:text-white">
+                              {formatCurrency(Math.abs(row.balance))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-100 dark:bg-white/10">
+                        <tr>
+                          <td colSpan={2} className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">Total</td>
+                          <td className="px-6 py-4 text-sm text-right font-bold text-green-600 dark:text-green-400">{formatCurrency(totalDr)}</td>
+                          <td className="px-6 py-4 text-sm text-right font-bold text-red-600 dark:text-red-400">{formatCurrency(totalCr)}</td>
+                          <td className="px-6 py-4 text-sm text-right font-bold text-slate-900 dark:text-white">{formatCurrency(Math.abs(runningBalance))}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-white/50">{rows.length} transactions for {selectedAccount}</p>
+                </div>
+              );
+            })()}
 
             {activeTab === 'disclosures' && (
               <div className="space-y-6">

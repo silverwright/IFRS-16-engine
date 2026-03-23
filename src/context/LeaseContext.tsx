@@ -525,7 +525,7 @@ export interface SavedContract {
 type LeaseAction =
   | { type: 'SET_LEASE_DATA'; payload: Partial<LeaseData> }
   | { type: 'SET_MODE'; payload: 'MINIMAL' | 'FULL' }
-  | { type: 'SET_CALCULATIONS'; payload: CalculationResults }
+  | { type: 'SET_CALCULATIONS'; payload: CalculationResults | null }
   | { type: 'SET_CONTRACT_HTML'; payload: string }
   | { type: 'SAVE_CONTRACT'; payload: SavedContract }
   | { type: 'UPDATE_CONTRACT'; payload: SavedContract }

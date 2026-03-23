@@ -676,6 +676,7 @@ function generateJournalEntries(
   const entries = [];
   const commenceDate = leaseData.CommencementDate || '2025-01-01';
   const currency = leaseData.Currency || 'NGN';
+  const monthsPerPeriod = Math.round(12 / getPeriodsPerYear(leaseData.PaymentFrequency || 'Monthly'));
 
   /* ==========================================================================
    * JOURNAL ENTRY 1: Initial Recognition at Commencement Date
@@ -705,7 +706,9 @@ function generateJournalEntries(
   );
 
   /* ==========================================================================
-   * JOURNAL ENTRY 2: Subsequent Measurement (First Period Example)
+   * JOURNAL ENTRIES 2+: Subsequent Measurement for Every Period
+   *
+   * For each period in the amortization schedule:
    *
    * Dr. Interest expense (lease)             XXX
    * Dr. Lease liability (principal)          XXX
@@ -714,56 +717,56 @@ function generateJournalEntries(
    * Dr. Depreciation expense                 XXX
    *     Cr. Accumulated depreciation - ROU        XXX
    *
-   * This shows the recurring entries for each period.
    * ========================================================================== */
-  if (amort.length > 0) {
-    const firstPeriod = amort[0];
-    const secondMonth = new Date(commenceDate);
-    secondMonth.setMonth(secondMonth.getMonth() + 1);
+  amort.forEach((period, index) => {
+    const periodDate = new Date(commenceDate);
+    periodDate.setMonth(periodDate.getMonth() + (index + 1) * monthsPerPeriod);
+    const dateStr = periodDate.toISOString().split('T')[0];
+    const periodLabel = `Period ${period.month}`;
 
     entries.push(
       {
-        date: secondMonth.toISOString().split('T')[0],
+        date: dateStr,
         account: 'Interest expense (lease)',
-        dr: firstPeriod.interest || 0,
+        dr: period.interest || 0,
         cr: 0,
-        memo: 'Monthly interest expense',
+        memo: `${periodLabel} - Interest expense`,
         currency: currency
       },
       {
-        date: secondMonth.toISOString().split('T')[0],
+        date: dateStr,
         account: 'Lease liability',
-        dr: firstPeriod.principal || 0,
+        dr: period.principal || 0,
         cr: 0,
-        memo: 'Principal reduction',
+        memo: `${periodLabel} - Principal reduction`,
         currency: currency
       },
       {
-        date: secondMonth.toISOString().split('T')[0],
+        date: dateStr,
         account: 'Cash',
         dr: 0,
-        cr: firstPeriod.payment || 0,
-        memo: 'Lease payment',
+        cr: period.payment || 0,
+        memo: `${periodLabel} - Lease payment`,
         currency: currency
       },
       {
-        date: secondMonth.toISOString().split('T')[0],
+        date: dateStr,
         account: 'Depreciation expense',
-        dr: firstPeriod.depreciation || 0,
+        dr: period.depreciation || 0,
         cr: 0,
-        memo: 'Monthly depreciation',
+        memo: `${periodLabel} - Depreciation`,
         currency: currency
       },
       {
-        date: secondMonth.toISOString().split('T')[0],
+        date: dateStr,
         account: 'Accumulated depreciation - ROU asset',
         dr: 0,
-        cr: firstPeriod.depreciation || 0,
-        memo: 'Accumulated depreciation',
+        cr: period.depreciation || 0,
+        memo: `${periodLabel} - Accumulated depreciation`,
         currency: currency
       }
     );
-  }
+  });
 
   return entries;
 }

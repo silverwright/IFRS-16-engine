@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { ResultsDisplay } from '../components/Calculations/ResultsDisplay';
 import { ContractSelector } from '../components/Contract/Selectors/ContractSelector';
@@ -25,36 +25,28 @@ export function LeaseCalculations() {
     dispatch({ type: 'SET_CALCULATIONS', payload: null });
     dispatch({ type: 'LOAD_CONTRACT', payload: contract.data });
     dispatch({ type: 'SET_MODE', payload: contract.mode });
+
+    // Calculate immediately using the contract parameter directly — no state dependency
+    setCalculating(true);
+    dispatch({ type: 'SET_LOADING', payload: true });
+    setTimeout(() => {
+      try {
+        const results = calculateIFRS16(contract.data);
+        dispatch({ type: 'SET_CALCULATIONS', payload: results });
+        dispatch({ type: 'SET_ERROR', payload: null });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Calculation failed. Please check your inputs.' });
+      } finally {
+        setCalculating(false);
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    }, 800);
   };
 
   const handleBackToSelection = () => {
     setSelectedContract(null);
     dispatch({ type: 'SET_CALCULATIONS', payload: null });
   };
-
-  // Automatically calculate when contract is selected and has required data
-  useEffect(() => {
-    if (selectedContract && hasRequiredData && !calculations) {
-      const runCalculation = async () => {
-        setCalculating(true);
-        dispatch({ type: 'SET_LOADING', payload: true });
-
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const results = calculateIFRS16(leaseData);
-          dispatch({ type: 'SET_CALCULATIONS', payload: results });
-          dispatch({ type: 'SET_ERROR', payload: null });
-        } catch (error) {
-          dispatch({ type: 'SET_ERROR', payload: 'Calculation failed. Please check your inputs.' });
-        } finally {
-          setCalculating(false);
-          dispatch({ type: 'SET_LOADING', payload: false });
-        }
-      };
-
-      runCalculation();
-    }
-  }, [selectedContract, hasRequiredData, leaseData, calculations, dispatch]);
 
   return (
     <div className="w-full min-h-screen p-6 space-y-6 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

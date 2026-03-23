@@ -51,6 +51,7 @@ import { Select } from '../../UI/Select';
  * - Other: Any asset not fitting the above categories
  */
 const assetClasses = [
+  'Land',
   'Buildings',
   'Machinery',
   'Vehicles',

@@ -708,7 +708,7 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
                   </tr>
                 ) : (
                   filteredContracts.map((contract, index) => (
-                  <tr key={contract.id} className={`${index % 2 === 0 ? 'bg-white dark:bg-slate-800/20' : 'bg-slate-50 dark:bg-slate-700/30'} hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors`}>
+                  <tr key={contract.id} onClick={() => onEditContract(contract)} className={`cursor-pointer ${index % 2 === 0 ? 'bg-white dark:bg-slate-800/20' : 'bg-slate-50 dark:bg-slate-700/30'} hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg flex items-center justify-center mr-3">
@@ -755,7 +755,7 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
                       <StatusBadge status={contract.status} size="sm" />
                     </td>
                     {/* Actions Column */}
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-center" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-center">
                         <div className="relative" ref={openDropdownId === contract.id ? dropdownRef : null}>
                           <button
