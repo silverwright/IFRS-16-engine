@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useLeaseContext } from '../context/LeaseContext';
 import { calculateIFRS16 } from '../utils/ifrs16Calculator';
 import jsPDF from 'jspdf';
@@ -80,60 +80,58 @@ export function Dashboard() {
     XLSX.writeFile(wb, `Consolidated_Journal_${journalYear !== 'all' ? journalYear : 'All'}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // Calculate aggregated totals from all saved contracts
-  const aggregatedData = useMemo(() => {
-    let totalROU = 0;
-    let totalLiability = 0;
-    let totalInterest = 0;
-    let totalDepreciation = 0;
-    let totalLeaseTermYears = 0;
-    let totalMonthlyInterest = 0;
-    let totalMonthlyDepreciation = 0;
-    const validContracts = [];
+  const emptyAggregated = {
+    totalROU: 0, totalLiability: 0, totalInterest: 0, totalDepreciation: 0,
+    avgLeaseTermYears: 0, totalMonthlyInterest: 0, totalMonthlyDepreciation: 0,
+    validContracts: [] as { contract: any; results: any }[],
+    totalContracts: 0,
+  };
 
-    for (const contract of savedContracts) {
-      const data = contract.data;
+  const [aggregatedData, setAggregatedData] = useState(emptyAggregated);
+  const [isCalculating, setIsCalculating] = useState(true);
 
-      // Check if contract has required data
-      const hasRequiredData = !!(
-        data.ContractID &&
-        data.CommencementDate &&
-        data.NonCancellableYears &&
-        data.FixedPaymentPerPeriod &&
-        data.IBR_Annual
-      );
+  useEffect(() => {
+    setIsCalculating(true);
+    const timer = setTimeout(() => {
+      let totalROU = 0, totalLiability = 0, totalInterest = 0;
+      let totalDepreciation = 0, totalLeaseTermYears = 0;
+      let totalMonthlyInterest = 0, totalMonthlyDepreciation = 0;
+      const validContracts: { contract: any; results: any }[] = [];
 
-      if (hasRequiredData) {
-        try {
-          const results = calculateIFRS16(data);
-          const contractMonths = (results.leaseTermYears || 1) * 12;
-          totalROU += results.initialROU;
-          totalLiability += results.initialLiability;
-          totalInterest += results.totalInterest;
-          totalDepreciation += results.totalDepreciation;
-          totalLeaseTermYears += results.leaseTermYears;
-          totalMonthlyInterest += results.totalInterest / contractMonths;
-          totalMonthlyDepreciation += results.totalDepreciation / contractMonths;
-          validContracts.push({ contract, results });
-        } catch (error) {
-          console.error(`Failed to calculate for contract ${data.ContractID}:`, error);
+      for (const contract of savedContracts) {
+        const data = contract.data;
+        const hasRequiredData = !!(
+          data.ContractID && data.CommencementDate &&
+          data.NonCancellableYears && data.FixedPaymentPerPeriod && data.IBR_Annual
+        );
+        if (hasRequiredData) {
+          try {
+            const results = calculateIFRS16(data);
+            const contractMonths = (results.leaseTermYears || 1) * 12;
+            totalROU += results.initialROU;
+            totalLiability += results.initialLiability;
+            totalInterest += results.totalInterest;
+            totalDepreciation += results.totalDepreciation;
+            totalLeaseTermYears += results.leaseTermYears;
+            totalMonthlyInterest += results.totalInterest / contractMonths;
+            totalMonthlyDepreciation += results.totalDepreciation / contractMonths;
+            validContracts.push({ contract, results });
+          } catch (error) {
+            console.error(`Failed to calculate for contract ${data.ContractID}:`, error);
+          }
         }
       }
-    }
 
-    const avgLeaseTermYears = validContracts.length > 0 ? totalLeaseTermYears / validContracts.length : 0;
+      const avgLeaseTermYears = validContracts.length > 0 ? totalLeaseTermYears / validContracts.length : 0;
+      setAggregatedData({
+        totalROU, totalLiability, totalInterest, totalDepreciation,
+        avgLeaseTermYears, totalMonthlyInterest, totalMonthlyDepreciation,
+        validContracts, totalContracts: savedContracts.length,
+      });
+      setIsCalculating(false);
+    }, 0);
 
-    return {
-      totalROU,
-      totalLiability,
-      totalInterest,
-      totalDepreciation,
-      avgLeaseTermYears,
-      totalMonthlyInterest,
-      totalMonthlyDepreciation,
-      validContracts,
-      totalContracts: savedContracts.length
-    };
+    return () => clearTimeout(timer);
   }, [savedContracts]);
 
   // Consolidated journal entries from all contracts
@@ -489,7 +487,9 @@ export function Dashboard() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
-            <p className="text-slate-600 dark:text-slate-400">Overview of your IFRS 16 lease portfolio</p>
+            <p className="text-slate-600 dark:text-slate-400">
+              {isCalculating ? 'Calculating portfolio data…' : 'Overview of your IFRS 16 lease portfolio'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
