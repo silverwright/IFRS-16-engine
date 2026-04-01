@@ -230,7 +230,10 @@ export function Dashboard() {
       .map(({ contract, results }) => {
         const d = contract.data;
         const commence = new Date(d.CommencementDate!);
-        const termMonths = Math.round((d.NonCancellableYears || 0) * 12);
+        const totalYears = (Number(d.NonCancellableYears) || 0)
+          + (Number(d.RenewalYears) || 0)
+          - (Number(d.TerminationYears) || 0);
+        const termMonths = Math.round(totalYears * 12);
         const endDate = new Date(commence);
         endDate.setMonth(endDate.getMonth() + termMonths);
         const daysToMaturity = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -580,7 +583,13 @@ export function Dashboard() {
           </div>
           <div className="text-2xl font-bold text-amber-500">
             {aggregatedData.validContracts.filter(vc => {
-              const endDate = new Date(vc.contract.data.EndDateOriginal || '');
+              const d = vc.contract.data;
+              const commence = new Date(d.CommencementDate || '');
+              const totalYears = (Number(d.NonCancellableYears) || 0)
+                + (Number(d.RenewalYears) || 0)
+                - (Number(d.TerminationYears) || 0);
+              const endDate = new Date(commence);
+              endDate.setFullYear(endDate.getFullYear() + totalYears);
               const monthsToExpiry = (endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30);
               return monthsToExpiry <= 6 && monthsToExpiry > 0;
             }).length}

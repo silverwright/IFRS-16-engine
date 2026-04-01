@@ -398,7 +398,14 @@ function calculateWithModification(leaseData: Partial<LeaseData>): CalculationRe
       originalCalc.initialLiability,
       originalCalc.initialROU,
       mergedAmortization,
-      mergedAmortization
+      mergedAmortization,
+      {
+        modificationDate,
+        liabilityAtModification,
+        newLiability,
+        liabilityAdjustment,
+        rouAtModification,
+      }
     ),
     leaseTermYears: originalCalc.leaseTermYears,
     nonCancellableYears: originalCalc.nonCancellableYears,
@@ -671,7 +678,14 @@ function generateJournalEntries(
   liability: number,
   rou: number,
   amort: any[],
-  dep: any[]
+  dep: any[],
+  modification?: {
+    modificationDate: string;
+    liabilityAtModification: number;
+    newLiability: number;
+    liabilityAdjustment: number;
+    rouAtModification: number;
+  }
 ) {
   const entries = [];
   const commenceDate = leaseData.CommencementDate || '2025-01-01';
@@ -812,6 +826,45 @@ function generateJournalEntries(
   }
 
   /* ==========================================================================
+   * MODIFICATION REMEASUREMENT ENTRY (only if lease was modified)
+   *
+   * On the modification date, adjust the lease liability to its remeasured
+   * value and adjust the ROU asset by the same amount (IFRS 16.44).
+   *
+   * If liability increased (e.g. extended term or higher payment):
+   *   Dr. Right-of-use asset       [adjustment]
+   *       Cr. Lease liability           [adjustment]
+   *
+   * If liability decreased (e.g. shorter term or lower payment):
+   *   Dr. Lease liability          [adjustment]
+   *       Cr. Right-of-use asset        [adjustment]
+   * ========================================================================== */
+  if (modification) {
+    const { modificationDate, liabilityAdjustment, newLiability, liabilityAtModification } = modification;
+    const absAdj = Math.abs(liabilityAdjustment);
+    const increased = liabilityAdjustment > 0;
+
+    entries.push(
+      {
+        date: modificationDate,
+        account: 'Lease liability',
+        dr: increased ? 0 : absAdj,
+        cr: increased ? absAdj : 0,
+        memo: `Lease modification - remeasure liability from ${liabilityAtModification.toLocaleString()} to ${newLiability.toLocaleString()}`,
+        currency
+      },
+      {
+        date: modificationDate,
+        account: 'Right-of-use asset',
+        dr: increased ? absAdj : 0,
+        cr: increased ? 0 : absAdj,
+        memo: `Lease modification - adjust ROU asset by change in liability`,
+        currency
+      }
+    );
+  }
+
+  /* ==========================================================================
    * JOURNAL ENTRIES 2+: Subsequent Measurement for Every Period
    *
    * For each period in the amortization schedule:
@@ -873,6 +926,78 @@ function generateJournalEntries(
       }
     );
   });
+
+  /* ==========================================================================
+   * DERECOGNITION ENTRY: Lease End Date
+   *
+   * On the last day of the lease, remove the ROU asset and accumulated
+   * depreciation from the books. IFRS 16 para 39-46.
+   *
+   * Normal termination (fully run to end):
+   *   Dr. Accumulated depreciation - ROU asset   [= initialROU]
+   *       Cr. Right-of-use asset                      [= initialROU]
+   *
+   * Early termination (remaining liability exists):
+   *   Dr. Accumulated depreciation - ROU asset   [accumulated to date]
+   *   Dr. Lease liability                         [remaining balance]
+   *   Dr/Cr. Gain/Loss on lease termination       [balancing figure]
+   *       Cr. Right-of-use asset                      [original cost]
+   * ========================================================================== */
+  const lastPeriod = amort[amort.length - 1];
+  if (lastPeriod) {
+    const lastIndex = amort.length - 1;
+    const endDate = new Date(commenceDate);
+    endDate.setMonth(endDate.getMonth() + (lastIndex + 1) * monthsPerPeriod);
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    const totalAccumulatedDepreciation = dep.reduce((sum: number, row: any) => sum + (row.depreciation || 0), 0);
+    const remainingLiability = lastPeriod.remainingLiability || 0;
+    const gainOrLoss = totalAccumulatedDepreciation + remainingLiability - rou;
+
+    // Remove accumulated depreciation
+    entries.push({
+      date: endDateStr,
+      account: 'Accumulated depreciation - ROU asset',
+      dr: totalAccumulatedDepreciation,
+      cr: 0,
+      memo: 'Derecognition - remove accumulated depreciation at lease end',
+      currency
+    });
+
+    // Remove remaining liability (if any — normally 0 at full term)
+    if (remainingLiability > 0.01) {
+      entries.push({
+        date: endDateStr,
+        account: 'Lease liability',
+        dr: remainingLiability,
+        cr: 0,
+        memo: 'Derecognition - remove remaining lease liability',
+        currency
+      });
+    }
+
+    // Gain on termination (credit) or Loss on termination (debit)
+    if (Math.abs(gainOrLoss) > 0.01) {
+      entries.push({
+        date: endDateStr,
+        account: gainOrLoss > 0 ? 'Gain on lease termination' : 'Loss on lease termination',
+        dr: gainOrLoss < 0 ? Math.abs(gainOrLoss) : 0,
+        cr: gainOrLoss > 0 ? gainOrLoss : 0,
+        memo: `Derecognition - ${gainOrLoss > 0 ? 'gain' : 'loss'} on lease termination`,
+        currency
+      });
+    }
+
+    // Remove ROU asset original cost
+    entries.push({
+      date: endDateStr,
+      account: 'Right-of-use asset',
+      dr: 0,
+      cr: rou,
+      memo: 'Derecognition - remove ROU asset at lease end',
+      currency
+    });
+  }
 
   return entries;
 }

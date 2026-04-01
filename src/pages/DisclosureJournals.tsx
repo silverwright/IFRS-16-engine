@@ -15,6 +15,7 @@ export function DisclosureJournals() {
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedAccount, setSelectedAccount] = useState<string>('Lease liability');
+  const [selectedAccountYear, setSelectedAccountYear] = useState<string>('all');
 
   const hasCalculations = !!calculations;
 
@@ -47,29 +48,58 @@ export function DisclosureJournals() {
   };
 
   const generateMaturityAnalysis = () => {
-    if (!calculations || !leaseData.NonCancellableYears) return [];
-    
-    const totalPayments = calculations.cashflowSchedule.reduce((sum, row) => sum + row.rent, 0);
-    const year1Payments = calculations.cashflowSchedule.slice(0, 12).reduce((sum, row) => sum + row.rent, 0);
-    const years2to5Payments = totalPayments - year1Payments;
-    
-    return [
-      {
-        period: 'Year 1',
-        undiscountedCashflow: year1Payments,
-        presentValue: calculations.initialLiability * 0.3,
-      },
-      {
-        period: 'Years 2-5',
-        undiscountedCashflow: years2to5Payments,
-        presentValue: calculations.initialLiability * 0.7,
-      },
-      {
-        period: 'Total',
-        undiscountedCashflow: totalPayments,
-        presentValue: calculations.initialLiability,
+    if (!calculations || !leaseData.CommencementDate) return [];
+
+    const commenceDate = new Date(leaseData.CommencementDate);
+    const now = new Date();
+
+    // Group amortization schedule into IFRS 16 maturity buckets based on payment date
+    let year1Undiscounted = 0, year1PV = 0;
+    let years2to5Undiscounted = 0, years2to5PV = 0;
+    let beyond5Undiscounted = 0, beyond5PV = 0;
+
+    calculations.amortizationSchedule.forEach((row: any) => {
+      // Derive payment date from period index
+      const paymentDate = new Date(commenceDate);
+      paymentDate.setMonth(paymentDate.getMonth() + row.month);
+      if (paymentDate <= now) return; // skip past periods
+
+      const yearsFromNow = (paymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+      const undiscounted = row.payment || 0;
+
+      if (yearsFromNow <= 1) {
+        year1Undiscounted += undiscounted;
+        year1PV += row.principal || 0; // only principal reduces the liability
+      } else if (yearsFromNow <= 5) {
+        years2to5Undiscounted += undiscounted;
+        years2to5PV += row.principal || 0;
+      } else {
+        beyond5Undiscounted += undiscounted;
+        beyond5PV += row.principal || 0;
       }
+    });
+
+    // Closing liability = remaining principal not yet paid
+    const closingLiability = calculations.amortizationSchedule
+      .filter((row: any) => {
+        const paymentDate = new Date(commenceDate);
+        paymentDate.setMonth(paymentDate.getMonth() + row.month);
+        return paymentDate > now;
+      })
+      .reduce((sum: number, row: any) => sum + (row.principal || 0), 0);
+
+    const rows = [
+      { period: 'Within 1 year', undiscountedCashflow: year1Undiscounted, presentValue: year1PV },
+      { period: '1 – 5 years', undiscountedCashflow: years2to5Undiscounted, presentValue: years2to5PV },
     ];
+
+    if (beyond5Undiscounted > 0) {
+      rows.push({ period: 'More than 5 years', undiscountedCashflow: beyond5Undiscounted, presentValue: beyond5PV });
+    }
+
+    rows.push({ period: 'Total', undiscountedCashflow: year1Undiscounted + years2to5Undiscounted + beyond5Undiscounted, presentValue: closingLiability });
+
+    return rows;
   };
 
   const currency = leaseData.Currency || 'NGN';
@@ -85,19 +115,89 @@ export function DisclosureJournals() {
   };
 
   const getAccountRows = () => {
-    if (!calculations) return { rows: [], totalDr: 0, totalCr: 0, closing: 0 };
-    const entries = calculations.journalEntries.filter(e => e.account === selectedAccount);
-    let balance = 0;
-    const rows = entries.map(e => {
-      balance = Math.round((balance + e.dr - e.cr) * 100) / 100;
-      return { ...e, balance };
+    if (!calculations) return { rows: [], totalDr: 0, totalCr: 0, closing: 0, availableYears: [] };
+    const allForAccount = calculations.journalEntries.filter((e: any) => e.account === selectedAccount);
+    const availableYears = [...new Set(allForAccount.map((e: any) => new Date(e.date).getFullYear()))].sort() as number[];
+
+    // Build running balance across ALL entries first (balance is cumulative from inception)
+    let runningBalance = 0;
+    let filteredTotalDr = 0;
+    let filteredTotalCr = 0;
+    const rows: any[] = [];
+
+    allForAccount.forEach((e: any) => {
+      runningBalance = Math.round((runningBalance + e.dr - e.cr) * 100) / 100;
+      const entryYear = new Date(e.date).getFullYear();
+      if (selectedAccountYear === 'all' || entryYear === parseInt(selectedAccountYear)) {
+        filteredTotalDr += e.dr;
+        filteredTotalCr += e.cr;
+        rows.push({ ...e, balance: runningBalance });
+      }
     });
-    return {
-      rows,
-      totalDr: entries.reduce((s, e) => s + e.dr, 0),
-      totalCr: entries.reduce((s, e) => s + e.cr, 0),
-      closing: balance,
-    };
+
+    return { rows, totalDr: filteredTotalDr, totalCr: filteredTotalCr, closing: runningBalance, availableYears };
+  };
+
+  const exportAllExcel = () => {
+    if (!calculations) return;
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Journal Entries (all)
+    const journalRows = calculations.journalEntries.map((e: any) => ({
+      'Date': e.date,
+      'Account': e.account,
+      [`Debit (${currency})`]: e.dr > 0 ? e.dr : '',
+      [`Credit (${currency})`]: e.cr > 0 ? e.cr : '',
+      'Memo': e.memo,
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(journalRows);
+    ws1['!cols'] = [{ wch: 14 }, { wch: 38 }, { wch: 22 }, { wch: 22 }, { wch: 50 }];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Journal Entries');
+
+    // Sheet 2: Account Statements (all accounts)
+    const accounts = ['Lease liability', 'Right-of-use asset', 'Accumulated depreciation - ROU asset', 'Interest expense (lease)', 'Depreciation expense', 'Cash'];
+    accounts.forEach(acct => {
+      const entries = calculations.journalEntries.filter((e: any) => e.account === acct);
+      if (entries.length === 0) return;
+      let balance = 0;
+      const rows = entries.map((e: any) => {
+        balance = Math.round((balance + e.dr - e.cr) * 100) / 100;
+        return {
+          'Date': e.date,
+          'Memo': e.memo,
+          [`Debit (${currency})`]: e.dr > 0 ? e.dr : '',
+          [`Credit (${currency})`]: e.cr > 0 ? e.cr : '',
+          'Running Balance': Math.abs(balance),
+        };
+      });
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{ wch: 14 }, { wch: 45 }, { wch: 20 }, { wch: 20 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, ws, acct.substring(0, 31)); // Excel tab name max 31 chars
+    });
+
+    // Sheet 3: Maturity Analysis
+    const maturity = generateMaturityAnalysis();
+    const ws3 = XLSX.utils.json_to_sheet(maturity.map(r => ({
+      'Period': r.period,
+      [`Undiscounted Cashflow (${currency})`]: r.undiscountedCashflow,
+      [`Present Value (${currency})`]: r.presentValue,
+    })));
+    XLSX.utils.book_append_sheet(wb, ws3, 'Maturity Analysis');
+
+    // Sheet 4: Amortization Schedule
+    const ws4 = XLSX.utils.json_to_sheet(calculations.amortizationSchedule.map((r: any) => ({
+      'Period': r.month,
+      'Opening Liability': r.openingLiability,
+      'Interest': r.interest,
+      'Payment': r.payment,
+      'Principal': r.principal,
+      'Closing Liability': r.remainingLiability,
+      'Depreciation': r.depreciation,
+      'Closing ROU Asset': r.remainingAsset,
+    })));
+    XLSX.utils.book_append_sheet(wb, ws4, 'Amortization Schedule');
+
+    XLSX.writeFile(wb, filename('Full_Disclosure', 'xlsx'));
   };
 
   const addPdfHeader = (doc: jsPDF, title: string) => {
@@ -181,11 +281,6 @@ export function DisclosureJournals() {
       styles: { fontSize: 7.5 },
       headStyles: { fillColor: [79, 70, 229], textColor: 255 },
       columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-      didDrawRow: (data) => {
-        if (data.row.index === rows.length) {
-          data.doc.setFont('helvetica', 'bold');
-        }
-      },
     });
 
     doc.save(filename(`AccountStatement_${selectedAccount.replace(/\s+/g, '_')}`, 'pdf'));
@@ -268,12 +363,18 @@ export function DisclosureJournals() {
 
       {selectedContract && hasCalculations && (
         <>
-          {/* Contract ID Banner */}
+          {/* Contract ID Banner + Export All */}
           {leaseData.ContractID && (
             <div className="flex items-center gap-3 px-5 py-3 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl">
               <FileText className="w-4 h-4 text-slate-500 dark:text-white/50 flex-shrink-0" />
               <span className="text-sm text-slate-500 dark:text-white/50 font-medium">Contract ID</span>
               <span className="text-sm font-bold text-slate-900 dark:text-white tracking-wide">{leaseData.ContractID}</span>
+              <div className="ml-auto">
+                <Button variant="outline" onClick={exportAllExcel} className="flex items-center gap-2 text-sm">
+                  <FileSpreadsheet className="w-4 h-4" />
+                  Export All (Excel)
+                </Button>
+              </div>
             </div>
           )}
 
@@ -382,26 +483,16 @@ export function DisclosureJournals() {
 
             {activeTab === 'account-statement' && (() => {
               const accounts = [
-                { key: 'Lease liability', label: 'Lease Liability', type: 'liability' },
-                { key: 'Right-of-use asset', label: 'ROU Asset', type: 'asset' },
-                { key: 'Accumulated depreciation - ROU asset', label: 'Accumulated Depreciation', type: 'contra' },
-                { key: 'Interest expense (lease)', label: 'Interest Expense', type: 'expense' },
-                { key: 'Depreciation expense', label: 'Depreciation Expense', type: 'expense' },
+                { key: 'Lease liability', label: 'Lease Liability' },
+                { key: 'Right-of-use asset', label: 'ROU Asset' },
+                { key: 'Accumulated depreciation - ROU asset', label: 'Accumulated Depreciation' },
+                { key: 'Interest expense (lease)', label: 'Interest Expense' },
+                { key: 'Depreciation expense', label: 'Depreciation Expense' },
+                { key: 'Cash', label: 'Cash' },
+                { key: 'Prepaid lease expense', label: 'Prepaid Lease Expense' },
               ];
 
-              const allEntries = calculations.journalEntries;
-
-              const accountEntries = allEntries.filter((e: any) => e.account === selectedAccount);
-
-              let runningBalance = 0;
-              const rows = accountEntries.map(entry => {
-                const net = entry.dr - entry.cr;
-                runningBalance = Math.round((runningBalance + net) * 100) / 100;
-                return { ...entry, balance: runningBalance };
-              });
-
-              const totalDr = accountEntries.reduce((s, e) => s + e.dr, 0);
-              const totalCr = accountEntries.reduce((s, e) => s + e.cr, 0);
+              const { rows, totalDr, totalCr, closing, availableYears } = getAccountRows();
 
               return (
                 <div className="space-y-6">
@@ -411,12 +502,21 @@ export function DisclosureJournals() {
                       <label className="text-sm font-medium text-slate-700 dark:text-white/80">Account:</label>
                       <select
                         value={selectedAccount}
-                        onChange={e => setSelectedAccount(e.target.value)}
+                        onChange={e => { setSelectedAccount(e.target.value); setSelectedAccountYear('all'); }}
                         className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
                         {accounts.map(a => (
                           <option key={a.key} value={a.key}>{a.label}</option>
                         ))}
+                      </select>
+                      <label className="text-sm font-medium text-slate-700 dark:text-white/80">Year:</label>
+                      <select
+                        value={selectedAccountYear}
+                        onChange={e => setSelectedAccountYear(e.target.value)}
+                        className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="all">All Years</option>
+                        {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
                       </select>
                       <button
                         onClick={exportAccountExcel}
@@ -447,7 +547,7 @@ export function DisclosureJournals() {
                     </div>
                     <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-4 text-center">
                       <p className="text-xs text-slate-600 dark:text-white/60 font-medium uppercase tracking-wide">Closing Balance</p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(Math.abs(runningBalance))}</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">{formatCurrency(Math.abs(closing))}</p>
                     </div>
                   </div>
 
@@ -485,7 +585,7 @@ export function DisclosureJournals() {
                           <td colSpan={2} className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">Total</td>
                           <td className="px-6 py-4 text-sm text-right font-bold text-green-600 dark:text-green-400">{formatCurrency(totalDr)}</td>
                           <td className="px-6 py-4 text-sm text-right font-bold text-red-600 dark:text-red-400">{formatCurrency(totalCr)}</td>
-                          <td className="px-6 py-4 text-sm text-right font-bold text-slate-900 dark:text-white">{formatCurrency(Math.abs(runningBalance))}</td>
+                          <td className="px-6 py-4 text-sm text-right font-bold text-slate-900 dark:text-white">{formatCurrency(Math.abs(closing))}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -496,7 +596,48 @@ export function DisclosureJournals() {
               );
             })()}
 
-            {activeTab === 'disclosures' && (
+            {activeTab === 'disclosures' && (() => {
+              const now = new Date();
+              const commenceDate = new Date(leaseData.CommencementDate || '');
+
+              // Current portion = principal repayable within next 12 months
+              const currentLiability = calculations.amortizationSchedule.reduce((sum: number, row: any) => {
+                const pd = new Date(commenceDate);
+                pd.setMonth(pd.getMonth() + row.month);
+                const yearsFromNow = (pd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+                return yearsFromNow > 0 && yearsFromNow <= 1 ? sum + (row.principal || 0) : sum;
+              }, 0);
+
+              // Non-current = total remaining liability minus current portion
+              const remainingLiability = calculations.amortizationSchedule.reduce((sum: number, row: any) => {
+                const pd = new Date(commenceDate);
+                pd.setMonth(pd.getMonth() + row.month);
+                return pd > now ? sum + (row.principal || 0) : sum;
+              }, 0);
+              const nonCurrentLiability = Math.max(0, remainingLiability - currentLiability);
+
+              // Accumulated depreciation = depreciation for all periods up to today
+              const accumulatedDepreciation = calculations.depreciationSchedule.reduce((sum: number, row: any) => {
+                const pd = new Date(commenceDate);
+                pd.setMonth(pd.getMonth() + row.month);
+                return pd <= now ? sum + (row.depreciation || 0) : sum;
+              }, 0);
+              const netROU = calculations.initialROU - accumulatedDepreciation;
+
+              // Annual P&L = current year's interest + depreciation
+              const currentYear = now.getFullYear();
+              const annualInterest = calculations.amortizationSchedule.reduce((sum: number, row: any) => {
+                const pd = new Date(commenceDate);
+                pd.setMonth(pd.getMonth() + row.month);
+                return pd.getFullYear() === currentYear ? sum + (row.interest || 0) : sum;
+              }, 0);
+              const annualDepreciation = calculations.depreciationSchedule.reduce((sum: number, row: any) => {
+                const pd = new Date(commenceDate);
+                pd.setMonth(pd.getMonth() + row.month);
+                return pd.getFullYear() === currentYear ? sum + (row.depreciation || 0) : sum;
+              }, 0);
+
+              return (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Key Disclosure Figures</h3>
 
@@ -512,22 +653,16 @@ export function DisclosureJournals() {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-blue-700 dark:text-blue-200">Current (within 1 year):</span>
-                        <span className="font-bold text-blue-800 dark:text-blue-100">
-                          {formatCurrency(calculations.initialLiability * 0.3)}
-                        </span>
+                        <span className="font-bold text-blue-800 dark:text-blue-100">{formatCurrency(currentLiability)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-blue-700 dark:text-blue-200">Non-current:</span>
-                        <span className="font-bold text-blue-800 dark:text-blue-100">
-                          {formatCurrency(calculations.initialLiability * 0.7)}
-                        </span>
+                        <span className="font-bold text-blue-800 dark:text-blue-100">{formatCurrency(nonCurrentLiability)}</span>
                       </div>
                       <div className="border-t border-blue-300 dark:border-blue-400/30 pt-2">
                         <div className="flex justify-between">
                           <span className="text-blue-800 dark:text-blue-100 font-medium">Total:</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {formatCurrency(calculations.initialLiability)}
-                          </span>
+                          <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(remainingLiability)}</span>
                         </div>
                       </div>
                     </div>
@@ -544,22 +679,16 @@ export function DisclosureJournals() {
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-emerald-700 dark:text-emerald-200">Gross carrying amount:</span>
-                        <span className="font-bold text-emerald-800 dark:text-emerald-100">
-                          {formatCurrency(calculations.initialROU)}
-                        </span>
+                        <span className="font-bold text-emerald-800 dark:text-emerald-100">{formatCurrency(calculations.initialROU)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-emerald-700 dark:text-emerald-200">Accumulated depreciation:</span>
-                        <span className="font-bold text-emerald-800 dark:text-emerald-100">
-                          {formatCurrency(calculations.totalDepreciation * 0.1)}
-                        </span>
+                        <span className="font-bold text-emerald-800 dark:text-emerald-100">{formatCurrency(accumulatedDepreciation)}</span>
                       </div>
                       <div className="border-t border-emerald-300 dark:border-emerald-400/30 pt-2">
                         <div className="flex justify-between">
                           <span className="text-emerald-800 dark:text-emerald-100 font-medium">Net carrying amount:</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {formatCurrency(calculations.initialROU - (calculations.totalDepreciation * 0.1))}
-                          </span>
+                          <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(Math.max(0, netROU))}</span>
                         </div>
                       </div>
                     </div>
@@ -571,27 +700,21 @@ export function DisclosureJournals() {
                       <div className="w-10 h-10 bg-purple-200 dark:bg-purple-500/30 rounded-lg flex items-center justify-center">
                         <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-300" />
                       </div>
-                      <h4 className="font-semibold text-purple-700 dark:text-purple-100">Annual P&L Impact</h4>
+                      <h4 className="font-semibold text-purple-700 dark:text-purple-100">Current Year P&L Impact ({currentYear})</h4>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
                         <span className="text-purple-700 dark:text-purple-200">Interest expense:</span>
-                        <span className="font-bold text-purple-800 dark:text-purple-100">
-                          {formatCurrency(calculations.totalInterest / (leaseData.NonCancellableYears || 1))}
-                        </span>
+                        <span className="font-bold text-purple-800 dark:text-purple-100">{formatCurrency(annualInterest)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-purple-700 dark:text-purple-200">Depreciation expense:</span>
-                        <span className="font-bold text-purple-800 dark:text-purple-100">
-                          {formatCurrency(calculations.totalDepreciation / (leaseData.NonCancellableYears || 1))}
-                        </span>
+                        <span className="font-bold text-purple-800 dark:text-purple-100">{formatCurrency(annualDepreciation)}</span>
                       </div>
                       <div className="border-t border-purple-300 dark:border-purple-400/30 pt-2">
                         <div className="flex justify-between">
-                          <span className="text-purple-800 dark:text-purple-100 font-medium">Total annual impact:</span>
-                          <span className="font-bold text-slate-900 dark:text-white">
-                            {formatCurrency((calculations.totalInterest + calculations.totalDepreciation) / (leaseData.NonCancellableYears || 1))}
-                          </span>
+                          <span className="text-purple-800 dark:text-purple-100 font-medium">Total P&L charge:</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(annualInterest + annualDepreciation)}</span>
                         </div>
                       </div>
                     </div>
@@ -620,7 +743,8 @@ export function DisclosureJournals() {
                   </div>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {activeTab === 'maturity' && (
               <div className="space-y-6">
