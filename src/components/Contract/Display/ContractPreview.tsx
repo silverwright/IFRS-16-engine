@@ -75,7 +75,7 @@ export function ContractPreview() {
 
       // Payment changes
       if (originalTerms.FixedPaymentPerPeriod !== modifiedTerms.FixedPaymentPerPeriod) {
-        const currency = leaseData.Currency || '₦';
+        const currency = leaseData.Currency || 'NGN';
         paymentChanges.push(
           `Fixed Payment: ${currency}${originalTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} → ${currency}${modifiedTerms.FixedPaymentPerPeriod?.toLocaleString() || 0} per period`
         );
@@ -126,7 +126,7 @@ export function ContractPreview() {
 
       // Initial direct costs changes
       if (originalTerms.InitialDirectCosts !== modifiedTerms.InitialDirectCosts) {
-        const currency = leaseData.Currency || '₦';
+        const currency = leaseData.Currency || 'NGN';
         financialChanges.push(
           `Initial Direct Costs: ${currency}${(originalTerms.InitialDirectCosts || 0).toLocaleString()} → ${currency}${(modifiedTerms.InitialDirectCosts || 0).toLocaleString()}`
         );
@@ -134,7 +134,7 @@ export function ContractPreview() {
 
       // Prepayments changes
       if (originalTerms.Prepayments !== modifiedTerms.Prepayments) {
-        const currency = leaseData.Currency || '₦';
+        const currency = leaseData.Currency || 'NGN';
         financialChanges.push(
           `Prepayments: ${currency}${(originalTerms.Prepayments || 0).toLocaleString()} → ${currency}${(modifiedTerms.Prepayments || 0).toLocaleString()}`
         );
@@ -142,7 +142,7 @@ export function ContractPreview() {
 
       // Lease incentives changes
       if (originalTerms.LeaseIncentives !== modifiedTerms.LeaseIncentives) {
-        const currency = leaseData.Currency || '₦';
+        const currency = leaseData.Currency || 'NGN';
         financialChanges.push(
           `Lease Incentives: ${currency}${(originalTerms.LeaseIncentives || 0).toLocaleString()} → ${currency}${(modifiedTerms.LeaseIncentives || 0).toLocaleString()}`
         );

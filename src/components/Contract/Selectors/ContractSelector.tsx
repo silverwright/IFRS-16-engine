@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useLeaseContext, SavedContract } from '../../../context/LeaseContext';
 import { FileText, Search, ChevronRight, Download, FileSpreadsheet } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -102,14 +102,14 @@ export function ContractSelector({ onSelect, showCalculateButton = true }: Contr
       head: [[
         'Contract ID',
         'Asset Description',
-        'Commencement Date',
+        'Commencement',
         'End Date',
-        'Lease Term (Years)',
-        'Initial Direct Cost',
-        'Initial Liability',
-        'Initial ROU',
-        'Total Interest',
-        'Total Depreciation'
+        'Term (Yrs)',
+        'IDC (NGN)',
+        'Init. Liability (NGN)',
+        'Init. ROU (NGN)',
+        'Total Interest (NGN)',
+        'Total Depreciation (NGN)'
       ]],
       body: data.map(item => [
         item.contractId,
@@ -123,8 +123,12 @@ export function ContractSelector({ onSelect, showCalculateButton = true }: Contr
         item.totalInterest.toLocaleString(),
         item.totalDepreciation.toLocaleString()
       ]),
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [22, 163, 74], textColor: 255 }
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [22, 163, 74], textColor: 255, fontSize: 7 },
+      columnStyles: {
+        5: { halign: 'right' }, 6: { halign: 'right' },
+        7: { halign: 'right' }, 8: { halign: 'right' }, 9: { halign: 'right' }
+      }
     });
 
     doc.save(`IFRS16_Contracts_${new Date().toISOString().split('T')[0]}.pdf`);

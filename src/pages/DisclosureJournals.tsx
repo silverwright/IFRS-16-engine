@@ -259,14 +259,22 @@ export function DisclosureJournals() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     addPdfHeader(doc, `Account Statement — ${selectedAccount}`);
 
-    // Summary row
-    doc.setFontSize(9);
-    doc.text(`Total Debits: ${currency} ${totalDr.toLocaleString()}`, 14, 28);
-    doc.text(`Total Credits: ${currency} ${totalCr.toLocaleString()}`, 80, 28);
-    doc.text(`Closing Balance: ${currency} ${Math.abs(closing).toLocaleString()}`, 146, 28);
+    // Summary boxes — separate rows so they don't overlap
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Total Debits', 14, 27);
+    doc.text('Total Credits', 74, 27);
+    doc.text('Closing Balance', 134, 27);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59);
+    doc.text(`${currency} ${totalDr.toLocaleString()}`, 14, 33);
+    doc.text(`${currency} ${totalCr.toLocaleString()}`, 74, 33);
+    doc.text(`${currency} ${Math.abs(closing).toLocaleString()}`, 134, 33);
+    doc.setFont('helvetica', 'normal');
 
     autoTable(doc, {
-      startY: 34,
+      startY: 40,
       head: [['Date', 'Description', `Debit (${currency})`, `Credit (${currency})`, 'Balance']],
       body: [
         ...rows.map(r => [
