@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip as ReTooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
 } from 'recharts';
 
 export function Dashboard() {
@@ -561,7 +561,7 @@ export function Dashboard() {
           {/* Skeleton section label */}
           <div className="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
           {/* Skeleton KPI cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
                 <div className="h-1 bg-slate-200 dark:bg-slate-700"></div>
@@ -606,108 +606,107 @@ export function Dashboard() {
         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Balance Sheet Snapshot</span>
       </div>
 
-      {/* KPI Cards — 3 per row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* KPI Cards — 6 in one row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Total ROU Assets */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-green-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total ROU Assets</span>
-              <div className="w-8 h-8 bg-green-50 dark:bg-green-500/10 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-green-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Total ROU Assets</span>
+              <div className="w-6 h-6 bg-green-50 dark:bg-green-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-3 h-3 text-green-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {aggregatedData.totalROU > 0 ? fmt(aggregatedData.totalROU) : '—'}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} contracts calculated</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 truncate">{aggregatedData.validContracts.length} contracts</p>
           </div>
         </div>
 
         {/* Total Liabilities */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-blue-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Lease Liability</span>
-              <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-blue-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Lease Liability</span>
+              <div className="w-6 h-6 bg-blue-50 dark:bg-blue-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-3 h-3 text-blue-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {aggregatedData.totalLiability > 0 ? fmt(aggregatedData.totalLiability) : '—'}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} contracts calculated</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 truncate">{aggregatedData.validContracts.length} contracts</p>
           </div>
         </div>
 
         {/* Total Interest Cost */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-red-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Interest Cost</span>
-              <div className="w-8 h-8 bg-red-50 dark:bg-red-500/10 rounded-lg flex items-center justify-center">
-                <TrendingDown className="w-4 h-4 text-red-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Total Interest</span>
+              <div className="w-6 h-6 bg-red-50 dark:bg-red-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <TrendingDown className="w-3 h-3 text-red-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {aggregatedData.totalInterest > 0 ? fmt(aggregatedData.totalInterest) : '—'}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Over full lease term</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 truncate">Over full term</p>
           </div>
         </div>
 
         {/* Monthly Depreciation */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-orange-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Monthly Depreciation</span>
-              <div className="w-8 h-8 bg-orange-50 dark:bg-orange-500/10 rounded-lg flex items-center justify-center">
-                <Activity className="w-4 h-4 text-orange-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Monthly Depn.</span>
+              <div className="w-6 h-6 bg-orange-50 dark:bg-orange-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <Activity className="w-3 h-3 text-orange-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {aggregatedData.totalMonthlyDepreciation > 0 ? fmt(aggregatedData.totalMonthlyDepreciation) : '—'}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Portfolio total per month</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 truncate">Per month</p>
           </div>
         </div>
 
         {/* Monthly Interest */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-purple-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Monthly Interest</span>
-              <div className="w-8 h-8 bg-purple-50 dark:bg-purple-500/10 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-purple-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Monthly Interest</span>
+              <div className="w-6 h-6 bg-purple-50 dark:bg-purple-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-3 h-3 text-purple-500" />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {aggregatedData.totalMonthlyInterest > 0 ? fmt(aggregatedData.totalMonthlyInterest) : '—'}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Portfolio total per month</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1 truncate">Per month</p>
           </div>
         </div>
 
         {/* Contracts */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
           <div className="h-1 bg-amber-500"></div>
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Contracts</span>
-              <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center">
-                <FileText className="w-4 h-4 text-amber-500" />
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-tight">Total Contracts</span>
+              <div className="w-6 h-6 bg-amber-50 dark:bg-amber-500/10 rounded-md flex items-center justify-center flex-shrink-0">
+                <FileText className="w-3 h-3 text-amber-500" />
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               {aggregatedData.totalContracts}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-              {aggregatedData.validContracts.length} with full calculations ·{' '}
               {upcomingMaturities.filter(m => m.daysToMaturity > 0 && m.daysToMaturity <= 180).length} expiring in 6 months
             </p>
           </div>
@@ -734,8 +733,8 @@ export function Dashboard() {
           ) : (
             <div className="flex items-center gap-4">
               {/* Donut */}
-              <div className="flex-shrink-0">
-                <ResponsiveContainer width={180} height={180}>
+              <div className="flex-shrink-0 ml-14">
+                <ResponsiveContainer width={280} height={280}>
                   <PieChart>
                     <Pie
                       data={portfolioData}
@@ -743,8 +742,8 @@ export function Dashboard() {
                       nameKey="category"
                       cx="50%"
                       cy="50%"
-                      innerRadius={52}
-                      outerRadius={82}
+                      innerRadius={78}
+                      outerRadius={126}
                       strokeWidth={2}
                       stroke="transparent"
                     >
@@ -753,7 +752,7 @@ export function Dashboard() {
                       ))}
                     </Pie>
                     <ReTooltip
-                      formatter={(value) => [fmt(Number(value)), 'Liability']}
+                      formatter={(value, name) => [fmt(Number(value)), name]}
                       contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
                     />
                   </PieChart>
@@ -769,8 +768,8 @@ export function Dashboard() {
                       <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{item.category}</span>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">{fmt(item.value)}</div>
-                      <div className="text-xs text-slate-500">{item.percentage}%</div>
+                      <div className="text-xs font-semibold" style={{ color: item.hex }}>{fmt(item.value)}</div>
+                      <div className="text-xs" style={{ color: item.hex }}>{item.percentage}%</div>
                     </div>
                   </div>
                 ))}
@@ -788,7 +787,7 @@ export function Dashboard() {
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">Closing balances per year across all contracts</p>
 
           <div className="overflow-x-auto">
-            <div className="overflow-y-auto max-h-[660px]">
+            <div className="overflow-y-auto max-h-[264px]">
               <table className="w-full">
                 <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
                   <tr className="border-b border-slate-300 dark:border-slate-700">
@@ -842,7 +841,7 @@ export function Dashboard() {
           <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-12">No trend data available</p>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart
+            <AreaChart
               data={yearlyTrends.map(t => ({
                 year: t.year,
                 'Liability': +(t.liability / 1_000_000).toFixed(2),
@@ -850,21 +849,33 @@ export function Dashboard() {
                 'Depreciation': +(t.depreciation / 1_000_000).toFixed(2),
               }))}
               margin={{ top: 8, right: 16, left: 8, bottom: 4 }}
-              barGap={3}
-              barCategoryGap="28%"
             >
+              <defs>
+                <linearGradient id="gradLiability" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradROU" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradDep" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fb923c" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#fb923c" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}M`} width={52} />
               <ReTooltip
-                formatter={(value) => [`NGN ${Number(value).toLocaleString()}M`, '']}
+                formatter={(value, name) => [`NGN ${Number(value).toLocaleString()}M`, name]}
                 contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', backgroundColor: '#fff' }}
                 labelStyle={{ fontWeight: 600, color: '#1e293b', marginBottom: 4 }}
               />
-              <Bar dataKey="Liability" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="ROU Asset" fill="#10b981" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Depreciation" fill="#fb923c" radius={[3, 3, 0, 0]} />
-            </BarChart>
+              <Area type="monotone" dataKey="Liability" stroke="#3b82f6" strokeWidth={2} fill="url(#gradLiability)" dot={{ r: 3, fill: '#3b82f6' }} activeDot={{ r: 5 }} />
+              <Area type="monotone" dataKey="ROU Asset" stroke="#10b981" strokeWidth={2} fill="url(#gradROU)" dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
+              <Area type="monotone" dataKey="Depreciation" stroke="#fb923c" strokeWidth={2} fill="url(#gradDep)" dot={{ r: 3, fill: '#fb923c' }} activeDot={{ r: 5 }} />
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
@@ -952,8 +963,9 @@ export function Dashboard() {
         </div>
 
         <div className="overflow-x-auto">
+          <div className="overflow-y-auto max-h-[440px]">
           <table className="w-full">
-            <thead>
+            <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
               <tr className="border-b border-slate-300 dark:border-slate-700">
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">CONTRACT ID</th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">ASSET CLASS</th>
@@ -997,6 +1009,7 @@ export function Dashboard() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
@@ -1076,8 +1089,9 @@ export function Dashboard() {
           return (
             <>
               <div className="overflow-x-auto">
+                <div className="overflow-y-auto max-h-[440px]">
                 <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700/50">
-                  <thead className="bg-slate-50 dark:bg-slate-700/30">
+                  <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800 z-10">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Date</th>
                       <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Contract ID</th>
@@ -1108,6 +1122,7 @@ export function Dashboard() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
               <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700/50 text-xs text-slate-500 dark:text-slate-400">
                 Showing {filtered.length} of {consolidatedJournal.length} total entries across {aggregatedData.validContracts.length} contracts
