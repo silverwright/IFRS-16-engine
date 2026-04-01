@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../components/UI/ToastContext';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { useSearchParams } from 'react-router-dom';
 import { useContracts } from '../hooks/useContracts';
@@ -29,6 +30,7 @@ export function ContractInitiation() {
   const { state, dispatch } = useLeaseContext();
   const { saveContract, updateContract, modifyContract } = useContracts();
   const { user } = useAuth();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [modeSelected, setModeSelected] = useState(true); // Always true - FULL mode only
@@ -136,7 +138,7 @@ export function ContractInitiation() {
       if (!state.leaseData.PaymentFrequency) missingFields.push('Payment Frequency');
 
       if (missingFields.length > 0) {
-        alert(`Please fill in the following required fields before saving:\n\n• ${missingFields.join('\n• ')}`);
+        toast.error('Missing required fields', missingFields.join(', '));
         return;
       }
 
@@ -170,11 +172,11 @@ export function ContractInitiation() {
 
       if (isExistingDbContract) {
         await updateContract(editingContract.id, contractData);
-        alert('Contract updated successfully!');
+        toast.success('Contract updated successfully!');
       } else {
         // Treat as new contract (either no editingContract, or imported contract)
         await saveContract(contractData);
-        alert('Contract saved successfully!');
+        toast.success('Contract saved successfully!');
       }
 
       // Reset form after successful save
@@ -183,7 +185,7 @@ export function ContractInitiation() {
       setModeSelected(false);
       setActiveTab('list');
     } catch (error) {
-      alert(`Failed to save contract. Please try again.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error('Failed to save contract', error instanceof Error ? error.message : 'Unknown error');
       console.error('Save error:', error);
     }
   };
@@ -243,13 +245,13 @@ export function ContractInitiation() {
       );
 
       const typeLabel = modificationType === 'amendment' ? 'amendment' : 'termination and new lease';
-      alert(`Contract ${typeLabel} submitted successfully! A new version has been created.`);
+      toast.success(`Contract ${typeLabel} submitted`, 'A new version has been created.');
 
       setShowModifyModal(false);
       setSelectedContractForModification(null);
     } catch (error) {
       console.error('Error modifying contract:', error);
-      alert(`Failed to modify contract. Please try again.\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error('Failed to modify contract', error instanceof Error ? error.message : 'Unknown error');
     }
   };
 

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useToast } from '../../UI/ToastContext';
 import { useLeaseContext } from '../../../context/LeaseContext';
 import { Button } from '../../UI/Button';
 import { Download, FileText, Eye, ArrowLeft } from 'lucide-react';
@@ -12,6 +13,7 @@ export function ContractPreview() {
   const { state, dispatch } = useLeaseContext();
   const { leaseData, mode, contractHtml } = state;
   const [showModal, setShowModal] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     // Generate contract HTML when component mounts
@@ -548,7 +550,7 @@ export function ContractPreview() {
 
   const handleSendContract = () => {
     // TODO: Implement email sending functionality
-    alert('Contract will be sent via email');
+    toast.info('Coming soon', 'Email sending is not yet implemented.');
     setShowModal(false);
   };
 

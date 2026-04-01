@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useToast } from '../components/UI/ToastContext';
 import { useLeaseContext, SavedContract } from '../context/LeaseContext';
 import { FileText, Download, Calendar, DollarSign, BarChart3, AlertCircle, ArrowLeft, FileSpreadsheet } from 'lucide-react';
 import { Button } from '../components/UI/Button';
@@ -11,6 +12,7 @@ import * as XLSX from 'xlsx';
 export function DisclosureJournals() {
   const { state, dispatch } = useLeaseContext();
   const { calculations, leaseData } = state;
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('journals');
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('all');
@@ -198,6 +200,7 @@ export function DisclosureJournals() {
     XLSX.utils.book_append_sheet(wb, ws4, 'Amortization Schedule');
 
     XLSX.writeFile(wb, filename('Full_Disclosure', 'xlsx'));
+    toast.success('Excel exported', 'Full disclosure package downloaded successfully.');
   };
 
   const addPdfHeader = (doc: jsPDF, title: string) => {
@@ -237,6 +240,7 @@ export function DisclosureJournals() {
     });
 
     doc.save(filename(`Journal_${selectedYear !== 'all' ? selectedYear : 'All'}`, 'pdf'));
+    toast.success('PDF exported', 'Journal entries downloaded successfully.');
   };
 
   const exportJournalExcel = () => {
@@ -252,6 +256,7 @@ export function DisclosureJournals() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Journal Entries');
     XLSX.writeFile(wb, filename(`Journal_${selectedYear !== 'all' ? selectedYear : 'All'}`, 'xlsx'));
+    toast.success('Excel exported', 'Journal entries downloaded successfully.');
   };
 
   const exportAccountPDF = () => {
@@ -292,6 +297,7 @@ export function DisclosureJournals() {
     });
 
     doc.save(filename(`AccountStatement_${selectedAccount.replace(/\s+/g, '_')}`, 'pdf'));
+    toast.success('PDF exported', 'Account statement downloaded successfully.');
   };
 
   const exportAccountExcel = () => {
@@ -322,6 +328,7 @@ export function DisclosureJournals() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Account Statement');
     XLSX.writeFile(wb, filename(`AccountStatement_${selectedAccount.replace(/\s+/g, '_')}`, 'xlsx'));
+    toast.success('Excel exported', 'Account statement downloaded successfully.');
   };
 
   return (

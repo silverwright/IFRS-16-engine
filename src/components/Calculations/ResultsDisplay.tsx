@@ -99,6 +99,7 @@ import AmendmentNotice from '../Contract/Display/AmendmentNotice';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { useToast } from '../UI/ToastContext';
 
 /* ============================================================================
  * COMPONENT
@@ -117,6 +118,7 @@ export function ResultsDisplay() {
   const navigate = useNavigate();
   const { state, dispatch } = useLeaseContext();
   const { calculations, leaseData } = state;
+  const toast = useToast();
 
   // UI State
   const [activeTab, setActiveTab] = useState('summary');
@@ -238,7 +240,7 @@ export function ResultsDisplay() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Failed to load version:', error);
-      alert('Failed to load the selected version. Please try again.');
+      toast.error('Failed to load version', 'Please try again.');
     } finally {
       setRecalculating(false);
     }
@@ -294,11 +296,11 @@ export function ResultsDisplay() {
       const versionList = await contractsApi.getVersions(baseContractId);
       setVersions(versionList);
 
-      alert(`Version ${currentVersion + 1} created successfully!`);
+      toast.success(`Version ${currentVersion + 1} created`, 'Contract modification saved successfully.');
     } catch (error) {
       console.error('Failed to create modification:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to create contract modification' });
-      alert('Failed to create modification. Please try again.');
+      toast.error('Failed to create modification', 'Please try again.');
     } finally {
       setRecalculating(false);
       dispatch({ type: 'SET_LOADING', payload: false });

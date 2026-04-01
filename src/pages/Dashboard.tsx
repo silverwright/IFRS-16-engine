@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useToast } from '../components/UI/ToastContext';
 import { useLeaseContext } from '../context/LeaseContext';
 import { calculateIFRS16 } from '../utils/ifrs16Calculator';
 import jsPDF from 'jspdf';
@@ -6,7 +7,6 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import {
   FileText,
-  Calculator,
   DollarSign,
   Calendar,
   TrendingUp,
@@ -14,9 +14,6 @@ import {
   AlertCircle,
   BarChart3,
   Activity,
-  Building,
-  Car,
-  Wrench,
   Download,
   FileSpreadsheet
 } from 'lucide-react';
@@ -24,6 +21,7 @@ import {
 export function Dashboard() {
   const { state } = useLeaseContext();
   const { savedContracts } = state;
+  const toast = useToast();
   const [journalYear, setJournalYear] = useState<string>('all');
   const [journalContract, setJournalContract] = useState<string>('all');
   const [journalAccount, setJournalAccount] = useState<string>('all');
@@ -61,6 +59,7 @@ export function Dashboard() {
     });
 
     doc.save(`Consolidated_Journal_${journalYear !== 'all' ? journalYear : 'All'}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF exported', 'Consolidated journal downloaded successfully.');
   };
 
   const exportJournalExcel = () => {
@@ -78,6 +77,7 @@ export function Dashboard() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Consolidated Journal');
     XLSX.writeFile(wb, `Consolidated_Journal_${journalYear !== 'all' ? journalYear : 'All'}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Excel exported', 'Consolidated journal downloaded successfully.');
   };
 
   const emptyAggregated = {
@@ -187,7 +187,8 @@ export function Dashboard() {
       if (!commenceDate) continue;
 
       const frequency = d.PaymentFrequency || 'Monthly';
-      const periodsPerYear = { Monthly: 12, Quarterly: 4, Semiannual: 2, Annual: 1 }[frequency] || 12;
+      const freqMap: Record<string, number> = { Monthly: 12, Quarterly: 4, Semiannual: 2, Annual: 1 };
+      const periodsPerYear = freqMap[frequency] || 12;
       const monthsPerPeriod = Math.round(12 / periodsPerYear);
       const schedule = results.amortizationSchedule;
       const depPerPeriod = schedule.length > 0 ? results.totalDepreciation / schedule.length : 0;
@@ -398,6 +399,7 @@ export function Dashboard() {
     });
 
     doc.save(`Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF exported', 'Dashboard report downloaded successfully.');
   };
 
   const exportDashboardExcel = () => {
@@ -468,6 +470,7 @@ export function Dashboard() {
     XLSX.utils.book_append_sheet(wb, wsJournal, 'Journal Entries');
 
     XLSX.writeFile(wb, `Dashboard_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Excel exported', 'Dashboard report downloaded successfully.');
   };
 
   const fmt = (value: number) => {
@@ -489,9 +492,11 @@ export function Dashboard() {
             <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              {isCalculating ? 'Calculating portfolio data…' : 'Overview of your IFRS 16 lease portfolio'}
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Portfolio Dashboard</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">
+              {isCalculating
+                ? 'Calculating portfolio data…'
+                : `IFRS 16 lease portfolio · As at ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`}
             </p>
           </div>
         </div>
@@ -513,89 +518,191 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      {/* Empty state when no contracts exist */}
+      {savedContracts.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-24 text-center bg-white dark:bg-slate-800/50 rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl">
+          <div className="w-20 h-20 bg-blue-50 dark:bg-blue-500/10 rounded-full flex items-center justify-center mb-5">
+            <BarChart3 className="w-10 h-10 text-blue-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Your portfolio is empty</h3>
+          <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-8 text-sm">
+            Add your first lease contract to start seeing portfolio metrics, trends, and IFRS 16 calculations here.
+          </p>
+          <a
+            href="#/contract"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold shadow-md"
+          >
+            <FileText className="w-4 h-4" />
+            Add your first contract
+          </a>
+        </div>
+      )}
+
+      {savedContracts.length > 0 && <>
+
+      {/* Skeleton loading state */}
+      {isCalculating && (
+        <div className="space-y-6 animate-pulse">
+          {/* Skeleton section label */}
+          <div className="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+          {/* Skeleton KPI cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+                <div className="h-1 bg-slate-200 dark:bg-slate-700"></div>
+                <div className="p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="h-3 w-28 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                  </div>
+                  <div className="h-7 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div className="h-2.5 w-36 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Skeleton section label */}
+          <div className="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+          {/* Skeleton 2-col grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-300 dark:border-slate-700/50 p-6 shadow-xl space-y-4">
+                <div className="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <div key={j} className="space-y-2">
+                    <div className="flex justify-between">
+                      <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                    <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isCalculating && <>
+
+      {/* Section label */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Balance Sheet Snapshot</span>
+      </div>
+
+      {/* KPI Cards — 3 per row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total ROU Assets */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Total ROU Assets</span>
-            <TrendingUp className="w-4 h-4 text-green-500" />
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-green-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total ROU Assets</span>
+              <div className="w-8 h-8 bg-green-50 dark:bg-green-500/10 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalROU > 0 ? fmt(aggregatedData.totalROU) : '—'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} contracts calculated</p>
           </div>
-          <div className="text-2xl font-bold text-green-500">
-            {aggregatedData.totalROU > 0 ? fmt(aggregatedData.totalROU) : '₦0'}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} calculated</p>
         </div>
 
         {/* Total Liabilities */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Total Liabilities</span>
-            <DollarSign className="w-4 h-4 text-blue-500" />
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-blue-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Lease Liability</span>
+              <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-blue-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalLiability > 0 ? fmt(aggregatedData.totalLiability) : '—'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} contracts calculated</p>
           </div>
-          <div className="text-2xl font-bold text-blue-500">
-            {aggregatedData.totalLiability > 0 ? fmt(aggregatedData.totalLiability) : '₦0'}
+        </div>
+
+        {/* Total Interest Cost */}
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-red-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Interest Cost</span>
+              <div className="w-8 h-8 bg-red-50 dark:bg-red-500/10 rounded-lg flex items-center justify-center">
+                <TrendingDown className="w-4 h-4 text-red-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalInterest > 0 ? fmt(aggregatedData.totalInterest) : '—'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Over full lease term</p>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} calculated</p>
         </div>
 
         {/* Monthly Depreciation */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Monthly Depreciation</span>
-            <Activity className="w-4 h-4 text-orange-500" />
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-orange-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Monthly Depreciation</span>
+              <div className="w-8 h-8 bg-orange-50 dark:bg-orange-500/10 rounded-lg flex items-center justify-center">
+                <Activity className="w-4 h-4 text-orange-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalMonthlyDepreciation > 0 ? fmt(aggregatedData.totalMonthlyDepreciation) : '—'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Portfolio total per month</p>
           </div>
-          <div className="text-2xl font-bold text-orange-500">
-            {aggregatedData.totalMonthlyDepreciation > 0 ? fmt(aggregatedData.totalMonthlyDepreciation) : '₦0'}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Total per month across portfolio</p>
         </div>
 
         {/* Monthly Interest */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Monthly Interest</span>
-            <DollarSign className="w-4 h-4 text-red-500" />
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-purple-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Monthly Interest</span>
+              <div className="w-8 h-8 bg-purple-50 dark:bg-purple-500/10 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-purple-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalMonthlyInterest > 0 ? fmt(aggregatedData.totalMonthlyInterest) : '—'}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Portfolio total per month</p>
           </div>
-          <div className="text-2xl font-bold text-red-500">
-            {aggregatedData.totalMonthlyInterest > 0 ? fmt(aggregatedData.totalMonthlyInterest) : '₦0'}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Total per month across portfolio</p>
         </div>
 
-        {/* Active Contracts */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Total Contracts</span>
-            <FileText className="w-4 h-4 text-purple-500" />
+        {/* Contracts */}
+        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 shadow-xl overflow-hidden">
+          <div className="h-1 bg-amber-500"></div>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Contracts</span>
+              <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 rounded-lg flex items-center justify-center">
+                <FileText className="w-4 h-4 text-amber-500" />
+              </div>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              {aggregatedData.totalContracts}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+              {aggregatedData.validContracts.length} with full calculations ·{' '}
+              {upcomingMaturities.filter(m => m.daysToMaturity > 0 && m.daysToMaturity <= 180).length} expiring in 6 months
+            </p>
           </div>
-          <div className="text-2xl font-bold text-purple-500">
-            {aggregatedData.totalContracts}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{aggregatedData.validContracts.length} with calculations</p>
         </div>
+      </div>
 
-        {/* Expiring Soon */}
-        <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-4 shadow-xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">Expiring Soon</span>
-            <Calendar className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-2xl font-bold text-amber-500">
-            {aggregatedData.validContracts.filter(vc => {
-              const d = vc.contract.data;
-              const commence = new Date(d.CommencementDate || '');
-              const totalYears = (Number(d.NonCancellableYears) || 0)
-                + (Number(d.RenewalYears) || 0)
-                - (Number(d.TerminationYears) || 0);
-              const endDate = new Date(commence);
-              endDate.setFullYear(endDate.getFullYear() + totalYears);
-              const monthsToExpiry = (endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30);
-              return monthsToExpiry <= 6 && monthsToExpiry > 0;
-            }).length}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">Next 6 months</p>
-        </div>
+      {/* Section label */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Portfolio Breakdown</span>
       </div>
 
       {/* Main Content Grid */}
@@ -675,6 +782,12 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Section label */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Portfolio Health</span>
+      </div>
+
       {/* Additional Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Expiring Within 12 Months */}
@@ -737,6 +850,12 @@ export function Dashboard() {
         </div>
       </div>
 
+
+      {/* Section label */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 bg-slate-400 rounded-full"></div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contract Maturities</span>
+      </div>
 
       {/* Upcoming Contract Maturities */}
       <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-6 shadow-xl">
@@ -911,6 +1030,9 @@ export function Dashboard() {
         })()}
       </div>
 
-      </div>
+      </>}
+
+      </>}
+    </div>
   );
 }

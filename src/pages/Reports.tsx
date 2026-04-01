@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useToast } from '../components/UI/ToastContext';
 import { useLeaseContext } from '../context/LeaseContext';
 import { calculateIFRS16 } from '../utils/ifrs16Calculator';
 import jsPDF from 'jspdf';
@@ -107,6 +108,7 @@ function buildDisclosureData(contracts: any[], year: number) {
 export function Reports() {
   const { state } = useLeaseContext();
   const { savedContracts } = state;
+  const toast = useToast();
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
@@ -185,6 +187,7 @@ export function Reports() {
     ], y);
 
     doc.save(`IFRS16_Disclosure_Note_${selectedYear}.pdf`);
+    toast.success('PDF exported', 'Disclosure note downloaded successfully.');
   };
 
   const exportExcel = () => {
@@ -230,6 +233,7 @@ export function Reports() {
     const ws = XLSX.utils.aoa_to_sheet(rows);
     XLSX.utils.book_append_sheet(wb, ws, 'Disclosure Note');
     XLSX.writeFile(wb, `IFRS16_Disclosure_Note_${selectedYear}.xlsx`);
+    toast.success('Excel exported', 'Disclosure note downloaded successfully.');
   };
 
   const ThCell = ({ children }: { children: React.ReactNode }) => (
@@ -310,10 +314,20 @@ export function Reports() {
       </div>
 
       {savedContracts.length === 0 ? (
-        <div className="bg-white dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/10 p-12 text-center shadow-xl">
-          <BarChart3 className="w-12 h-12 mx-auto text-slate-400 mb-3" />
-          <p className="text-slate-600 dark:text-slate-400 font-medium">No contracts available</p>
-          <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">Create contracts first to generate disclosure notes</p>
+        <div className="bg-white dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/10 p-16 shadow-xl flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
+            <BarChart3 className="w-8 h-8 text-emerald-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No disclosure data yet</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+            The IFRS 16 disclosure note will appear here once you have saved contracts with all required fields.
+          </p>
+          <a
+            href="#/contract"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md"
+          >
+            Create a contract
+          </a>
         </div>
       ) : (
         <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-white/10 shadow-xl overflow-hidden">

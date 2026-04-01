@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useContracts } from '../hooks/useContracts';
 import { SavedContract } from '../context/LeaseContext';
@@ -6,9 +6,11 @@ import { StatusBadge } from '../components/Contract/Display/StatusBadge';
 import { approvalApi } from '../api/approvalApi';
 import { CheckCircle, XCircle, Clock, Eye, Calendar, Building, User, FileText } from 'lucide-react';
 import { Button } from '../components/UI/Button';
+import { useToast } from '../components/UI/ToastContext';
 
 export function ApprovalDashboard() {
   const { user, userProfile, hasRole } = useAuth();
+  const toast = useToast();
   const { contracts, loadContracts } = useContracts();
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -48,25 +50,25 @@ export function ApprovalDashboard() {
 
   const handleStartReview = async (contract: SavedContract) => {
     if (!user?.id) {
-      alert('You must be logged in to start a review');
+      toast.error('Not logged in', 'You must be logged in to start a review');
       return;
     }
 
     if (contract.status !== 'pending') {
-      alert('Only pending contracts can be moved to review');
+      toast.warning('Cannot start review', 'Only pending contracts can be moved to review');
       return;
     }
 
     if (confirm(`Start reviewing contract ${contract.contractId}?`)) {
       try {
         await approvalApi.startReview(contract.id, user.id);
-        alert('Contract moved to under review!');
+        toast.success('Contract under review', 'Status updated to under review.');
 
         // Reload contracts to get updated status
         await loadContracts();
       } catch (error: any) {
         console.error('Error starting review:', error);
-        alert(error.response?.data?.error || 'Failed to start review');
+        toast.error('Failed to start review', error.response?.data?.error);
       }
     }
   };
@@ -75,7 +77,7 @@ export function ApprovalDashboard() {
     if (!selectedContract || !action || !user || !userProfile) return;
 
     if (action === 'reject' && !notes.trim()) {
-      alert('Please provide a reason for rejection');
+      toast.warning('Reason required', 'Please provide a reason for rejection');
       return;
     }
 
@@ -90,7 +92,7 @@ export function ApprovalDashboard() {
           `${userProfile.first_name} ${userProfile.last_name}` || userProfile.email,
           notes
         );
-        alert('Contract approved successfully!');
+        toast.success('Contract approved');
       } else {
         await approvalApi.rejectContract(
           selectedContract.id,
@@ -99,7 +101,7 @@ export function ApprovalDashboard() {
           `${userProfile.first_name} ${userProfile.last_name}` || userProfile.email,
           notes
         );
-        alert('Contract rejected successfully!');
+        toast.success('Contract rejected');
       }
 
       // Reload contracts
@@ -110,7 +112,7 @@ export function ApprovalDashboard() {
       setNotes('');
     } catch (error: any) {
       console.error('Error processing approval:', error);
-      alert(error.response?.data?.error || 'Failed to process approval');
+      toast.error('Failed to process approval', error.response?.data?.error);
     } finally {
       setProcessing(false);
     }

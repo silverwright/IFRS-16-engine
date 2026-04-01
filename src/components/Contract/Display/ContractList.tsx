@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useToast } from '../../UI/ToastContext';
 import { useLeaseContext, SavedContract } from '../../../context/LeaseContext';
 import { Button } from '../../UI/Button';
 import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, Code, Send, GitBranch, Download, Search, ChevronDown } from 'lucide-react';
@@ -18,6 +19,7 @@ interface ContractListProps {
 export function ContractList({ onEditContract, onNewContract, onModifyContract }: ContractListProps) {
   const { state, dispatch } = useLeaseContext();
   const { savedContracts } = state;
+  const toast = useToast();
   const { user } = useAuth();
   const { loadContracts } = useContracts();
   const [selectedContract, setSelectedContract] = useState<SavedContract | null>(null);
@@ -63,12 +65,12 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
 
   const handleSubmitForApproval = async (contract: SavedContract) => {
     if (!user?.id) {
-      alert('You must be logged in to submit a contract for approval');
+      toast.error('Not logged in', 'You must be logged in to submit a contract for approval');
       return;
     }
 
     if (contract.status !== 'draft') {
-      alert('Only draft contracts can be submitted for approval');
+      toast.warning('Cannot submit', 'Only draft contracts can be submitted for approval');
       return;
     }
 
@@ -80,10 +82,10 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
         // Reload contracts to get updated status
         await loadContracts();
 
-        alert('Contract submitted for approval successfully!');
+        toast.success('Submitted for approval', 'Contract is now pending review.');
       } catch (error: any) {
         console.error('Error submitting contract:', error);
-        alert(error.response?.data?.error || 'Failed to submit contract for approval');
+        toast.error('Submission failed', error.response?.data?.error || 'Failed to submit contract for approval');
       } finally {
         setSubmitting(null);
       }
@@ -584,7 +586,7 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
       pdf.save(`LeaseContract_${contract.mode.toLowerCase()}_${contract.contractId}.pdf`);
     } catch (error) {
       console.error('Error generating contract PDF:', error);
-      alert('Failed to generate contract PDF. Please check the contract data.');
+      toast.error('PDF generation failed', 'Please check the contract data.');
     }
   };
 
@@ -662,11 +664,17 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
       )}
 
       {savedContracts.length === 0 ? (
-        <div className="text-center py-12 bg-slate-100 dark:bg-slate-700/40 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-600/50">
-          <FileText className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
-          <h4 className="text-lg font-medium text-slate-900 dark:text-white mb-2">No contracts saved yet</h4>
-          <p className="text-slate-600 dark:text-slate-300 mb-4">Create your first lease contract to get started</p>
-          <Button onClick={onNewContract}>Create New Contract</Button>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mb-5">
+            <FileText className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
+          </div>
+          <h4 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No contracts yet</h4>
+          <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-8 text-sm">
+            Start building your IFRS 16 lease portfolio by creating your first contract.
+          </p>
+          <Button onClick={onNewContract} className="px-6 py-2.5 text-sm font-semibold">
+            + Create your first contract
+          </Button>
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-600/50 overflow-hidden shadow-lg">
@@ -935,7 +943,7 @@ export function ContractList({ onEditContract, onNewContract, onModifyContract }
                 <Button
                   onClick={() => {
                     navigator.clipboard.writeText(JSON.stringify(dataToShow, null, 2));
-                    alert('Data copied to clipboard!');
+                    toast.info('Copied to clipboard');
                   }}
                   className="flex items-center gap-2"
                 >

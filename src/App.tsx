@@ -17,6 +17,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import { LoginModal } from "./components/Auth/LoginModal";
 import { useAuth } from "./context/AuthContext";
+import { ToastProvider } from "./components/UI/ToastContext";
 
 // Component to handle LoginModal globally
 function AppContent() {
@@ -87,7 +88,9 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <LeaseProvider>
-          <AppContent />
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
         </LeaseProvider>
       </AuthProvider>
     </ThemeProvider>
