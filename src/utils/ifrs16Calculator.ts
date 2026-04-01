@@ -678,22 +678,92 @@ function generateJournalEntries(
   const currency = leaseData.Currency || 'NGN';
   const monthsPerPeriod = Math.round(12 / getPeriodsPerYear(leaseData.PaymentFrequency || 'Monthly'));
 
+  const idc = leaseData.InitialDirectCosts || 0;
+  const prepayments = leaseData.PrepaymentsBeforeCommencement || 0;
+  const incentives = leaseData.LeaseIncentivesReceived || 0;
+
+  // Derive a date one day before commencement for pre-commencement entries
+  const preDateObj = new Date(commenceDate);
+  preDateObj.setDate(preDateObj.getDate() - 1);
+  const preDate = preDateObj.toISOString().split('T')[0];
+
   /* ==========================================================================
-   * JOURNAL ENTRY 1: Initial Recognition at Commencement Date
-   *
-   * Dr. Right-of-use asset          XXX
-   *     Cr. Lease liability              XXX
-   *
-   * This recognizes the ROU asset and lease liability at commencement.
+   * PRE-COMMENCEMENT ENTRIES (only when values are non-zero)
    * ========================================================================== */
+
+  // If prepayment was made before commencement:
+  // Dr. Prepaid lease expense   XXX
+  //   Cr. Cash                      XXX
+  if (prepayments > 0) {
+    entries.push(
+      {
+        date: preDate,
+        account: 'Prepaid lease expense',
+        dr: prepayments,
+        cr: 0,
+        memo: 'Prepayment made before lease commencement',
+        currency
+      },
+      {
+        date: preDate,
+        account: 'Cash',
+        dr: 0,
+        cr: prepayments,
+        memo: 'Cash paid for lease prepayment',
+        currency
+      }
+    );
+  }
+
+  // If initial direct costs were incurred:
+  // Dr. Right-of-use asset (IDC)   XXX
+  //   Cr. Cash / Accrued expenses      XXX
+  if (idc > 0) {
+    entries.push(
+      {
+        date: preDate,
+        account: 'Right-of-use asset',
+        dr: idc,
+        cr: 0,
+        memo: 'Initial direct costs capitalised into ROU asset',
+        currency
+      },
+      {
+        date: preDate,
+        account: 'Cash',
+        dr: 0,
+        cr: idc,
+        memo: 'Cash paid for initial direct costs',
+        currency
+      }
+    );
+  }
+
+  /* ==========================================================================
+   * JOURNAL ENTRY: Initial Recognition at Commencement Date
+   *
+   * Dr. Right-of-use asset          [liability + prepayment - incentives]
+   *     Cr. Lease liability              [PV of payments]
+   *     Cr. Prepaid lease expense        [reclassified if prepayment exists]
+   *
+   * If lease incentive received:
+   * Dr. Cash / Incentive receivable  XXX
+   *     Cr. Right-of-use asset           XXX  (reduces carrying amount)
+   * ========================================================================== */
+
+  // Core recognition: ROU asset vs lease liability
+  // ROU at commencement = liability + prepayments (reclassified) - incentives
+  // IDC already pushed above as a separate entry
+  const rouAtCommencement = liability + prepayments - incentives;
+
   entries.push(
     {
       date: commenceDate,
       account: 'Right-of-use asset',
-      dr: rou,
+      dr: rouAtCommencement,
       cr: 0,
-      memo: 'Initial recognition of ROU asset',
-      currency: currency
+      memo: 'Initial recognition of ROU asset at commencement',
+      currency
     },
     {
       date: commenceDate,
@@ -701,9 +771,45 @@ function generateJournalEntries(
       dr: 0,
       cr: liability,
       memo: 'Initial recognition of lease liability',
-      currency: currency
+      currency
     }
   );
+
+  // Reclassify prepayment from Prepaid lease into ROU asset
+  if (prepayments > 0) {
+    entries.push(
+      {
+        date: commenceDate,
+        account: 'Prepaid lease expense',
+        dr: 0,
+        cr: prepayments,
+        memo: 'Reclassify prepayment into ROU asset at commencement',
+        currency
+      }
+    );
+  }
+
+  // Lease incentive received reduces ROU asset carrying amount
+  if (incentives > 0) {
+    entries.push(
+      {
+        date: commenceDate,
+        account: 'Cash',
+        dr: incentives,
+        cr: 0,
+        memo: 'Lease incentive received from lessor',
+        currency
+      },
+      {
+        date: commenceDate,
+        account: 'Right-of-use asset',
+        dr: 0,
+        cr: incentives,
+        memo: 'Lease incentive deducted from ROU asset carrying amount',
+        currency
+      }
+    );
+  }
 
   /* ==========================================================================
    * JOURNAL ENTRIES 2+: Subsequent Measurement for Every Period
