@@ -17,6 +17,10 @@ import {
   Download,
   FileSpreadsheet
 } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, Tooltip as ReTooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
+} from 'recharts';
 
 export function Dashboard() {
   const { state } = useLeaseContext();
@@ -155,6 +159,16 @@ export function Dashboard() {
     'Other':        'bg-slate-400',
   };
 
+  const CLASS_HEX: Record<string, string> = {
+    'Land':         '#10b981',
+    'Buildings':    '#3b82f6',
+    'Machinery':    '#f97316',
+    'Vehicles':     '#a855f7',
+    'Equipment':    '#06b6d4',
+    'IT Hardware':  '#ec4899',
+    'Other':        '#94a3b8',
+  };
+
   const portfolioData = useMemo(() => {
     const grouped: Record<string, { contracts: number; liability: number }> = {};
     let totalLiability = 0;
@@ -174,6 +188,7 @@ export function Dashboard() {
         value: liability,
         percentage: totalLiability > 0 ? Math.round((liability / totalLiability) * 1000) / 10 : 0,
         color: CLASS_COLORS[category] || 'bg-slate-400',
+        hex: CLASS_HEX[category] || '#94a3b8',
       }))
       .sort((a, b) => b.value - a.value);
   }, [aggregatedData.validContracts]);
@@ -707,38 +722,61 @@ export function Dashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Portfolio Composition */}
+        {/* Portfolio Composition — Donut chart */}
         <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-6 shadow-xl">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Portfolio Composition</h3>
             <BarChart3 className="w-5 h-5 text-slate-600 dark:text-slate-400" />
           </div>
 
-          <div className="space-y-4">
-            {portfolioData.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No contract data available</p>
-            ) : portfolioData.map((item, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${item.color}`}></div>
-                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{item.category}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{fmt(item.value)}</div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400">({item.contracts} contracts)</div>
-                  </div>
-                </div>
-                <div className="w-full bg-slate-200 dark:bg-slate-700/50 rounded-full h-2">
-                  <div
-                    className={`${item.color} h-2 rounded-full transition-all duration-300`}
-                    style={{ width: `${item.percentage}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400">{item.percentage}% of total portfolio</div>
+          {portfolioData.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-12">No contract data available</p>
+          ) : (
+            <div className="flex items-center gap-4">
+              {/* Donut */}
+              <div className="flex-shrink-0">
+                <ResponsiveContainer width={180} height={180}>
+                  <PieChart>
+                    <Pie
+                      data={portfolioData}
+                      dataKey="value"
+                      nameKey="category"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={52}
+                      outerRadius={82}
+                      strokeWidth={2}
+                      stroke="transparent"
+                    >
+                      {portfolioData.map((item, i) => (
+                        <Cell key={i} fill={item.hex} />
+                      ))}
+                    </Pie>
+                    <ReTooltip
+                      formatter={(value) => [fmt(Number(value)), 'Liability']}
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
+
+              {/* Legend */}
+              <div className="flex-1 space-y-2.5 min-w-0">
+                {portfolioData.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.hex }} />
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{item.category}</span>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">{fmt(item.value)}</div>
+                      <div className="text-xs text-slate-500">{item.percentage}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Yearly Summary Table */}
@@ -780,6 +818,55 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Section label */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-5 bg-violet-500 rounded-full"></div>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Liability & Asset Movement</span>
+      </div>
+
+      {/* Bar chart — Liability and ROU by year */}
+      <div className="bg-white dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-slate-700/50 p-6 shadow-xl">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Annual Balance Movement</h3>
+          <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-blue-500"></span>Lease Liability</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-emerald-500"></span>ROU Asset</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-orange-400"></span>Depreciation</span>
+          </div>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Closing balances per year across all contracts (NGN M)</p>
+
+        {yearlyTrends.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-12">No trend data available</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={yearlyTrends.map(t => ({
+                year: t.year,
+                'Liability': +(t.liability / 1_000_000).toFixed(2),
+                'ROU Asset': +(t.asset / 1_000_000).toFixed(2),
+                'Depreciation': +(t.depreciation / 1_000_000).toFixed(2),
+              }))}
+              margin={{ top: 8, right: 16, left: 8, bottom: 4 }}
+              barGap={3}
+              barCategoryGap="28%"
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="year" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={v => `${v}M`} width={52} />
+              <ReTooltip
+                formatter={(value) => [`NGN ${Number(value).toLocaleString()}M`, '']}
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e2e8f0', backgroundColor: '#fff' }}
+                labelStyle={{ fontWeight: 600, color: '#1e293b', marginBottom: 4 }}
+              />
+              <Bar dataKey="Liability" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="ROU Asset" fill="#10b981" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Depreciation" fill="#fb923c" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Section label */}
