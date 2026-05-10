@@ -128,8 +128,11 @@ export interface LeaseData {
   /** Fixed rent payment per period */
   FixedPaymentPerPeriod: number;
 
-  /** Payment frequency: 'Monthly', 'Quarterly', 'Semiannual', or 'Annual' */
+  /** Payment frequency: 'Monthly', 'Quarterly', 'Semiannual', 'Annual', or 'Custom' */
   PaymentFrequency: string;
+
+  /** Interval in years for custom payment frequency (e.g. 4 = every 4 years) */
+  CustomPaymentIntervalYears: number;
 
   /** Payment timing: 'Advance' (beginning of period) or 'Arrears' (end of period) */
   PaymentTiming: string;

@@ -67,6 +67,8 @@ export function CSVUpload({ onUploadComplete, onModeRequired }: CSVUploadProps) 
       'Currency': 'Currency',
       'Payment Frequency': 'PaymentFrequency',
       'PaymentFrequency': 'PaymentFrequency',
+      'Custom Payment Interval Years': 'CustomPaymentIntervalYears',
+      'CustomPaymentIntervalYears': 'CustomPaymentIntervalYears',
       'Payment Timing': 'PaymentTiming',
       'PaymentTiming': 'PaymentTiming',
       'IBR Annual': 'IBR_Annual',
@@ -80,7 +82,7 @@ export function CSVUpload({ onUploadComplete, onModeRequired }: CSVUploadProps) 
       if (leaseKey && csvData[csvKey]) {
         let value = csvData[csvKey];
 
-        if (['NonCancellableYears', 'FixedPaymentPerPeriod', 'IBR_Annual', 'UsefulLifeYears'].includes(leaseKey)) {
+        if (['NonCancellableYears', 'FixedPaymentPerPeriod', 'IBR_Annual', 'UsefulLifeYears', 'CustomPaymentIntervalYears'].includes(leaseKey)) {
           value = parseFloat(value);
           if (leaseKey === 'IBR_Annual' && value > 1) {
             value = value / 100;

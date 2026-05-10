@@ -343,10 +343,12 @@ export function ResultsDisplay() {
 
     // Get payment frequency label for first column
     const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+    const customYears = leaseData.CustomPaymentIntervalYears;
     const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
                        paymentFrequency === 'Quarterly' ? 'Quarter' :
                        paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
-                       paymentFrequency === 'Annual' ? 'Year' : 'Period';
+                       paymentFrequency === 'Annual' ? 'Year' :
+                       paymentFrequency === 'Custom' ? `${customYears || '?'}-Year Period` : 'Period';
 
     // Summary Sheet
     const summaryData = [
@@ -415,10 +417,12 @@ export function ResultsDisplay() {
 
     // Get payment frequency label for first column
     const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
+    const customYears = leaseData.CustomPaymentIntervalYears;
     const periodLabel = paymentFrequency === 'Monthly' ? 'Month' :
                        paymentFrequency === 'Quarterly' ? 'Quarter' :
                        paymentFrequency === 'Semiannual' ? 'Semi-Annual Period' :
-                       paymentFrequency === 'Annual' ? 'Year' : 'Period';
+                       paymentFrequency === 'Annual' ? 'Year' :
+                       paymentFrequency === 'Custom' ? `${customYears || '?'}-Year Period` : 'Period';
 
     // Title and Header
     doc.setFontSize(18);
@@ -540,10 +544,12 @@ export function ResultsDisplay() {
     const yearsElapsed = (endDate.getTime() - commencementDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
 
     // Calculate periods elapsed based on payment frequency
+    const customYearsElapsed = leaseData.CustomPaymentIntervalYears;
     const periodsPerYear = paymentFrequency === 'Monthly' ? 12 :
                           paymentFrequency === 'Quarterly' ? 4 :
                           paymentFrequency === 'Semiannual' ? 2 :
-                          paymentFrequency === 'Annual' ? 1 : 12;
+                          paymentFrequency === 'Annual' ? 1 :
+                          paymentFrequency === 'Custom' ? (customYearsElapsed && customYearsElapsed > 0 ? 1 / customYearsElapsed : 1) : 12;
 
     const periodsElapsed = Math.floor(yearsElapsed * periodsPerYear);
 
@@ -849,7 +855,9 @@ export function ResultsDisplay() {
             <div>
               <p className="text-cyan-100 text-sm font-medium">Payment Frequency</p>
               <p className="text-2xl font-bold mt-1">
-                {leaseData.PaymentFrequency || 'Monthly'}
+                {leaseData.PaymentFrequency === 'Custom'
+                  ? `Every ${leaseData.CustomPaymentIntervalYears || '?'} Yr${(leaseData.CustomPaymentIntervalYears || 0) !== 1 ? 's' : ''}`
+                  : leaseData.PaymentFrequency || 'Monthly'}
               </p>
             </div>
             <div className="bg-white/20 p-3 rounded-lg">

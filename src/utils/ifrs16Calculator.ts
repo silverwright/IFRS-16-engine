@@ -116,8 +116,9 @@ function calculateStandardLease(leaseData: Partial<LeaseData>): CalculationResul
    *
    * Discount Rate: Incremental Borrowing Rate (IBR)
    * ============================================================================ */
-  const periods = Math.round(totalLeaseYears * getPeriodsPerYear(paymentFrequency));
-  const ratePerPeriod = Math.pow(1 + ibrAnnual, 1 / getPeriodsPerYear(paymentFrequency)) - 1;
+  const customYears = leaseData.CustomPaymentIntervalYears;
+  const periods = Math.round(totalLeaseYears * getPeriodsPerYear(paymentFrequency, customYears));
+  const ratePerPeriod = Math.pow(1 + ibrAnnual, 1 / getPeriodsPerYear(paymentFrequency, customYears)) - 1;
 
   // Residual Value Guarantee (included if reasonably certain)
   const rvgExpected = leaseData.RVGExpected || 0;
@@ -275,7 +276,7 @@ function calculateWithModification(leaseData: Partial<LeaseData>): CalculationRe
   const modDate = new Date(modificationDate);
 
   const paymentFrequency = originalTerms.PaymentFrequency || 'Monthly';
-  const periodsPerYear = getPeriodsPerYear(paymentFrequency);
+  const periodsPerYear = getPeriodsPerYear(paymentFrequency, originalTerms.CustomPaymentIntervalYears);
 
   // Calculate periods elapsed = (years elapsed) × (periods per year)
   const yearsElapsed = (modDate.getTime() - commenceDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
@@ -449,14 +450,15 @@ function calculateIFRS16WithTerms(terms: Partial<LeaseData>): CalculationResults
  * getPeriodsPerYear('Monthly') // Returns 12
  * getPeriodsPerYear('Quarterly') // Returns 4
  */
-function getPeriodsPerYear(frequency: string): number {
+function getPeriodsPerYear(frequency: string, customYears?: number): number {
+  if (frequency === 'Custom') return customYears && customYears > 0 ? 1 / customYears : 1;
   const map: { [key: string]: number } = {
     'Monthly': 12,
     'Quarterly': 4,
     'Semiannual': 2,
     'Annual': 1
   };
-  return map[frequency] || 12; // Default to monthly
+  return map[frequency] || 12;
 }
 
 /* ================================================================================
@@ -483,7 +485,7 @@ function generateCashflowSchedule(
   const startDate = new Date(leaseData.CommencementDate || '2025-01-01');
   const paymentAmount = leaseData.FixedPaymentPerPeriod || 0;
   const frequency = leaseData.PaymentFrequency || 'Monthly';
-  const monthsPerPeriod = 12 / getPeriodsPerYear(frequency);
+  const monthsPerPeriod = 12 / getPeriodsPerYear(frequency, leaseData.CustomPaymentIntervalYears);
 
   for (let i = 1; i <= periods; i++) {
     const paymentDate = new Date(startDate);

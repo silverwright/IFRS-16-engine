@@ -121,7 +121,7 @@ export function generateContractHTML(leaseData: Partial<LeaseData>, mode: 'MINIM
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Asset</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.AssetDescription || 'N/A'} (${leaseData.AssetClass || 'N/A'})</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Commencement</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.CommencementDate ? formatDate(leaseData.CommencementDate) : 'N/A'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Non-Cancellation Period</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.NonCancellableYears || 0} years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Rent</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} / ${leaseData.PaymentFrequency || 'N/A'}, payable in ${leaseData.PaymentTiming || 'advance'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Rent</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} / ${leaseData.PaymentFrequency === 'Custom' ? `Every ${leaseData.CustomPaymentIntervalYears || '?'} Year(s)` : (leaseData.PaymentFrequency || 'N/A')}, payable in ${leaseData.PaymentTiming || 'advance'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Currency / IBR</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency || 'N/A'} / IBR (annual): ${((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%</td></tr>
         </table>
 
@@ -138,7 +138,7 @@ export function generateContractHTML(leaseData: Partial<LeaseData>, mode: 'MINIM
         <p>3.3 Acceptance: Upon successful commissioning and Lessee's execution of the Acceptance Certificate, the Asset is deemed accepted. If defects are identified, Lessor shall rectify within a reasonable cure period; acceptance follows re-test.</p>
 
         <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">4. Rent; Payment Mechanics; Escalation</h2>
-        <p>4.1 Lessee shall pay rent of ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} per ${leaseData.PaymentFrequency || 'period'} in ${leaseData.PaymentTiming || 'advance'} without set-off or counterclaim.</p>
+        <p>4.1 Lessee shall pay rent of ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} per ${leaseData.PaymentFrequency === 'Custom' ? `every ${leaseData.CustomPaymentIntervalYears || '?'} year(s)` : (leaseData.PaymentFrequency || 'period')} in ${leaseData.PaymentTiming || 'advance'} without set-off or counterclaim.</p>
         <p>4.2 Late amounts accrue default interest at the maximum rate permitted by law.</p>
         <p>4.3 Escalation: Rent may be adjusted as specified in the contract terms.</p>
 

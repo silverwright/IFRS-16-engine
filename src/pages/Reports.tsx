@@ -9,7 +9,8 @@ import { BarChart3, Download, FileSpreadsheet } from 'lucide-react';
 
 const ASSET_CLASSES = ['Land', 'Buildings', 'Machinery', 'Vehicles', 'Equipment', 'IT Hardware', 'Other'];
 
-function getPeriodsPerYear(frequency: string): number {
+function getPeriodsPerYear(frequency: string, customYears?: number): number {
+  if (frequency === 'Custom') return customYears && customYears > 0 ? 1 / customYears : 1;
   const map: Record<string, number> = { Monthly: 12, Quarterly: 4, Semiannual: 2, Annual: 1 };
   return map[frequency] || 12;
 }
@@ -47,7 +48,7 @@ function buildDisclosureData(contracts: any[], year: number) {
     try {
       const calc = calculateIFRS16(d);
       const commenceYear = new Date(d.CommencementDate).getFullYear();
-      const monthsPerPeriod = Math.round(12 / getPeriodsPerYear(d.PaymentFrequency || 'Monthly'));
+      const monthsPerPeriod = Math.round(12 / getPeriodsPerYear(d.PaymentFrequency || 'Monthly', d.CustomPaymentIntervalYears));
       const schedule = calc.amortizationSchedule;
 
       // Split schedule into periods before / during / after reporting year

@@ -25,7 +25,8 @@ export interface LeaseData {
   CommencementDate?: string;
   Currency?: string;
   FixedPaymentPerPeriod?: number;
-  PaymentFrequency?: 'Monthly' | 'Quarterly' | 'Semiannual' | 'Annual';
+  PaymentFrequency?: 'Monthly' | 'Quarterly' | 'Semiannual' | 'Annual' | 'Custom';
+  CustomPaymentIntervalYears?: number;
   PaymentTiming?: 'Advance' | 'Arrears';
   NonCancellableYears?: number;
   IBR_Annual?: number;

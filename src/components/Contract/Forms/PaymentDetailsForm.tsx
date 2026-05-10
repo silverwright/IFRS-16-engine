@@ -59,7 +59,7 @@ import { Modal } from '../../UI/Modal';
  * ============================================================================ */
 
 /** Payment frequency options */
-const paymentFrequencies = ['Monthly', 'Quarterly', 'Semiannual', 'Annual'];
+const paymentFrequencies = ['Monthly', 'Quarterly', 'Semiannual', 'Annual', 'Custom'];
 
 /** Payment timing options (when payment occurs relative to period) */
 const paymentTimings = ['Arrears', 'Advance'];
@@ -225,6 +225,18 @@ export function PaymentDetailsForm() {
           onChange={(value) => updateField('PaymentFrequency', value)}
           required
         />
+
+        {leaseData.PaymentFrequency === 'Custom' && (
+          <FormField
+            label="Payment Interval (years)"
+            type="number"
+            value={leaseData.CustomPaymentIntervalYears || ''}
+            onChange={(value) => updateField('CustomPaymentIntervalYears', Number(value))}
+            placeholder="e.g. 4 (every 4 years)"
+            min="1"
+            required
+          />
+        )}
 
         <Select
           label="Payment Timing"
