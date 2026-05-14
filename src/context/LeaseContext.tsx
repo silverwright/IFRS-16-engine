@@ -109,6 +109,9 @@ export interface LeaseData {
   /** Likelihood of exercising renewal option (0-100%) */
   RenewalOptionLikelihood: number;
 
+  /** Estimated payment amount during the renewal/extension period */
+  RenewalOptionPayment: number;
+
   /** Point at which termination option can be exercised (e.g., "End of Year 3") */
   TerminationOptionPoint: string;
 

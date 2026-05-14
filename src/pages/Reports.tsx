@@ -5,7 +5,8 @@ import { calculateIFRS16 } from '../utils/ifrs16Calculator';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { BarChart3, Download, FileSpreadsheet } from 'lucide-react';
+import { BarChart3, Download, FileSpreadsheet, TableProperties } from 'lucide-react';
+import { CalculationSheet } from '../components/Reports/CalculationSheet';
 
 const ASSET_CLASSES = ['Land', 'Buildings', 'Machinery', 'Vehicles', 'Equipment', 'IT Hardware', 'Other'];
 
@@ -113,6 +114,8 @@ export function Reports() {
 
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [calcSheetYear, setCalcSheetYear] = useState(currentYear);
+  const [activeTab, setActiveTab] = useState<'disclosure' | 'calculation'>('disclosure');
 
   const fmt = (n: number) => n === 0 ? '-' : n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const neg = (n: number) => n === 0 ? '-' : `(${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
@@ -284,37 +287,73 @@ export function Reports() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports & Disclosures</h1>
           <p className="text-slate-600 dark:text-white/80">IFRS 16 compliant disclosure note by asset class</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-white/80">Reporting Year:</label>
-            <select
-              value={selectedYear}
-              onChange={e => setSelectedYear(parseInt(e.target.value))}
-              className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        {activeTab === 'disclosure' && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-white/80">Reporting Year:</label>
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(parseInt(e.target.value))}
+                className="text-sm border border-slate-300 dark:border-white/20 rounded-lg px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {Array.from({ length: 10 }, (_, i) => currentYear - 3 + i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={exportExcel}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
             >
-              {Array.from({ length: 10 }, (_, i) => currentYear - 3 + i).map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+              <FileSpreadsheet className="w-4 h-4" />
+              Excel
+            </button>
+            <button
+              onClick={exportPDF}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+            >
+              <Download className="w-4 h-4" />
+              PDF
+            </button>
           </div>
-          <button
-            onClick={exportExcel}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            Excel
-          </button>
-          <button
-            onClick={exportPDF}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
-          >
-            <Download className="w-4 h-4" />
-            PDF
-          </button>
-        </div>
+        )}
       </div>
 
-      {savedContracts.length === 0 ? (
+      {/* Tabs */}
+      <div className="flex gap-1 bg-white dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/10 p-1 shadow w-fit">
+        <button
+          onClick={() => setActiveTab('disclosure')}
+          className={`inline-flex items-center gap-2 px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'disclosure'
+              ? 'bg-emerald-600 text-white shadow'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          Disclosure Note
+        </button>
+        <button
+          onClick={() => setActiveTab('calculation')}
+          className={`inline-flex items-center gap-2 px-5 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'calculation'
+              ? 'bg-blue-600 text-white shadow'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
+          }`}
+        >
+          <TableProperties className="w-4 h-4" />
+          Lease Portfolio Summary
+        </button>
+      </div>
+
+      {activeTab === 'calculation' && (
+        <CalculationSheet
+          contracts={savedContracts}
+          selectedYear={calcSheetYear}
+          onYearChange={setCalcSheetYear}
+        />
+      )}
+
+      {activeTab === 'disclosure' && savedContracts.length === 0 ? (
         <div className="bg-white dark:bg-white/5 rounded-lg border border-slate-300 dark:border-white/10 p-16 shadow-xl flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
             <BarChart3 className="w-8 h-8 text-emerald-500" />
@@ -330,7 +369,7 @@ export function Reports() {
             Create a contract
           </a>
         </div>
-      ) : (
+      ) : activeTab === 'disclosure' ? (
         <div className="bg-white dark:bg-white/5 backdrop-blur-sm rounded-lg border border-slate-300 dark:border-white/10 shadow-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 dark:border-white/10">
             <h2 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-wide">
@@ -455,7 +494,7 @@ export function Reports() {
             Values derived from {savedContracts.length} contract(s). Only asset classes with activity in {selectedYear} are shown as columns.
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

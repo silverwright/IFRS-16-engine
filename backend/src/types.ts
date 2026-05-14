@@ -35,6 +35,7 @@ export interface LeaseData {
   LeaseIncentives?: number;
   RenewalOptionYears?: number;
   RenewalOptionLikelihood?: number;
+  RenewalOptionPayment?: number;
   TerminationOptionPoint?: string;
   TerminationOptionLikelihood?: number;
   RVGExpected?: number;

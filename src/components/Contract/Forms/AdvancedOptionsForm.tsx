@@ -145,6 +145,16 @@ export function AdvancedOptionsForm() {
             max="1"
           />
 
+          {leaseData.RenewalOptionYears > 0 && (
+            <FormField
+              label="Estimated Extension Payment"
+              type="number"
+              value={leaseData.RenewalOptionPayment || ''}
+              onChange={(value) => updateField('RenewalOptionPayment', Number(value))}
+              placeholder="Enter payment amount for extension period"
+            />
+          )}
+
           {/* Termination Option Fields */}
           <FormField
             label="Termination Option Point (years)"
