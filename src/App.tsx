@@ -1,5 +1,4 @@
-import React from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Header } from "./components/Layout/Header";
 import { Home } from "./pages/Home";
 import { ContractInitiation } from "./pages/ContractInitiation";
